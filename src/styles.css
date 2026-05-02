@@ -324,10 +324,9 @@ body {
 
 /* ── Notes row ── */
 .custom-table tr.notes-row td {
-  background: rgba(195, 225, 208, 0.45);
   border: none;
   border-radius: 0;
-  padding: 0 8px 2px 8px;
+  padding: 5px
 }
 
 .row-notes {

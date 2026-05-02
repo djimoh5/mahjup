@@ -65,11 +65,14 @@ export default function App() {
     await gameService.save(newRecord);
   }
 
-  async function updateRecord(oid: string, patch: Partial<GameRecord>) {
+  async function updateRecord(oid: string, patch: Partial<GameRecord>, skipSave?: boolean) {
     setRecords(prev => prev.map(r => (r.oid === oid ? { ...r, ...patch } : r)));
-    const target = records.find(r => r.oid === oid);
-    if (target) {
-      await gameService.save({ ...target, ...patch });
+
+    if(!skipSave) {
+      const target = records.find(r => r.oid === oid);
+      if (target) {
+        await gameService.save({ ...target, ...patch });
+      }
     }
   }
 

@@ -1,4 +1,4 @@
-import { Common } from "../core/utility/common";
+import { Common } from "../server/utility/common";
 import { authid, AuthId } from "./id.model";
 
 export class UserAuth {

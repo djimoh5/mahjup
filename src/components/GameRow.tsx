@@ -3,7 +3,7 @@ import type { GameRecord } from '../../model/game.model';
 
 interface GameRowProps {
   record: GameRecord;
-  onUpdate: (patch: Partial<GameRecord>) => void;
+  onUpdate: (patch: Partial<GameRecord>, skipSave?: boolean) => void;
   onDelete: () => void;
 }
 
@@ -91,7 +91,8 @@ export default function GameRow({ record, onUpdate, onDelete }: GameRowProps) {
             rows={2}
             placeholder="Notes..."
             value={record.notes}
-            onChange={e => onUpdate({ notes: e.target.value })}
+            onChange={e => onUpdate({ notes: e.target.value }, true)}
+            onBlur={e => onUpdate({})}
           />
         </td>
       </tr>

@@ -34,7 +34,7 @@ export class AppOnboardJob extends Job {
             let domain = DeployConfig.DOMAIN;
             await this.s3Service.createDeploymentBucket(bucket);    
 
-            await this.createCloudFrontDistribution(bucket, 'Cortex');
+            await this.createCloudFrontDistribution(bucket, DeployConfig.CLOUDFRONT_DISTRIBUTION_NAME);
 
             const certificateRes = await this.cloudFrontService.requestCertificate(domain);
             console.log(certificateRes);

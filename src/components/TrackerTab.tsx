@@ -4,7 +4,7 @@ import GameRow from './GameRow';
 interface TrackerTabProps {
   records: GameRecord[];
   onAdd: () => void;
-  onUpdate: (id: string, patch: Partial<GameRecord>) => void;
+  onUpdate: (id: string, patch: Partial<GameRecord>, skipSave?: boolean) => void;
   onDelete: (id: string) => void;
 }
 
@@ -44,7 +44,7 @@ export default function TrackerTab({ records, onAdd, onUpdate, onDelete }: Track
               <GameRow
                 key={record.oid}
                 record={record}
-                onUpdate={patch => onUpdate(record.oid, patch)}
+                onUpdate={(patch, skipSave) => onUpdate(record.oid, patch, skipSave)}
                 onDelete={() => onDelete(record.oid)}
               />
             ))}

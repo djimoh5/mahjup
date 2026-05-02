@@ -26,7 +26,7 @@ export class UIDeployJob extends Job {
         'favicon.ico'
     ];
 
-    ignoreAssets = true;
+    ignoreAssets = false;
 
     constructor(private s3Service: S3Service, private cloudFrontService: CloudFrontService) {
         super('UIDeploy');
@@ -43,11 +43,11 @@ export class UIDeployJob extends Job {
         console.log('--------------------', bucket, '--------------------');
 
         //try to upload one file first to make sure build did not fail
-        await this.uploadFile('./ui/dist/browser/index.html', 'index.html', bucket);
+        await this.uploadFile('../dist/index.html', 'index.html', bucket, 'no-cache, no-store, must-revalidate');
 
         await this.deleteFiles(bucket);
 
-        await this.uploadFiles('./ui/dist/browser/', bucket);
+        await this.uploadFiles('../dist/', bucket);
 
         await this.oneTimeDeploy(bucket);
 
@@ -59,7 +59,7 @@ export class UIDeployJob extends Job {
     }
 
     private async oneTimeDeploy(_bucket: string) {
-        await this.uploadFile('./ui/dist/browser/favicon.ico', 'favicon.ico', _bucket);
+        //await this.uploadFile('../dist/favicon.ico', 'favicon.ico', _bucket, 'no-cache');
     }
 
     private async deleteFiles(bucket: string, continuationToken?: string) {
@@ -113,38 +113,35 @@ export class UIDeployJob extends Job {
         resolve();
     }
 
-    private async uploadFiles(dir: string, bucket: string) {
-        return new Promise<void>(resolve => {
-            var files = fs.readdirSync(dir);
-            var cnt = files.length;
-            var num = 0;
-
-            files.forEach(async (file: any) => {
-                if (file.indexOf('.') >= 0 && this.excludedFiles.indexOf(file) < 0) {
-                    num++;
-                    await this.uploadFile(dir + file, file, bucket);
-
-                    if (--cnt === 0) {
-                        console.log('Uploaded', num, 'files');
-                        resolve();
-                    }
-                }
-                else if (--cnt === 0) {
-                    resolve();
-                }
-            });
-        });
+    private async uploadFiles(dir: string, bucket: string, keyPrefix = '') {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        let num = 0;
+        for (const entry of entries) {
+            const localPath = dir + entry.name;
+            const s3Key = keyPrefix + entry.name;
+            if (entry.isDirectory()) {
+                await this.uploadFiles(localPath + '/', bucket, s3Key + '/');
+            } else if (this.excludedFiles.indexOf(entry.name) < 0) {
+                const cacheControl = keyPrefix.startsWith('assets/') ? 'max-age=31536000, immutable' : 'no-cache';
+                await this.uploadFile(localPath, s3Key, bucket, cacheControl);
+                num++;
+            }
+        }
+        if (!keyPrefix) {
+            console.log('Uploaded', num, 'root-level files');
+        }
     }
 
-    private async uploadFile(sourceFilePath: string, destinationKey: string, bucket: string) {
+    private async uploadFile(sourceFilePath: string, destinationKey: string, bucket: string, cacheControl = 'no-cache') {
         return new Promise<void>(resolve => {
-            let body = fs.createReadStream(sourceFilePath);//.pipe(zlib.createGzip());
+            let body = fs.createReadStream(sourceFilePath);
 
             this.s3Service.s3.putObject({
                 Bucket: bucket,
                 Key: destinationKey,
                 Body: body,
                 ContentType: Common.getContentTypeFromName(sourceFilePath),
+                CacheControl: cacheControl,
                 ACL: 'public-read'
             }, err => {
                 if (err) {

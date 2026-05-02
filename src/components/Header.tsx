@@ -22,7 +22,7 @@ export default function Header({ activeTab, onTabChange, isSaving, username, onL
         <div className="header-brand">
           <div className="header-icon">🀄</div>
           <div>
-            <h1 className="header-title">Mahjong Tracker</h1>
+            <h1 className="header-title">MahjUp</h1>
             <p className="header-date">{dateStr}</p>
           </div>
         </div>

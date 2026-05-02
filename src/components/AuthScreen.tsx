@@ -11,24 +11,17 @@ export default function AuthScreen({ onAuthenticated }: Props) {
   const [mode, setMode] = useState<AuthMode>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   function switchMode(next: AuthMode) {
     setMode(next);
     setError('');
-    setConfirmPassword('');
   }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
-
-    if (mode === 'register' && password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
 
     setIsLoading(true);
     const result = mode === 'login'
@@ -47,7 +40,7 @@ export default function AuthScreen({ onAuthenticated }: Props) {
     <div className="auth-overlay">
       <div className="auth-card">
         <div className="auth-logo">🀄</div>
-        <h1 className="auth-title">Mahjong Tracker</h1>
+        <h1 className="auth-title">MahjUp</h1>
 
         <div className="auth-tabs">
           <button
@@ -68,14 +61,14 @@ export default function AuthScreen({ onAuthenticated }: Props) {
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="auth-field">
-            <label className="auth-label" htmlFor="auth-username">Username</label>
+            <label className="auth-label" htmlFor="auth-username">Email Address</label>
             <input
               id="auth-username"
-              type="text"
+              type="email"
               className="auth-input"
               value={username}
               onChange={e => setUsername(e.target.value)}
-              placeholder="Enter your username"
+              placeholder="Enter your email"
               required
               autoComplete="username"
               autoFocus
@@ -98,19 +91,6 @@ export default function AuthScreen({ onAuthenticated }: Props) {
 
           {mode === 'register' && (
             <>
-              <div className="auth-field">
-                <label className="auth-label" htmlFor="auth-confirm">Confirm Password</label>
-                <input
-                  id="auth-confirm"
-                  type="password"
-                  className="auth-input"
-                  value={confirmPassword}
-                  onChange={e => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm your password"
-                  required
-                  autoComplete="new-password"
-                />
-              </div>
               <p className="auth-hint">
                 Password must be 8+ characters and include an uppercase letter,
                 a number, and a special character (!@#$%,-+*()&#123;&#125;/_&amp;).

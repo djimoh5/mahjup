@@ -1,6 +1,6 @@
-service: service-name
+service: mahjup
 
-frameworkVersion: '3'
+frameworkVersion: "3"
 
 provider:
   name: aws
@@ -10,13 +10,13 @@ provider:
   profile: veillance
 
 package:
-   patterns:
-      - ./config/app_secret_public.pem
-      - ./config/app_secret_private.pem
-   exclude:
-      - ./loader/node_modules/**
-      - ./lib/node_modules/**
-      - ./jobs/node_modules/**
+  patterns:
+    - ./config/app_secret_public.pem
+    - ./config/app_secret_private.pem
+  exclude:
+    - ./loader/node_modules/**
+    - ./lib/node_modules/**
+    - ./jobs/node_modules/**
 
 functions:
   api:
