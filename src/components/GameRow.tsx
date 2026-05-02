@@ -92,7 +92,7 @@ export default function GameRow({ record, onUpdate, onDelete }: GameRowProps) {
             placeholder="Notes..."
             value={record.notes}
             onChange={e => onUpdate({ notes: e.target.value }, true)}
-            onBlur={e => onUpdate({})}
+            onBlur={() => onUpdate({})}
           />
         </td>
       </tr>
