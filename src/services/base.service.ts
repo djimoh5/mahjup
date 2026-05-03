@@ -1,7 +1,7 @@
 const TOKEN_KEY = 'mahjongToken';
 
 export abstract class BaseService {
-  protected readonly baseUrl = '/api';
+  protected readonly baseUrl = import.meta.env.VITE_API_BASE_URL as string;
 
   protected getToken(): string | null {
     return localStorage.getItem(TOKEN_KEY);
