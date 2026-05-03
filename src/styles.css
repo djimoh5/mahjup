@@ -93,11 +93,16 @@ body {
   color: rgba(255, 255, 255, 0.95);
 }
 
+.header-logo {
+  width: 170px;
+}
+
 .header-date {
   margin: 0;
   font-size: 0.75rem;
   font-weight: 500;
   color: rgba(250, 208, 200, 0.8);
+  margin-left: 1rem;
 }
 
 /* ── Autosave syncing indicator ── */
@@ -615,11 +620,10 @@ body {
 .auth-logo {
   font-size: 3rem;
   line-height: 1;
-  background: rgba(255, 255, 255, 0.7);
-  padding: 1rem;
+  padding: .2rem;
   border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.6);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  width: 300px
 }
 
 .auth-title {

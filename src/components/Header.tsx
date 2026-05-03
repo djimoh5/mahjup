@@ -1,4 +1,5 @@
 import type { Tab } from '../App';
+import logoUrl from '../../Assets/mahjup-logo-white.svg';
 
 interface HeaderProps {
   activeTab: Tab;
@@ -20,9 +21,8 @@ export default function Header({ activeTab, onTabChange, isSaving, username, onL
     <header className="app-header">
       <div className="app-header-inner">
         <div className="header-brand">
-          <div className="header-icon">🀄</div>
           <div>
-            <h1 className="header-title">MahjUp</h1>
+            <img src={logoUrl} alt="MahjUp" className="header-logo" />
             <p className="header-date">{dateStr}</p>
           </div>
         </div>

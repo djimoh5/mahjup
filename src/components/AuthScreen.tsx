@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { authService, type AuthedUser } from '../services/auth.service';
+import logoUrl from '../../Assets/mahjup-logo-green.svg';
 
 type AuthMode = 'login' | 'register';
 
@@ -39,8 +40,7 @@ export default function AuthScreen({ onAuthenticated }: Props) {
   return (
     <div className="auth-overlay">
       <div className="auth-card">
-        <div className="auth-logo">🀄</div>
-        <h1 className="auth-title">MahjUp</h1>
+        <img src={logoUrl} alt="MahjUp" className="auth-logo" />
 
         <div className="auth-tabs">
           <button

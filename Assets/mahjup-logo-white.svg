@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 200" font-family="-apple-system, system-ui, sans-serif">
+  <!-- ============ Stacked offset tiles (left side) ============ -->
+  <g transform="translate(50, 60)">
+    
+    <!-- Bottom tile: Bamboo (3 bam) -->
+    <g transform="translate(0, 30)">
+      <rect x="0" y="0" width="60" height="75" rx="8" fill="#ffffff" stroke="#1a1a1a" stroke-width="2.5"/>
+      <rect x="4" y="4" width="52" height="67" rx="5" fill="#f5f5f0" stroke="#1a1a1a" stroke-width="1"/>
+      <g stroke="#1a8754" stroke-width="2.5" fill="#1a8754">
+        <line x1="20" y1="20" x2="20" y2="55" stroke-linecap="round"/>
+        <circle cx="20" cy="22" r="2.5"/>
+        <circle cx="20" cy="37" r="2.5"/>
+        <circle cx="20" cy="53" r="2.5"/>
+        <line x1="30" y1="20" x2="30" y2="55" stroke-linecap="round"/>
+        <circle cx="30" cy="22" r="2.5"/>
+        <circle cx="30" cy="37" r="2.5"/>
+        <circle cx="30" cy="53" r="2.5"/>
+        <line x1="40" y1="20" x2="40" y2="55" stroke-linecap="round"/>
+        <circle cx="40" cy="22" r="2.5"/>
+        <circle cx="40" cy="37" r="2.5"/>
+        <circle cx="40" cy="53" r="2.5"/>
+      </g>
+    </g>
+    
+    <!-- Middle tile: Dots (3 dot) -->
+    <g transform="translate(22, 15)">
+      <rect x="0" y="0" width="60" height="75" rx="8" fill="#ffffff" stroke="#1a1a1a" stroke-width="2.5"/>
+      <rect x="4" y="4" width="52" height="67" rx="5" fill="#f5f5f0" stroke="#1a1a1a" stroke-width="1"/>
+      <circle cx="30" cy="22" r="6.5" fill="#d62828" stroke="#1a1a1a" stroke-width="1.2"/>
+      <circle cx="30" cy="22" r="2.5" fill="#f5f5f0"/>
+      <circle cx="30" cy="38" r="6.5" fill="#1a8754" stroke="#1a1a1a" stroke-width="1.2"/>
+      <circle cx="30" cy="38" r="2.5" fill="#f5f5f0"/>
+      <circle cx="30" cy="54" r="6.5" fill="#d62828" stroke="#1a1a1a" stroke-width="1.2"/>
+      <circle cx="30" cy="54" r="2.5" fill="#f5f5f0"/>
+    </g>
+    
+    <!-- Top tile: Red Dragon (中) -->
+    <g transform="translate(44, 0)">
+      <rect x="0" y="0" width="60" height="75" rx="8" fill="#ffffff" stroke="#1a1a1a" stroke-width="2.5"/>
+      <rect x="4" y="4" width="52" height="67" rx="5" fill="#f5f5f0" stroke="#1a1a1a" stroke-width="1"/>
+      <text x="30" y="52" text-anchor="middle" font-size="46" font-weight="700" fill="#d62828" font-family="'PingFang SC', 'Hiragino Sans', 'Microsoft YaHei', sans-serif">中</text>
+    </g>
+  </g>
+  
+  <!-- ============ Wordmark - Up in forest green ============ -->
+  <text x="200" y="142" font-size="100" font-weight="800" fill="#fcfcfc" letter-spacing="-2">
+    Mahj<tspan fill="#e7f4ed">Up</tspan>
+  </text>
+</svg>
