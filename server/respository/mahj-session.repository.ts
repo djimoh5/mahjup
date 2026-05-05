@@ -6,7 +6,7 @@ import { MahjSession } from '../../model/mahj-session.model';
 @Bootstrap()
 export class MahjSessionRepository extends BaseRepository {
     constructor() {
-        super('mahj_sessions');
+        super('mahj_session');
     }
 
     getByOid(oid: string): Promise<MahjSession> {

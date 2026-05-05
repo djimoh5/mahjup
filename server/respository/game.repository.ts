@@ -6,7 +6,7 @@ import { GameRecord } from '../../model/game.model';
 @Bootstrap()
 export class GameRepository extends BaseRepository {
     constructor() {
-        super('game_records');
+        super('game');
     }
 
     getByOid(oid: string): Promise<GameRecord> {
