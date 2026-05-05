@@ -58,11 +58,18 @@ An Express.js API designed for dual deployment: AWS Lambda (primary) and monolit
 | `core/config/`     | Multi-environment config (base/QA/sprint/release), AWS Secrets Manager integration, RSA key pair |
 | `model/`           | TypeScript interfaces for domain objects (user, auth, email, job, privilege, error)              |
 | `core/service/`    | Business logic — auth (JWT + bcrypt), email (Mandrill), S3, CloudFront, HTTP                     |
-| `core/repository/` | MongoDB data access layer                                                                        |
+| `core/repository/` | MongoDB data access layer                                                                       |
 | `core/controller/` | Express request handlers                                                                         |
 | `core/router/`     | Route definitions                                                                                |
 | `core/jobs/`       | Async/scheduled background tasks                                                                 |
 | `core/deploy/`     | AWS Lambda handler and build-version artifacts                                                   |
+
+
+**Coding Patterns and Naming Conventions**
+
+All MongoDB collection names defined in repositories should be singular. E.g. do not user "game_records", instead it should be "game_record".
+
+Repository names should mirror their underlying collection name. However, when using multiple words, MongoDB collections should use underscores, while repository names should use hypens. E.g. collection name = `mahj_session` and repository name =  `mahj-session.repository.ts`
 
 **DI**: The backend uses `injection-js` for dependency injection, bootstrapped in [core/config/bootstrap.ts](core/config/bootstrap.ts).
 
