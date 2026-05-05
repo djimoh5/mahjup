@@ -21,14 +21,13 @@ export default function GameRow({ record, sessionPlayers, onUpdate, onDelete }: 
   }
 
   function handleParticipantToggle(player: string, checked: boolean) {
-    const current = record.participants ?? sessionPlayers;
     const updated = checked
-      ? [...current, player]
-      : current.filter(p => p !== player);
+      ? [...record.participants, player]
+      : record.participants.filter(p => p !== player);
     onUpdate({ participants: updated });
   }
 
-  const participants = record.participants.length > 0 ? record.participants : sessionPlayers;
+  const participants = record.participants;
 
   return (
     <>

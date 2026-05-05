@@ -30,14 +30,13 @@ export default function GameCardMobile({ record, sessionPlayers, onUpdate, onDel
   }
 
   function handleParticipantToggle(player: string, checked: boolean) {
-    const current = record.participants.length > 0 ? record.participants : sessionPlayers;
     const updated = checked
-      ? [...current, player]
-      : current.filter(p => p !== player);
+      ? [...record.participants, player]
+      : record.participants.filter(p => p !== player);
     onUpdate({ participants: updated });
   }
 
-  const participants = record.participants.length > 0 ? record.participants : sessionPlayers;
+  const participants = record.participants;
 
   return (
     <div className={`mc-card${isEditing ? ' mc-card--editing' : ''}`}>
