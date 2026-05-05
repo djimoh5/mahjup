@@ -24,4 +24,8 @@ export class GameRepository extends BaseRepository {
     remove(oid: string): Promise<boolean> {
         return super.removeObject(oid);
     }
+
+    removeBySession(sessionId: string): Promise<boolean> {
+        return this.context.remove({ sessionId }, null);
+    }
 }

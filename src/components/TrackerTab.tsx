@@ -1,22 +1,30 @@
+import type { MahjSession } from '../../model/mahj-session.model';
 import type { GameRecord } from '../../model/game.model';
-import GameRow from './GameRow';
+import SessionGroup from './SessionGroup';
 
 interface TrackerTabProps {
+  sessions: MahjSession[];
   records: GameRecord[];
-  onAdd: () => void;
+  onAddSession: () => void;
+  onUpdateSession: (oid: string, patch: Partial<MahjSession>) => void;
+  onDeleteSession: (oid: string) => void;
+  onAddGame: (sessionId: string, sessionPlayers: string[], sessionDate: string) => void;
   onUpdate: (id: string, patch: Partial<GameRecord>, skipSave?: boolean) => void;
   onDelete: (id: string) => void;
 }
 
-export default function TrackerTab({ records, onAdd, onUpdate, onDelete }: TrackerTabProps) {
+export default function TrackerTab({
+  sessions, records, onAddSession, onUpdateSession, onDeleteSession,
+  onAddGame, onUpdate, onDelete,
+}: TrackerTabProps) {
   return (
     <>
       <div className="tracker-toolbar">
-        <button onClick={onAdd} className="btn-primary">
+        <button onClick={onAddSession} className="btn-primary">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>
-          Add Game Entry
+          New Session
         </button>
         <div className="autosave-badge">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -26,30 +34,28 @@ export default function TrackerTab({ records, onAdd, onUpdate, onDelete }: Track
         </div>
       </div>
 
-      <div className="table-wrapper">
-        <table className="custom-table">
-          <thead>
-            <tr>
-              <th className="col-date">Date</th>
-              <th className="col-cat">Category</th>
-              <th>Exact Hand</th>
-              <th className="center col-result">Result</th>
-              <th className="center col-pts">Points</th>
-              <th className="col-opp">Opponents</th>
-              <th className="col-del"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {records.map(record => (
-              <GameRow
-                key={record.oid}
-                record={record}
-                onUpdate={(patch, skipSave) => onUpdate(record.oid, patch, skipSave)}
-                onDelete={() => onDelete(record.oid)}
-              />
-            ))}
-          </tbody>
-        </table>
+      <div className="sessions-list">
+        {sessions.length === 0 && (
+          <div className="sessions-empty">
+            No sessions yet — click "New Session" to schedule your first Mahj gathering.
+          </div>
+        )}
+        {sessions.map(session => {
+          const sessionGames = records.filter(r => r.sessionId === session.oid);
+          const sessionDate = session.dateTime.split('T')[0];
+          return (
+            <SessionGroup
+              key={session.oid}
+              session={session}
+              games={sessionGames}
+              onAddGame={() => onAddGame(session.oid, session.players, sessionDate)}
+              onUpdate={onUpdate}
+              onDelete={onDelete}
+              onUpdateSession={patch => onUpdateSession(session.oid, patch)}
+              onDeleteSession={() => onDeleteSession(session.oid)}
+            />
+          );
+        })}
       </div>
     </>
   );

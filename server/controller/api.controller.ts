@@ -4,6 +4,7 @@ import { Bootstrap, Injectable } from '../config/bootstrap';
 
 import { AuthService } from '../service/auth.service';
 import { GameService } from '../service/game.service';
+import { MahjSessionService } from '../service/mahj-session.service';
 
 import { ApiResponse } from '../../model/shared.model';
 import { UserAuth } from '../../model/auth.model';
@@ -12,7 +13,7 @@ import { UserAuth } from '../../model/auth.model';
 @Bootstrap()
 @AllowAnonymous()
 export class APIController extends BaseController {
-	constructor(private authService: AuthService, private gameService: GameService) {
+	constructor(private authService: AuthService, private gameService: GameService, private mahjSessionService: MahjSessionService) {
 		super();
 	}
 
@@ -82,6 +83,24 @@ export class APIController extends BaseController {
 	@Delete('game/record/:oid')
 	async deleteRecord(req: Request, res: Response) {
 		const data = await this.gameService.remove(req.params.oid, req.session.user.oid);
+		res.send(data);
+	}
+
+	@Get('mahj-session/list')
+	async getSessions(req: Request, res: Response) {
+		const data = await this.mahjSessionService.getByUser(req.session.user.oid);
+		res.send(data);
+	}
+
+	@Post('mahj-session')
+	async saveSession(req: Request, res: Response) {
+		const data = await this.mahjSessionService.save(req.body, req.session.user.oid);
+		res.send(data);
+	}
+
+	@Delete('mahj-session/:oid')
+	async deleteSession(req: Request, res: Response) {
+		const data = await this.mahjSessionService.remove(req.params.oid, req.session.user.oid);
 		res.send(data);
 	}
 }

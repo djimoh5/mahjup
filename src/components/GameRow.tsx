@@ -3,11 +3,12 @@ import type { GameRecord } from '../../model/game.model';
 
 interface GameRowProps {
   record: GameRecord;
+  sessionPlayers: string[];
   onUpdate: (patch: Partial<GameRecord>, skipSave?: boolean) => void;
   onDelete: () => void;
 }
 
-export default function GameRow({ record, onUpdate, onDelete }: GameRowProps) {
+export default function GameRow({ record, sessionPlayers, onUpdate, onDelete }: GameRowProps) {
   const categoryHands = handData[record.category] ?? [];
 
   function handleCategoryChange(cat: string) {
@@ -18,6 +19,16 @@ export default function GameRow({ record, onUpdate, onDelete }: GameRowProps) {
     const match = handData[record.category]?.find(item => item.h === hand);
     onUpdate({ hand, score: match ? match.v : 0 });
   }
+
+  function handleParticipantToggle(player: string, checked: boolean) {
+    const current = record.participants ?? sessionPlayers;
+    const updated = checked
+      ? [...current, player]
+      : current.filter(p => p !== player);
+    onUpdate({ participants: updated });
+  }
+
+  const participants = record.participants.length > 0 ? record.participants : sessionPlayers;
 
   return (
     <>
@@ -68,13 +79,18 @@ export default function GameRow({ record, onUpdate, onDelete }: GameRowProps) {
           <div className="row-score-badge">{record.score}</div>
         </td>
         <td>
-          <input
-            type="text"
-            value={record.opponents}
-            className="row-opponents row-input"
-            placeholder="Players..."
-            onChange={e => onUpdate({ opponents: e.target.value })}
-          />
+          <div className="participant-checks">
+            {sessionPlayers.map(player => (
+              <label key={player} className="participant-check-label">
+                <input
+                  type="checkbox"
+                  checked={participants.includes(player)}
+                  onChange={e => handleParticipantToggle(player, e.target.checked)}
+                />
+                {player}
+              </label>
+            ))}
+          </div>
         </td>
         <td className="center">
           <button onClick={onDelete} className="delete-btn">
