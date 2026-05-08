@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import Box from '@mui/material/Box';
+import CircularProgress from '@mui/material/CircularProgress';
 import type { GameRecord } from '../model/game.model';
 import type { MahjSession } from '../model/mahj-session.model';
 import { authService, type AuthedUser } from './services/auth.service';
@@ -124,9 +126,9 @@ export default function App() {
 
   if (authLoading || isLoadingRecords) {
     return (
-      <div className="auth-loading">
-        <div className="auth-spinner" />
-      </div>
+      <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <CircularProgress sx={{ color: 'primary.main' }} size={40} thickness={3} />
+      </Box>
     );
   }
 
@@ -137,7 +139,7 @@ export default function App() {
   const sortedSessions = [...sessions].sort((a, b) => b.dateTime.localeCompare(a.dateTime));
 
   return (
-    <div className="app-container">
+    <Box sx={{ maxWidth: '80rem', mx: 'auto', minHeight: '100vh', display: 'flex', flexDirection: 'column', px: { xs: '0.75rem', md: '1.5rem' }, py: { xs: '0.75rem', md: '1.5rem' } }}>
       <Header
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -145,8 +147,8 @@ export default function App() {
         username={user.username}
         onLogout={handleLogout}
       />
-      <main className="app-main">
-        <div className={`view-content${activeTab !== 'tracker' ? ' hidden' : ''}`}>
+      <Box component="main" sx={{ flexGrow: 1 }}>
+        <Box sx={{ display: activeTab !== 'tracker' ? 'none' : 'block' }}>
           <TrackerTab
             sessions={sortedSessions}
             records={records}
@@ -157,17 +159,20 @@ export default function App() {
             onUpdate={updateRecord}
             onDelete={deleteRecord}
           />
-        </div>
-        <div className={`view-content${activeTab !== 'hands' ? ' hidden' : ''}`}>
+        </Box>
+        <Box sx={{ display: activeTab !== 'hands' ? 'none' : 'block' }}>
           <ReferenceTab />
-        </div>
-        <div className={`view-content${activeTab !== 'summary' ? ' hidden' : ''}`}>
+        </Box>
+        <Box sx={{ display: activeTab !== 'summary' ? 'none' : 'block' }}>
           <SummaryTab records={records} />
-        </div>
-      </main>
-      <footer className="app-footer">
+        </Box>
+      </Box>
+      <Box
+        component="footer"
+        sx={{ mt: 6, textAlign: 'center', fontSize: '0.75rem', fontWeight: 500, color: 'rgba(46,94,66,0.85)', pb: 3 }}
+      >
         Designed for 2026 NMJL Official Rules &bull; Always Play Responsibly
-      </footer>
-    </div>
+      </Box>
+    </Box>
   );
 }

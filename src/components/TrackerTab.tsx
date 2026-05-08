@@ -1,6 +1,10 @@
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
 import type { MahjSession } from '../../model/mahj-session.model';
 import type { GameRecord } from '../../model/game.model';
 import SessionGroup from './SessionGroup';
+import { PlusIcon } from './icons/Icons';
 
 interface TrackerTabProps {
   sessions: MahjSession[];
@@ -19,26 +23,42 @@ export default function TrackerTab({
 }: TrackerTabProps) {
   return (
     <>
-      <div className="tracker-toolbar">
-        <button onClick={onAddSession} className="btn-primary">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          alignItems: { xs: 'flex-end', sm: 'center' },
+          justifyContent: 'space-between',
+          mb: 3,
+          gap: 2,
+        }}
+      >
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={onAddSession}
+          startIcon={<PlusIcon style={{ width: '1.25rem', height: '1.25rem' }} />}
+        >
           New Session
-        </button>
-        <div className="autosave-badge">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-          </svg>
-          Autosave Active
-        </div>
-      </div>
+        </Button>
+      </Box>
 
-      <div className="sessions-list">
+      <Stack spacing={2}>
         {sessions.length === 0 && (
-          <div className="sessions-empty">
+          <Box
+            sx={{
+              p: '2.5rem 1.5rem',
+              textAlign: 'center',
+              color: 'text.secondary',
+              fontSize: '0.9375rem',
+              background: 'rgba(255,255,255,0.88)',
+              borderRadius: '1rem',
+              border: '1px dashed rgba(242,171,164,0.55)',
+              backdropFilter: 'blur(8px)',
+            }}
+          >
             No sessions yet — click "New Session" to schedule your first Mahj gathering.
-          </div>
+          </Box>
         )}
         {sessions.map(session => {
           const sessionGames = records.filter(r => r.sessionId === session.oid);
@@ -56,7 +76,7 @@ export default function TrackerTab({
             />
           );
         })}
-      </div>
+      </Stack>
     </>
   );
 }

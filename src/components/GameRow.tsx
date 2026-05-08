@@ -1,5 +1,13 @@
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import TextField from '@mui/material/TextField';
+import Checkbox from '@mui/material/Checkbox';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import IconButton from '@mui/material/IconButton';
+import Box from '@mui/material/Box';
 import { handData } from '../data/hands';
 import type { GameRecord } from '../../model/game.model';
+import { TrashIcon } from './icons/Icons';
 
 interface GameRowProps {
   record: GameRecord;
@@ -33,81 +41,113 @@ export default function GameRow({ record, sessionPlayers, onUpdate, onDelete }: 
     <>
       <tr className="data-row">
         <td>
-          <input
+          <TextField
             type="date"
             value={record.date}
-            className="row-date row-input"
+            size="small"
             onChange={e => onUpdate({ date: e.target.value })}
+            sx={{ width: '100%', '& .MuiInputBase-input': { fontSize: '0.75rem', fontWeight: 600 } }}
           />
         </td>
         <td>
-          <select
+          <Select
             value={record.category}
-            className="row-category row-input"
+            size="small"
             onChange={e => handleCategoryChange(e.target.value)}
+            displayEmpty
+            sx={{ width: '100%', fontSize: '0.75rem', fontWeight: 600 }}
           >
-            <option value="">Select...</option>
+            <MenuItem value=""><em>Select...</em></MenuItem>
             {Object.keys(handData).map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
+              <MenuItem key={cat} value={cat}>{cat}</MenuItem>
             ))}
-          </select>
+          </Select>
         </td>
         <td>
-          <select
+          <Select
             value={record.hand}
-            className="row-hand row-input"
+            size="small"
             onChange={e => handleHandChange(e.target.value)}
+            displayEmpty
+            sx={{ width: '100%', fontSize: '0.75rem', fontWeight: 600 }}
           >
-            <option value="">Choose Hand</option>
+            <MenuItem value=""><em>Choose Hand</em></MenuItem>
             {categoryHands.map(item => (
-              <option key={item.h} value={item.h}>{item.h}</option>
+              <MenuItem key={item.h} value={item.h}>{item.h}</MenuItem>
             ))}
-          </select>
+          </Select>
         </td>
         <td className="center">
-          <select
+          <Select
             value={record.wl}
-            className="row-wl row-input"
+            size="small"
             onChange={e => onUpdate({ wl: e.target.value as 'Win' | 'Loss' })}
+            sx={{ width: '100%', fontSize: '0.75rem', fontWeight: 600 }}
           >
-            <option value="Win">WIN</option>
-            <option value="Loss">LOSS</option>
-          </select>
+            <MenuItem value="Win">WIN</MenuItem>
+            <MenuItem value="Loss">LOSS</MenuItem>
+          </Select>
         </td>
         <td>
-          <div className="row-score-badge">{record.score}</div>
+          <Box
+            sx={{
+              background: 'rgba(250,208,200,0.6)',
+              color: '#0d4a2f',
+              fontWeight: 700,
+              textAlign: 'center',
+              borderRadius: '6px',
+              p: '4px',
+              fontFamily: 'monospace',
+              fontSize: '0.875rem',
+            }}
+          >
+            {record.score}
+          </Box>
         </td>
         <td>
-          <div className="participant-checks">
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem 0.75rem', py: '0.25rem' }}>
             {sessionPlayers.map(player => (
-              <label key={player} className="participant-check-label">
-                <input
-                  type="checkbox"
-                  checked={participants.includes(player)}
-                  onChange={e => handleParticipantToggle(player, e.target.checked)}
-                />
-                {player}
-              </label>
+              <FormControlLabel
+                key={player}
+                label={player}
+                sx={{ margin: 0, '& .MuiFormControlLabel-label': { fontSize: '0.8125rem', color: 'text.primary' } }}
+                control={
+                  <Checkbox
+                    size="small"
+                    checked={participants.includes(player)}
+                    onChange={e => handleParticipantToggle(player, e.target.checked)}
+                  />
+                }
+              />
             ))}
-          </div>
+          </Box>
         </td>
         <td className="center">
-          <button onClick={onDelete} className="delete-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
+          <IconButton
+            size="small"
+            onClick={onDelete}
+            sx={{
+              color: '#a0b8a8',
+              borderRadius: '0.5rem',
+              '&:hover': { color: '#ef4444', background: 'rgba(254,242,242,0.8)' },
+            }}
+          >
+            <TrashIcon style={{ width: '1rem', height: '1rem' }} />
+          </IconButton>
         </td>
       </tr>
       <tr className="notes-row">
         <td colSpan={7}>
-          <textarea
-            className="row-notes"
+          <TextField
+            multiline
             rows={2}
+            fullWidth
             placeholder="Notes..."
             value={record.notes}
+            size="small"
             onChange={e => onUpdate({ notes: e.target.value }, true)}
             onBlur={() => onUpdate({})}
+            sx={{ '& .MuiInputBase-input': { fontSize: '0.75rem' } }}
           />
         </td>
       </tr>

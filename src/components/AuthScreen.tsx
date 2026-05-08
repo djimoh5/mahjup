@@ -1,4 +1,10 @@
 import { useState, type FormEvent } from 'react';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert';
 import { authService, type AuthedUser } from '../services/auth.service';
 import logoUrl from '../../Assets/mahjup-logo-green.svg';
 
@@ -38,75 +44,110 @@ export default function AuthScreen({ onAuthenticated }: Props) {
   }
 
   return (
-    <div className="auth-overlay">
-      <div className="auth-card">
-        <img src={logoUrl} alt="MahjUp" className="auth-logo" />
+    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}>
+      <Paper
+        sx={{
+          width: '100%',
+          maxWidth: 420,
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255,255,255,0.6)',
+          borderRadius: '1.5rem',
+          boxShadow: '0 20px 60px -10px rgba(0,0,0,0.2)',
+          p: '2.5rem 2rem',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 2,
+        }}
+      >
+        <img src={logoUrl} alt="MahjUp" style={{ width: 300, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }} />
 
-        <div className="auth-tabs">
-          <button
-            type="button"
-            className={`auth-tab${mode === 'login' ? ' auth-tab-active' : ''}`}
-            onClick={() => switchMode('login')}
-          >
-            Sign In
-          </button>
-          <button
-            type="button"
-            className={`auth-tab${mode === 'register' ? ' auth-tab-active' : ''}`}
-            onClick={() => switchMode('register')}
-          >
-            Register
-          </button>
-        </div>
+        {/* Mode toggle */}
+        <Box sx={{ display: 'flex', width: '100%', background: 'rgba(46,94,66,0.1)', borderRadius: '0.75rem', p: '0.25rem', gap: '0.25rem' }}>
+          {(['login', 'register'] as AuthMode[]).map(m => (
+            <Button
+              key={m}
+              type="button"
+              onClick={() => switchMode(m)}
+              fullWidth
+              sx={{
+                borderRadius: '0.5rem',
+                fontWeight: 600,
+                fontSize: '0.875rem',
+                color: mode === m ? 'primary.main' : 'text.secondary',
+                background: mode === m ? 'white' : 'transparent',
+                boxShadow: mode === m ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                '&:hover': {
+                  background: mode === m ? 'white' : 'transparent',
+                  color: mode === m ? 'primary.main' : 'text.primary',
+                },
+              }}
+            >
+              {m === 'login' ? 'Sign In' : 'Register'}
+            </Button>
+          ))}
+        </Box>
 
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <div className="auth-field">
-            <label className="auth-label" htmlFor="auth-username">Email Address</label>
-            <input
+        <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <Typography component="label" htmlFor="auth-username" sx={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'text.secondary' }}>
+              Email Address
+            </Typography>
+            <TextField
               id="auth-username"
               type="email"
-              className="auth-input"
               value={username}
               onChange={e => setUsername(e.target.value)}
               placeholder="Enter your email"
               required
               autoComplete="username"
               autoFocus
+              fullWidth
             />
-          </div>
+          </Box>
 
-          <div className="auth-field">
-            <label className="auth-label" htmlFor="auth-password">Password</label>
-            <input
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <Typography component="label" htmlFor="auth-password" sx={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'text.secondary' }}>
+              Password
+            </Typography>
+            <TextField
               id="auth-password"
               type="password"
-              className="auth-input"
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="Enter your password"
               required
               autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+              fullWidth
             />
-          </div>
+          </Box>
 
           {mode === 'register' && (
-            <>
-              <p className="auth-hint">
-                Password must be 8+ characters and include an uppercase letter,
-                a number, and a special character (!@#$%,-+*()&#123;&#125;/_&amp;).
-              </p>
-            </>
+            <Typography sx={{ fontSize: '0.75rem', color: 'text.secondary', lineHeight: 1.5 }}>
+              Password must be 8+ characters and include an uppercase letter,
+              a number, and a special character (!@#$%,-+*()&#123;&#125;/_&amp;).
+            </Typography>
           )}
 
-          {error && <div className="auth-error">{error}</div>}
+          {error && (
+            <Alert severity="error" variant="outlined" sx={{ borderRadius: '0.75rem', fontSize: '0.875rem' }}>
+              {error}
+            </Alert>
+          )}
 
-          <button type="submit" className="auth-btn" disabled={isLoading}>
-            {isLoading
-              ? 'Please wait…'
-              : mode === 'login' ? 'Sign In' : 'Create Account'}
-          </button>
-        </form>
-      </div>
-    </div>
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            fullWidth
+            disabled={isLoading}
+            sx={{ py: '0.875rem', fontSize: '1rem', borderRadius: '0.75rem', mt: 0.5 }}
+          >
+            {isLoading ? 'Please wait…' : mode === 'login' ? 'Sign In' : 'Create Account'}
+          </Button>
+        </Box>
+      </Paper>
+    </Box>
   );
 }

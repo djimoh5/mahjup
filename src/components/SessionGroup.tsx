@@ -1,9 +1,18 @@
 import { useState } from 'react';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import Chip from '@mui/material/Chip';
+import Stack from '@mui/material/Stack';
 import type { MahjSession } from '../../model/mahj-session.model';
 import type { GameRecord } from '../../model/game.model';
 import GameRow from './GameRow';
 import GameCardMobile from './GameCardMobile';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { PlusIcon, PencilIcon, TrashIcon, ChevronDownIcon } from './icons/Icons';
 
 interface SessionGroupProps {
   session: MahjSession;
@@ -102,132 +111,227 @@ export default function SessionGroup({
   }
 
   return (
-    <div className="session-group">
-      <div className="session-header">
-        <button
-          className="session-collapse-btn"
+    <Paper sx={{ borderRadius: '1rem', overflow: 'hidden', border: '1px solid rgba(242,171,164,0.55)' }}>
+      {/* Session header */}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          px: '1rem',
+          py: '0.875rem',
+          borderBottom: '1px solid rgba(242,171,164,0.55)',
+          flexWrap: 'wrap',
+        }}
+      >
+        <IconButton
+          size="small"
           onClick={() => setIsExpanded(prev => !prev)}
           aria-label={isExpanded ? 'Collapse' : 'Expand'}
+          sx={{ color: 'text.secondary', flexShrink: 0 }}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            className={`session-chevron${isExpanded ? '' : ' session-chevron--collapsed'}`}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
+          <ChevronDownIcon
+            style={{
+              width: '1.125rem',
+              height: '1.125rem',
+              transition: 'transform 0.2s',
+              transform: isExpanded ? 'none' : 'rotate(-90deg)',
+            }}
+          />
+        </IconButton>
 
-        <div className="session-header-info">
-          <span className="session-datetime">{formatDateTime(session.dateTime)}</span>
-          {session.title && <span className="session-title">{session.title}</span>}
-          <div className="session-player-pills">
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
+          <Typography sx={{ fontWeight: 600, fontSize: '0.9375rem', color: 'text.primary', whiteSpace: 'nowrap' }}>
+            {formatDateTime(session.dateTime)}
+          </Typography>
+          {session.title && (
+            <Typography sx={{ fontSize: '0.875rem', color: 'text.secondary', fontStyle: 'italic' }}>
+              {session.title}
+            </Typography>
+          )}
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem' }}>
             {session.players.map(p => (
-              <span key={p} className="session-player-pill">{p}</span>
+              <Chip key={p} label={p} size="small" />
             ))}
-          </div>
-        </div>
+          </Box>
+        </Box>
 
-        <div className="session-header-actions">
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
           {!isEditing && (
             <>
-              <button className="btn-primary session-add-game-btn" onClick={onAddGame}>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={onAddGame}
+                startIcon={<PlusIcon style={{ width: '0.875rem', height: '0.875rem' }} />}
+                sx={{ borderRadius: '0.5rem', fontSize: '0.8125rem', py: '0.375rem', px: '0.75rem' }}
+              >
                 Add Game
-              </button>
-              <button className="session-edit-btn" onClick={handleOpenEdit} aria-label="Edit session">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
-              </button>
-              <button className="session-delete-btn" onClick={onDeleteSession} aria-label="Delete session">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
+              </Button>
+              <IconButton
+                size="small"
+                onClick={handleOpenEdit}
+                aria-label="Edit session"
+                sx={{
+                  border: '1px solid rgba(242,171,164,0.55)',
+                  borderRadius: '0.5rem',
+                  color: 'text.secondary',
+                  '&:hover': { background: 'rgba(46,94,66,0.08)', color: 'text.primary' },
+                }}
+              >
+                <PencilIcon style={{ width: '1rem', height: '1rem' }} />
+              </IconButton>
+              <IconButton
+                size="small"
+                onClick={onDeleteSession}
+                aria-label="Delete session"
+                sx={{
+                  border: '1px solid rgba(242,171,164,0.55)',
+                  borderRadius: '0.5rem',
+                  color: 'text.secondary',
+                  '&:hover': { background: 'rgba(232,135,122,0.1)', color: 'primary.main', borderColor: 'primary.main' },
+                }}
+              >
+                <TrashIcon style={{ width: '1rem', height: '1rem' }} />
+              </IconButton>
             </>
           )}
-        </div>
-      </div>
+        </Box>
+      </Box>
 
+      {/* Edit form */}
       {isEditing && (
-        <div className="session-edit-form">
-          <div className="session-edit-field">
-            <label className="session-edit-label">Title (optional)</label>
-            <input
-              type="text"
-              value={editTitle}
-              className="row-input"
-              placeholder="e.g. Tuesday Morning Mahj"
-              onChange={e => setEditTitle(e.target.value)}
-            />
-          </div>
+        <Box
+          sx={{
+            px: '1.25rem',
+            pt: '1rem',
+            pb: '1.25rem',
+            borderBottom: '1px solid rgba(242,171,164,0.55)',
+            background: 'rgba(255,255,255,0.5)',
+          }}
+        >
+          <Stack spacing={1.5}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              <Typography sx={{ fontSize: '0.8125rem', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Title (optional)
+              </Typography>
+              <TextField
+                type="text"
+                value={editTitle}
+                placeholder="e.g. Tuesday Morning Mahj"
+                onChange={e => setEditTitle(e.target.value)}
+                fullWidth
+              />
+            </Box>
 
-          <div className="session-edit-field">
-            <label className="session-edit-label">Date &amp; Time</label>
-            <input
-              type="datetime-local"
-              value={editDateTime}
-              className="row-input"
-              onChange={e => setEditDateTime(e.target.value)}
-            />
-          </div>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              <Typography sx={{ fontSize: '0.8125rem', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Date &amp; Time
+              </Typography>
+              <TextField
+                type="datetime-local"
+                value={editDateTime}
+                onChange={e => setEditDateTime(e.target.value)}
+                fullWidth
+              />
+            </Box>
 
-          <div className="session-edit-field">
-            <label className="session-edit-label">Players</label>
-            <div className="player-entry-list">
-              {editPlayers.map((p, idx) => (
-                <div key={idx} className="player-entry-row">
-                  <input
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              <Typography sx={{ fontSize: '0.8125rem', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Players
+              </Typography>
+              <Stack spacing={0.5}>
+                {editPlayers.map((p, idx) => (
+                  <Box key={idx} sx={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <TextField
+                      type="text"
+                      value={p}
+                      placeholder={`Player ${idx + 1}`}
+                      onChange={e => handleEditPlayerChange(idx, e.target.value)}
+                      sx={{ flex: 1 }}
+                    />
+                    <IconButton
+                      type="button"
+                      onClick={() => handleRemovePlayer(idx)}
+                      aria-label="Remove player"
+                      size="small"
+                      sx={{
+                        border: '1px solid rgba(242,171,164,0.55)',
+                        borderRadius: '0.375rem',
+                        width: '2rem',
+                        height: '2rem',
+                        flexShrink: 0,
+                        color: 'text.secondary',
+                        fontSize: '1.125rem',
+                        '&:hover': { background: 'rgba(232,135,122,0.1)', color: 'primary.main', borderColor: 'primary.main' },
+                      }}
+                    >
+                      ×
+                    </IconButton>
+                  </Box>
+                ))}
+                <Box sx={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <TextField
                     type="text"
-                    value={p}
-                    className="row-input"
-                    placeholder={`Player ${idx + 1}`}
-                    onChange={e => handleEditPlayerChange(idx, e.target.value)}
+                    value={newPlayer}
+                    placeholder="Add a player..."
+                    onChange={e => setNewPlayer(e.target.value)}
+                    onKeyDown={handleNewPlayerKeyDown}
+                    sx={{ flex: 1 }}
                   />
-                  <button
-                    className="player-remove-btn"
-                    onClick={() => handleRemovePlayer(idx)}
-                    aria-label="Remove player"
+                  <IconButton
                     type="button"
-                  >×</button>
-                </div>
-              ))}
-              <div className="player-entry-row player-entry-row--add">
-                <input
-                  type="text"
-                  value={newPlayer}
-                  className="row-input"
-                  placeholder="Add a player..."
-                  onChange={e => setNewPlayer(e.target.value)}
-                  onKeyDown={handleNewPlayerKeyDown}
-                />
-                <button
-                  className="player-add-btn"
-                  onClick={handleAddPlayer}
-                  type="button"
-                >+</button>
-              </div>
-            </div>
-          </div>
+                    onClick={handleAddPlayer}
+                    size="small"
+                    sx={{
+                      background: 'rgba(46,94,66,0.1)',
+                      border: '1px solid rgba(46,94,66,0.2)',
+                      borderRadius: '0.375rem',
+                      width: '2rem',
+                      height: '2rem',
+                      flexShrink: 0,
+                      color: 'text.secondary',
+                      fontSize: '1.25rem',
+                      '&:hover': { background: 'rgba(46,94,66,0.2)' },
+                    }}
+                  >
+                    +
+                  </IconButton>
+                </Box>
+              </Stack>
+            </Box>
 
-          <div className="session-edit-footer">
-            <button className="btn-primary" onClick={handleSave}>Save Session</button>
-            <button className="session-cancel-btn" onClick={handleCancel}>Cancel</button>
-          </div>
-        </div>
+            <Stack direction="row" spacing={1} sx={{ pt: 0.5 }}>
+              <Button variant="contained" color="primary" onClick={handleSave}>
+                Save Session
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={handleCancel}
+                sx={{
+                  borderColor: 'rgba(242,171,164,0.55)',
+                  color: 'text.secondary',
+                  borderRadius: '0.625rem',
+                  '&:hover': { background: 'rgba(0,0,0,0.04)', borderColor: 'rgba(242,171,164,0.55)' },
+                }}
+              >
+                Cancel
+              </Button>
+            </Stack>
+          </Stack>
+        </Box>
       )}
 
+      {/* Games area */}
       {isExpanded && !isEditing && (
-        <div className="session-games">
+        <Box sx={{ p: '0.75rem' }}>
           {games.length === 0 ? (
-            <div className="session-empty">No games yet — click "Add Game" to record the first one.</div>
+            <Box sx={{ p: '1.5rem', textAlign: 'center', color: 'text.secondary', fontSize: '0.875rem' }}>
+              No games yet — click "Add Game" to record the first one.
+            </Box>
           ) : isMobile ? (
-            <div className="card-list-mobile">
+            <Stack spacing={1}>
               {games.map(game => (
                 <GameCardMobile
                   key={game.oid}
@@ -237,9 +341,9 @@ export default function SessionGroup({
                   onDelete={() => onDelete(game.oid)}
                 />
               ))}
-            </div>
+            </Stack>
           ) : (
-            <div className="table-wrapper session-table-wrapper">
+            <div className="table-wrapper">
               <table className="custom-table">
                 <thead>
                   <tr>
@@ -266,8 +370,8 @@ export default function SessionGroup({
               </table>
             </div>
           )}
-        </div>
+        </Box>
       )}
-    </div>
+    </Paper>
   );
 }
