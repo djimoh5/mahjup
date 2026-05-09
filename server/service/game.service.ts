@@ -1,18 +1,21 @@
 import { Bootstrap, Injectable } from '../config/bootstrap';
 import { ApiResponse, BaseService } from './base.service';
 import { AppService } from './app.service';
+
+import { MahjSessionRepository } from '../repository/mahj-session.repository';
 import { GameRepository } from '../repository/game.repository';
 import { GameRecord } from '../../model/game.model';
 
 @Injectable()
 @Bootstrap()
 export class GameService extends BaseService {
-    constructor(protected appService: AppService, private gameRepository: GameRepository) {
+    constructor(protected appService: AppService, private mahjSessionRepository: MahjSessionRepository, private gameRepository: GameRepository) {
         super(appService);
     }
 
     async getByUser(userId: string): Promise<ApiResponse<GameRecord[]>> {
-        const records = await this.gameRepository.getByUser(userId);
+        const sessions = await this.mahjSessionRepository.getByUser(userId);
+        const records = await this.gameRepository.getBySessions(sessions.map(s => s.oid));
         return new ApiResponse(true, records ?? []);
     }
 

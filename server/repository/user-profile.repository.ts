@@ -14,6 +14,10 @@ export class UserProfileRepository extends BaseRepository {
         return this.context.findOne({ authOid });
     }
 
+    getByAuthOids(authOids: authid[]): Promise<UserProfile[]> {
+        return this.context.find({ authOid: { $in: authOids } });
+    }
+
     save(profile: UserProfile): Promise<UserProfile> {
         return this.context.update({ authOid: profile.authOid }, profile, null, { upsert: true });
     }

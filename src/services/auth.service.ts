@@ -64,6 +64,29 @@ export class AuthService extends BaseService {
     }
   }
 
+  async redeemInvite(code: string): Promise<{ user: AuthedUser | null; error?: string }> {
+    try {
+      const res = await this.post<ApiResponse<UserAuth>>('/auth/invite/redeem', { code });
+      if (res.success && res.data) {
+        if (res.data.token) this.setToken(res.data.token);
+        return { user: res.data };
+      }
+      return { user: null, error: res.msg ?? 'Invalid or expired invite link' };
+    } catch {
+      return { user: null, error: 'Unable to connect to the server' };
+    }
+  }
+
+  async invite(email: string): Promise<{ oid: string | null; error?: string }> {
+    try {
+      const res = await this.post<ApiResponse<{ oid: string }>>('/auth/invite', { username: email });
+      if (res.success && res.data) return { oid: res.data.oid };
+      return { oid: null, error: res.msg ?? 'Invite failed' };
+    } catch {
+      return { oid: null, error: 'Unable to connect to the server' };
+    }
+  }
+
   logout(): void {
     this.clearToken();
   }

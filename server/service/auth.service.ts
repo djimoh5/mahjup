@@ -10,6 +10,7 @@ import { AppService } from './app.service';
 import { EmailService } from './email.service';
 
 import { UserAuth } from '../../model/auth.model';
+import { UserSummary } from '../../model/user.model';
 import { Invite } from '../../model/invite.model';
 import { LoginCode, LoginCodePurpose } from '../../model/auth.model';
 import { Email } from '../../model/email.model';
@@ -199,16 +200,19 @@ export class AuthService extends BaseService {
         return new ApiResponse(true, null, 'Password has been reset successfully.');
     }
 
-    async invite(username: string, invitedBy: string): Promise<ApiResponse<null>> {
+    async invite(username: string, invitedBy: string): Promise<ApiResponse<{ oid: string }>> {
         const auth = await this.authRepository.getByUsername(username);
         if (auth && !auth.virtual) {
             return new ApiResponse(false, null, 'user already exists');
         }
 
+        let userAuth: UserAuth;
         if (!auth) {
-            const userAuth = new UserAuth(username, '');
+            userAuth = new UserAuth(username, '');
             userAuth.virtual = true;
             await this.authRepository.update(userAuth);
+        } else {
+            userAuth = auth;
         }
 
         const inviteCode = Common.uniqueId();
@@ -228,12 +232,28 @@ export class AuthService extends BaseService {
 
         const email: Email = {
             to: [username],
-            subject: "You've been invited",
-            html: `<p>You've been invited to join. Click the link below to get started.</p><p><a href="${Config.APP_URL}/invite?code=${inviteCode}">Accept Invite</a></p>`
+            subject: "You've been invited to MahjUp!",
+            html: `<div style="text-align: center; font-size: 16px;">You've been invited to join a session on MahjUp!<br><br>Click the link below to get started.<br><a href="${Config.APP_URL}/invite?code=${inviteCode}">Accept Invite</a></div>`
         };
-        this.emailService.sendEmail(email, invitedBy);
+        
+        await this.emailService.sendEmail(email, invitedBy);
 
-        return new ApiResponse(true, null);
+        return new ApiResponse(true, { oid: userAuth.oid as string });
+    }
+
+    async getUserList(): Promise<ApiResponse<UserSummary[]>> {
+        const users = await this.authRepository.getAll();
+        const profile = await this.userProfileRepository.getByAuthOids(users.map(u => u.oid));
+        const profileMap = Common.arrayToHashTable(profile, 'authOid');
+
+        const summaries: UserSummary[] = users.map(u => ({
+            oid: u.oid,
+            username: u.username,
+            firstName: profileMap[u.oid]?.firstName,
+            lastName: profileMap[u.oid]?.lastName,
+            virtual: u.virtual,
+        }));
+        return new ApiResponse(true, summaries);
     }
 
     async redeemInviteCode(code: string): Promise<ApiResponse<UserAuth>> {
@@ -245,9 +265,11 @@ export class AuthService extends BaseService {
             return new ApiResponse(false, null, 'invite code has expired');
         }
         const auth = await this.authRepository.getByUsername(invite.username);
-        if (!auth || !auth.virtual) {
+        if (!auth) {
             return new ApiResponse(false, null, 'invalid invite code');
         }
+        delete auth.virtual;
+        await this.authRepository.removeVirtualFlag(auth.oid as string);
         return new ApiResponse(true, auth);
     }
 

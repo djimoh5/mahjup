@@ -3,6 +3,7 @@ import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import type { MahjSession } from '../../model/mahj-session.model';
 import type { GameRecord } from '../../model/game.model';
+import type { UserSummary } from '../../model/user.model';
 import SessionGroup from './SessionGroup';
 import { PlusIcon } from './icons/Icons';
 
@@ -10,17 +11,22 @@ interface TrackerTabProps {
   sessions: MahjSession[];
   records: GameRecord[];
   newestSessionId: string | null;
+  users: UserSummary[];
+  usersMap: Record<string, UserSummary>;
+  currentUserOid: string;
   onAddSession: () => void;
   onUpdateSession: (oid: string, patch: Partial<MahjSession>) => void;
   onDeleteSession: (oid: string) => void;
   onAddGame: (sessionId: string, sessionPlayers: string[], sessionDate: string) => void;
   onUpdate: (id: string, patch: Partial<GameRecord>, skipSave?: boolean) => void;
   onDelete: (id: string) => void;
+  onUserAdded: (newUser: UserSummary) => void;
 }
 
 export default function TrackerTab({
-  sessions, records, newestSessionId, onAddSession, onUpdateSession, onDeleteSession,
-  onAddGame, onUpdate, onDelete,
+  sessions, records, newestSessionId, users, usersMap, currentUserOid,
+  onAddSession, onUpdateSession, onDeleteSession,
+  onAddGame, onUpdate, onDelete, onUserAdded,
 }: TrackerTabProps) {
   return (
     <>
@@ -70,11 +76,15 @@ export default function TrackerTab({
               session={session}
               games={sessionGames}
               initialEditing={session.oid === newestSessionId}
+              users={users}
+              usersMap={usersMap}
+              currentUserOid={currentUserOid}
               onAddGame={() => onAddGame(session.oid, session.players, sessionDate)}
               onUpdate={onUpdate}
               onDelete={onDelete}
               onUpdateSession={patch => onUpdateSession(session.oid, patch)}
               onDeleteSession={() => onDeleteSession(session.oid)}
+              onUserAdded={onUserAdded}
             />
           );
         })}

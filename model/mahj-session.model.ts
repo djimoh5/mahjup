@@ -1,10 +1,10 @@
-import { uniqueid } from './id.model';
+import { authid, uniqueid } from './id.model';
 
 export interface MahjSession {
     oid: uniqueid;
     userId?: string;
     dateTime: string;     // YYYY-MM-DDTHH:mm
     title?: string;
-    players: string[];
+    players: authid[];
     notes?: string;
 }

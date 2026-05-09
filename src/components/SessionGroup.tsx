@@ -7,22 +7,44 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
+import Autocomplete from '@mui/material/Autocomplete';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import CircularProgress from '@mui/material/CircularProgress';
 import type { MahjSession } from '../../model/mahj-session.model';
 import type { GameRecord } from '../../model/game.model';
+import type { UserSummary } from '../../model/user.model';
+import type { authid } from '../../model/id.model';
+import { authService } from '../services/auth.service';
 import GameRow from './GameRow';
 import GameCardMobile from './GameCardMobile';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { PlusIcon, PencilIcon, TrashIcon, ChevronDownIcon } from './icons/Icons';
+import { resolveDisplayName } from '../utils/user';
 
 interface SessionGroupProps {
   session: MahjSession;
   games: GameRecord[];
   initialEditing?: boolean;
+  users: UserSummary[];
+  usersMap: Record<string, UserSummary>;
+  currentUserOid: string;
   onAddGame: () => void;
   onUpdate: (id: string, patch: Partial<GameRecord>, skipSave?: boolean) => void;
   onDelete: (id: string) => void;
   onUpdateSession: (patch: Partial<MahjSession>) => void;
   onDeleteSession: () => void;
+  onUserAdded: (newUser: UserSummary) => void;
+}
+
+const INVITE_SENTINEL: UserSummary = { oid: '__invite__' as authid, username: '__invite__' };
+
+function userDisplayLabel(u: UserSummary): string {
+  if (u.firstName || u.lastName)
+    return [u.firstName, u.lastName].filter(Boolean).join(' ');
+  return u.username;
 }
 
 function formatDateTime(dt: string): string {
@@ -38,7 +60,8 @@ function formatDateTime(dt: string): string {
 }
 
 export default function SessionGroup({
-  session, games, initialEditing, onAddGame, onUpdate, onDelete, onUpdateSession, onDeleteSession
+  session, games, initialEditing, users, usersMap, currentUserOid,
+  onAddGame, onUpdate, onDelete, onUpdateSession, onDeleteSession, onUserAdded,
 }: SessionGroupProps) {
   const isMobile = useIsMobile();
   const [isExpanded, setIsExpanded] = useState(true);
@@ -46,62 +69,56 @@ export default function SessionGroup({
 
   const [editTitle, setEditTitle] = useState(session.title ?? '');
   const [editDateTime, setEditDateTime] = useState(session.dateTime);
-  const [editPlayers, setEditPlayers] = useState<string[]>(
-    session.players.length > 0 ? [...session.players] : ['']
-  );
-  const [newPlayer, setNewPlayer] = useState('');
+  const [editPlayers, setEditPlayers] = useState<string[]>([...session.players]);
+
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteError, setInviteError] = useState('');
 
   function handleOpenEdit() {
     setEditTitle(session.title ?? '');
     setEditDateTime(session.dateTime);
-    setEditPlayers(session.players.length > 0 ? [...session.players] : ['']);
-    setNewPlayer('');
+    setEditPlayers([...session.players]);
     setIsEditing(true);
   }
 
   function handleSave() {
-    const allPlayers = [...editPlayers];
-    if (newPlayer.trim()) allPlayers.push(newPlayer.trim());
-    const cleanedPlayers = allPlayers.filter(p => p.trim() !== '');
     onUpdateSession({
       title: editTitle.trim() || undefined,
       dateTime: editDateTime,
-      players: cleanedPlayers,
+      players: editPlayers as authid[],
     });
-    setEditPlayers(cleanedPlayers.length > 0 ? cleanedPlayers : ['']);
-    setNewPlayer('');
     setIsEditing(false);
   }
 
   function handleCancel() {
     setEditTitle(session.title ?? '');
     setEditDateTime(session.dateTime);
-    setEditPlayers(session.players.length > 0 ? [...session.players] : ['']);
-    setNewPlayer('');
+    setEditPlayers([...session.players]);
     setIsEditing(false);
   }
 
-  function handleEditPlayerChange(idx: number, value: string) {
-    setEditPlayers(prev => prev.map((p, i) => (i === idx ? value : p)));
-  }
-
-  function handleRemovePlayer(idx: number) {
-    setEditPlayers(prev => prev.filter((_, i) => i !== idx));
-  }
-
-  function handleAddPlayer() {
-    if (newPlayer.trim()) {
-      setEditPlayers(prev => [...prev, newPlayer.trim()]);
-      setNewPlayer('');
+  async function handleInviteConfirm() {
+    if (!inviteEmail.trim()) return;
+    setInviteLoading(true);
+    setInviteError('');
+    const { oid, error } = await authService.invite(inviteEmail.trim());
+    setInviteLoading(false);
+    if (!oid || error) {
+      setInviteError(error ?? 'Invite failed');
+      return;
     }
+    const newUser: UserSummary = { oid: oid as authid, username: inviteEmail.trim() };
+    setEditPlayers(prev => [...prev, oid]);
+    onUserAdded(newUser);
+    setInviteEmail('');
+    setInviteOpen(false);
   }
 
-  function handleNewPlayerKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleAddPlayer();
-    }
-  }
+  const selectedUsers: UserSummary[] = editPlayers.map(
+    oid => usersMap[oid] ?? { oid: oid as authid, username: oid }
+  );
 
   return (
     <Paper sx={{ borderRadius: '1rem', overflow: 'hidden', border: '1px solid rgba(242,171,164,0.55)' }}>
@@ -144,7 +161,7 @@ export default function SessionGroup({
           )}
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem' }}>
             {session.players.map(p => (
-              <Chip key={p} label={p} size="small" />
+              <Chip key={p} label={resolveDisplayName(p, usersMap)} size="small" />
             ))}
           </Box>
         </Box>
@@ -234,65 +251,51 @@ export default function SessionGroup({
               <Typography sx={{ fontSize: '0.8125rem', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 Players
               </Typography>
-              <Stack spacing={0.5}>
-                {editPlayers.map((p, idx) => (
-                  <Box key={idx} sx={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    <TextField
-                      type="text"
-                      value={p}
-                      placeholder={`Player ${idx + 1}`}
-                      onChange={e => handleEditPlayerChange(idx, e.target.value)}
-                      sx={{ flex: 1 }}
-                    />
-                    <IconButton
-                      type="button"
-                      onClick={() => handleRemovePlayer(idx)}
-                      aria-label="Remove player"
-                      size="small"
-                      sx={{
-                        border: '1px solid rgba(242,171,164,0.55)',
-                        borderRadius: '0.375rem',
-                        width: '2rem',
-                        height: '2rem',
-                        flexShrink: 0,
-                        color: 'text.secondary',
-                        fontSize: '1.125rem',
-                        '&:hover': { background: 'rgba(232,135,122,0.1)', color: 'primary.main', borderColor: 'primary.main' },
-                      }}
-                    >
-                      ×
-                    </IconButton>
-                  </Box>
-                ))}
-                <Box sx={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                  <TextField
-                    type="text"
-                    value={newPlayer}
-                    placeholder="Add a player..."
-                    onChange={e => setNewPlayer(e.target.value)}
-                    onKeyDown={handleNewPlayerKeyDown}
-                    sx={{ flex: 1 }}
-                  />
-                  <IconButton
-                    type="button"
-                    onClick={handleAddPlayer}
-                    size="small"
-                    sx={{
-                      background: 'rgba(46,94,66,0.1)',
-                      border: '1px solid rgba(46,94,66,0.2)',
-                      borderRadius: '0.375rem',
-                      width: '2rem',
-                      height: '2rem',
-                      flexShrink: 0,
-                      color: 'text.secondary',
-                      fontSize: '1.25rem',
-                      '&:hover': { background: 'rgba(46,94,66,0.2)' },
-                    }}
-                  >
-                    +
-                  </IconButton>
-                </Box>
-              </Stack>
+              <Autocomplete
+                multiple
+                options={users}
+                value={selectedUsers}
+                getOptionLabel={u => u.oid === '__invite__' ? '+ Invite new player…' : userDisplayLabel(u)}
+                isOptionEqualToValue={(option, value) => option.oid === value.oid}
+                filterOptions={(options, state) => {
+                  const filtered = options.filter(u => {
+                    const name = [u.firstName, u.lastName, u.username].filter(Boolean).join(' ').toLowerCase();
+                    return name.includes(state.inputValue.toLowerCase());
+                  });
+                  return [...filtered, INVITE_SENTINEL];
+                }}
+                onChange={(_, selected) => {
+                  if (selected.some(u => u.oid === '__invite__')) {
+                    setInviteOpen(true);
+                  } else {
+                    setEditPlayers(selected.map(u => u.oid as string));
+                  }
+                }}
+                renderOption={(props, option) => {
+                  if (option.oid === '__invite__') {
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                    const { key: _k, ...rest } = props as React.HTMLAttributes<HTMLLIElement> & { key?: unknown };
+                    return (
+                      <li key="__invite__" {...rest} style={{ color: '#2e5e42', fontWeight: 500 }}>
+                        + Invite new player…
+                      </li>
+                    );
+                  }
+                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                  const { key: _k, ...rest } = props as React.HTMLAttributes<HTMLLIElement> & { key?: unknown };
+                  return (
+                    <li key={option.oid} {...rest}>
+                      {userDisplayLabel(option)}
+                      {option.oid === currentUserOid && (
+                        <Typography component="span" sx={{ ml: 1, fontSize: '0.75rem', color: 'text.secondary' }}>
+                          (me)
+                        </Typography>
+                      )}
+                    </li>
+                  );
+                }}
+                renderInput={params => <TextField {...params} placeholder="Search players…" />}
+              />
             </Box>
 
             <Stack direction="row" spacing={1} sx={{ pt: 0.5 }}>
@@ -330,6 +333,7 @@ export default function SessionGroup({
                   key={game.oid}
                   record={game}
                   sessionPlayers={session.players}
+                  usersMap={usersMap}
                   onUpdate={(patch, skipSave) => onUpdate(game.oid, patch, skipSave)}
                   onDelete={() => onDelete(game.oid)}
                 />
@@ -340,8 +344,8 @@ export default function SessionGroup({
               <table className="custom-table">
                 <thead>
                   <tr>
-                    <th className="col-cat">My Category</th>
-                    <th>My Exact Hand</th>
+                    <th className="col-cat">Winning Category</th>
+                    <th>Winning Hand</th>
                     <th className="center col-result">Winner</th>
                     <th className="center col-pts">Points</th>
                     <th className="col-opp">Players</th>
@@ -354,6 +358,7 @@ export default function SessionGroup({
                       key={game.oid}
                       record={game}
                       sessionPlayers={session.players}
+                      usersMap={usersMap}
                       onUpdate={(patch, skipSave) => onUpdate(game.oid, patch, skipSave)}
                       onDelete={() => onDelete(game.oid)}
                     />
@@ -364,6 +369,38 @@ export default function SessionGroup({
           )}
         </Box>
       )}
+
+      {/* Invite dialog */}
+      <Dialog open={inviteOpen} onClose={() => { setInviteOpen(false); setInviteEmail(''); setInviteError(''); }} maxWidth="xs" fullWidth>
+        <DialogTitle>Invite new player</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            label="Email address"
+            type="email"
+            value={inviteEmail}
+            onChange={e => setInviteEmail(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') handleInviteConfirm(); }}
+            error={!!inviteError}
+            helperText={inviteError || ' '}
+            fullWidth
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => { setInviteOpen(false); setInviteEmail(''); setInviteError(''); }}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleInviteConfirm}
+            disabled={inviteLoading || !inviteEmail.trim()}
+            startIcon={inviteLoading ? <CircularProgress size={16} /> : undefined}
+          >
+            Send Invite
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   );
 }

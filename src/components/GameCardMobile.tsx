@@ -15,16 +15,19 @@ import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
 import { handData } from '../data/hands';
 import type { GameRecord } from '../../model/game.model';
+import type { UserSummary } from '../../model/user.model';
 import { PencilIcon, TrashIcon, CheckIcon } from './icons/Icons';
+import { resolveDisplayName } from '../utils/user';
 
 interface GameCardMobileProps {
   record: GameRecord;
   sessionPlayers: string[];
+  usersMap: Record<string, UserSummary>;
   onUpdate: (patch: Partial<GameRecord>, skipSave?: boolean) => void;
   onDelete: () => void;
 }
 
-export default function GameCardMobile({ record, sessionPlayers, onUpdate, onDelete }: GameCardMobileProps) {
+export default function GameCardMobile({ record, sessionPlayers, usersMap, onUpdate, onDelete }: GameCardMobileProps) {
   const [isEditing, setIsEditing] = useState(false);
   const categoryHands = handData[record.category] ?? [];
 
@@ -50,7 +53,7 @@ export default function GameCardMobile({ record, sessionPlayers, onUpdate, onDel
           <Chip label={record.score} size="small" color={record.winner ? 'success' : 'default'} />
         )}
         {record.winner && (
-          <Chip label={`W: ${record.winner}`} size="small" color="success" variant="outlined" />
+          <Chip label={`W: ${resolveDisplayName(record.winner, usersMap)}`} size="small" color="success" variant="outlined" />
         )}
         {!isEditing && (
           <IconButton size="small" onClick={() => setIsEditing(true)} aria-label="Edit">
@@ -79,7 +82,7 @@ export default function GameCardMobile({ record, sessionPlayers, onUpdate, onDel
             <Select value={record.winner} size="small" fullWidth displayEmpty
               onChange={e => onUpdate({ winner: e.target.value })}>
               <MenuItem value=""><em>Select winner…</em></MenuItem>
-              {sessionPlayers.map(p => <MenuItem key={p} value={p}>{p}</MenuItem>)}
+              {sessionPlayers.map(p => <MenuItem key={p} value={p}>{resolveDisplayName(p, usersMap)}</MenuItem>)}
             </Select>
 
             {sessionPlayers.length > 0 && (
@@ -87,7 +90,7 @@ export default function GameCardMobile({ record, sessionPlayers, onUpdate, onDel
                 <Typography variant="caption" color="text.secondary">Players</Typography>
                 <FormGroup row>
                   {sessionPlayers.map(player => (
-                    <FormControlLabel key={player} label={player} sx={{ mr: 1 }}
+                    <FormControlLabel key={player} label={resolveDisplayName(player, usersMap)} sx={{ mr: 1 }}
                       control={<Checkbox size="small" checked={record.participants.includes(player)}
                         onChange={e => handleParticipantToggle(player, e.target.checked)} />} />
                   ))}

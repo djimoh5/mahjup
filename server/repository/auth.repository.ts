@@ -21,4 +21,12 @@ export class AuthRepository extends BaseRepository {
         console.log(`updating auth ${auth.oid}`);
         return super.updateObject(auth);
     }
+
+    removeVirtualFlag(oid: string): Promise<any> {
+        return this.context.update({ oid }, { virtual: '' }, null, { unset: true });
+    }
+
+    getAll(): Promise<UserAuth[]> {
+        return this.context.find({}, { password: 0 });
+    }
 }

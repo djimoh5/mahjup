@@ -14,7 +14,7 @@ export class MahjSessionRepository extends BaseRepository {
     }
 
     getByUser(userId: string): Promise<MahjSession[]> {
-        return this.context.find({ userId });
+        return this.context.find({ $or: [{ userId }, { players: userId }] });
     }
 
     save(session: MahjSession): Promise<MahjSession> {

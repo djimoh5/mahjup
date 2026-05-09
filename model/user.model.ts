@@ -1,6 +1,14 @@
 import { BaseModel } from './shared.model';
 import { authid, uniqueid } from './id.model';
 
+export interface UserSummary {
+    oid: authid;
+    username: string;
+    firstName?: string;
+    lastName?: string;
+    virtual?: boolean;
+}
+
 export interface User {
     oid: string;
     token?: string;

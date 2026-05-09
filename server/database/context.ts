@@ -203,14 +203,14 @@ export class DatabaseContext implements IDatabaseContext {
 				if(options.multi) {
 					this.collection.updateMany(query, { $unset: data }, {}, err => {
 						if (id) { data._id = id; }
-						data.id = data._id.toString();
+						data.id = data._id && data._id.toString();
 						this.promiseCallback(resolve, reject, err, data);
 					});
 				}
 				else {
 					this.collection.updateOne(query, { $unset: data }, {}, err => {
 						if (id) { data._id = id; }
-						data.id = data._id.toString();
+						data.id = data._id && data._id.toString();
 						this.promiseCallback(resolve, reject, err, data);
 					});
 				}	

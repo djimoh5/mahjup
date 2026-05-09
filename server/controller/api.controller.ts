@@ -117,6 +117,12 @@ export class APIController extends BaseController {
 		res.send(data);
 	}
 
+	@Get('user/list')
+	async getUserList(_req: Request, res: Response) {
+		const data = await this.authService.getUserList();
+		res.send(data);
+	}
+
 	@Get('user/profile')
 	async getProfile(req: Request, res: Response) {
 		const data = await this.userProfileService.getProfile(AuthId(req.session.user.oid));

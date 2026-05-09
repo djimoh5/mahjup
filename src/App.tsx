@@ -1,13 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import type { GameRecord } from '../model/game.model';
 import type { MahjSession } from '../model/mahj-session.model';
+import type { UserSummary } from '../model/user.model';
+import { UniqueId } from '../model/id.model';
 import { authService, type AuthedUser } from './services/auth.service';
 import { gameService } from './services/game.service';
 import { mahjSessionService } from './services/mahj-session.service';
+import { userService } from './services/user.service';
 import Header from './components/Header';
 import AuthScreen from './components/AuthScreen';
+import InviteRedeemScreen from './components/InviteRedeemScreen';
 import TrackerTab from './components/TrackerTab';
 import ReferenceTab from './components/ReferenceTab';
 import SummaryTab from './components/SummaryTab';
@@ -19,7 +23,7 @@ function makeSession(partial: Partial<MahjSession> = {}): MahjSession {
   const pad = (n: number) => String(n).padStart(2, '0');
   const dateTime = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
   return {
-    oid: crypto.randomUUID(),
+    oid: UniqueId(crypto.randomUUID()),
     dateTime,
     players: [],
     ...partial,
@@ -30,7 +34,7 @@ function makeRecord(partial: Partial<GameRecord> = {}): GameRecord {
   const today = new Date();
   const date = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   return {
-    oid: crypto.randomUUID(),
+    oid: UniqueId(crypto.randomUUID()),
     sessionId: '',
     date,
     category: '',
@@ -44,10 +48,18 @@ function makeRecord(partial: Partial<GameRecord> = {}): GameRecord {
 }
 
 export default function App() {
+  const [inviteCode, setInviteCode] = useState<string | null>(() => {
+    if (window.location.pathname === '/invite') {
+      return new URLSearchParams(window.location.search).get('code');
+    }
+    return null;
+  });
+
   const [user, setUser] = useState<AuthedUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [sessions, setSessions] = useState<MahjSession[]>([]);
   const [records, setRecords] = useState<GameRecord[]>([]);
+  const [users, setUsers] = useState<UserSummary[]>([]);
   const [isLoadingRecords, setIsLoadingRecords] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('tracker');
   const [newestSessionId, setNewestSessionId] = useState<string | null>(null);
@@ -65,12 +77,20 @@ export default function App() {
     Promise.all([
       mahjSessionService.getAll(),
       gameService.getAll(),
-    ]).then(([{ sessions: fetchedSessions }, { records: fetchedRecords }]) => {
+      userService.getAll().catch(() => ({ users: [] as UserSummary[] })),
+    ]).then(([{ sessions: fetchedSessions }, { records: fetchedRecords }, { users: fetchedUsers }]) => {
       setSessions(fetchedSessions);
       setRecords(fetchedRecords);
+      setUsers(fetchedUsers);
+    }).catch(() => {}).finally(() => {
       setIsLoadingRecords(false);
     });
   }, [user]);
+
+  const usersMap = useMemo(
+    () => Object.fromEntries(users.map(u => [u.oid, u])),
+    [users]
+  );
 
   function handleAuthenticated(u: AuthedUser) {
     setUser(u);
@@ -85,11 +105,15 @@ export default function App() {
     setUser(null);
     setSessions([]);
     setRecords([]);
+    setUsers([]);
+  }
+
+  function handleUserAdded(newUser: UserSummary) {
+    setUsers(prev => [...prev, newUser]);
   }
 
   async function addSession() {
-    const mePlayer = `${user!.profile?.firstName || user!.username} (me)`;
-    const newSession = makeSession({ players: [mePlayer] });
+    const newSession = makeSession({ players: [user!.oid] });
     const firstGame = makeRecord({ sessionId: newSession.oid, participants: newSession.players, date: newSession.dateTime.split('T')[0] });
     setSessions(prev => [newSession, ...prev]);
     setRecords(prev => [firstGame, ...prev]);
@@ -133,6 +157,19 @@ export default function App() {
     await gameService.remove(oid);
   }
 
+  if (inviteCode) {
+    return (
+      <InviteRedeemScreen
+        code={inviteCode}
+        onAuthenticated={u => {
+          window.history.replaceState({}, '', '/');
+          setInviteCode(null);
+          handleAuthenticated(u);
+        }}
+      />
+    );
+  }
+
   if (authLoading || isLoadingRecords) {
     return (
       <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -163,19 +200,23 @@ export default function App() {
             sessions={sortedSessions}
             records={records}
             newestSessionId={newestSessionId}
+            users={users}
+            usersMap={usersMap}
+            currentUserOid={user!.oid}
             onAddSession={addSession}
             onUpdateSession={updateSession}
             onDeleteSession={deleteSession}
             onAddGame={addRecord}
             onUpdate={updateRecord}
             onDelete={deleteRecord}
+            onUserAdded={handleUserAdded}
           />
         </Box>
         <Box sx={{ display: activeTab !== 'hands' ? 'none' : 'block' }}>
           <ReferenceTab />
         </Box>
         <Box sx={{ display: activeTab !== 'summary' ? 'none' : 'block' }}>
-          <SummaryTab records={records} />
+          <SummaryTab records={records} currentUserOid={user!.oid} />
         </Box>
       </Box>
     </Box>

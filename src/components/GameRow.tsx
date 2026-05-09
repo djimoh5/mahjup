@@ -8,16 +8,19 @@ import Chip from '@mui/material/Chip';
 import Box from '@mui/material/Box';
 import { handData } from '../data/hands';
 import type { GameRecord } from '../../model/game.model';
+import type { UserSummary } from '../../model/user.model';
 import { TrashIcon } from './icons/Icons';
+import { resolveDisplayName } from '../utils/user';
 
 interface GameRowProps {
   record: GameRecord;
   sessionPlayers: string[];
+  usersMap: Record<string, UserSummary>;
   onUpdate: (patch: Partial<GameRecord>, skipSave?: boolean) => void;
   onDelete: () => void;
 }
 
-export default function GameRow({ record, sessionPlayers, onUpdate, onDelete }: GameRowProps) {
+export default function GameRow({ record, sessionPlayers, usersMap, onUpdate, onDelete }: GameRowProps) {
   const categoryHands = handData[record.category] ?? [];
 
   function handleCategoryChange(cat: string) {
@@ -57,7 +60,7 @@ export default function GameRow({ record, sessionPlayers, onUpdate, onDelete }: 
           <Select value={record.winner} size="small" fullWidth displayEmpty
             onChange={e => onUpdate({ winner: e.target.value })}>
             <MenuItem value=""><em>Winner…</em></MenuItem>
-            {sessionPlayers.map(p => <MenuItem key={p} value={p}>{p}</MenuItem>)}
+            {sessionPlayers.map(p => <MenuItem key={p} value={p}>{resolveDisplayName(p, usersMap)}</MenuItem>)}
           </Select>
         </td>
         <td>
@@ -66,7 +69,7 @@ export default function GameRow({ record, sessionPlayers, onUpdate, onDelete }: 
         <td>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: .5 }}>
             {sessionPlayers.map(player => (
-              <FormControlLabel key={player} label={player} sx={{ mr: 0, marginLeft: "2px" }}
+              <FormControlLabel key={player} label={resolveDisplayName(player, usersMap)} sx={{ mr: 0, marginLeft: "2px" }}
                 control={
                   <Checkbox size="small" checked={record.participants.includes(player)}
                     onChange={e => handleParticipantToggle(player, e.target.checked)} />
