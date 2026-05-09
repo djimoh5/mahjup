@@ -5,7 +5,7 @@ export interface GameRecord {
     date: string;
     category: string;
     hand: string;
-    wl: 'Win' | 'Loss';
+    winner: string;
     score: number;
     participants: string[];
     notes: string;

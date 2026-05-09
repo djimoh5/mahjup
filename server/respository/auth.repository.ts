@@ -9,12 +9,12 @@ export class AuthRepository extends BaseRepository {
         super('user_auth');
     }
 
-    getByUsername(username: string): Promise<UserAuth[]> {
+    getByUsername(username: string): Promise<UserAuth> {
         return this.context.findOne({ username: username }, { password: 0 });
     }
 
-    getByUsernameWithCredentials(username: string): Promise<UserAuth[]> {
-        return this.context.find({ username: username });
+    getByUsernameWithCredentials(username: string): Promise<UserAuth> {
+        return this.context.findOne({ username: username });
     } 
 
     update(auth: UserAuth): Promise<UserAuth> {

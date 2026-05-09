@@ -9,6 +9,7 @@ import { PlusIcon } from './icons/Icons';
 interface TrackerTabProps {
   sessions: MahjSession[];
   records: GameRecord[];
+  newestSessionId: string | null;
   onAddSession: () => void;
   onUpdateSession: (oid: string, patch: Partial<MahjSession>) => void;
   onDeleteSession: (oid: string) => void;
@@ -18,7 +19,7 @@ interface TrackerTabProps {
 }
 
 export default function TrackerTab({
-  sessions, records, onAddSession, onUpdateSession, onDeleteSession,
+  sessions, records, newestSessionId, onAddSession, onUpdateSession, onDeleteSession,
   onAddGame, onUpdate, onDelete,
 }: TrackerTabProps) {
   return (
@@ -68,6 +69,7 @@ export default function TrackerTab({
               key={session.oid}
               session={session}
               games={sessionGames}
+              initialEditing={session.oid === newestSessionId}
               onAddGame={() => onAddGame(session.oid, session.players, sessionDate)}
               onUpdate={onUpdate}
               onDelete={onDelete}

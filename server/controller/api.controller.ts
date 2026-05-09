@@ -68,6 +68,12 @@ export class APIController extends BaseController {
 		res.send(data);
 	}
 
+	@Post('user/profile')
+	async updateProfile(req: Request, res: Response) {
+		const data = await this.authService.updateProfile(req.session.user.username, req.body.firstName, req.body.lastName);
+		res.send(data);
+	}
+
 	@Get('game/records')
 	async getRecords(req: Request, res: Response) {
 		const data = await this.gameService.getByUser(req.session.user.oid);

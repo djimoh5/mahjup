@@ -35,7 +35,7 @@ function makeRecord(partial: Partial<GameRecord> = {}): GameRecord {
     date,
     category: '',
     hand: '',
-    wl: 'Loss',
+    winner: '',
     score: 0,
     participants: [],
     notes: '',
@@ -50,6 +50,7 @@ export default function App() {
   const [records, setRecords] = useState<GameRecord[]>([]);
   const [isLoadingRecords, setIsLoadingRecords] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('tracker');
+  const [newestSessionId, setNewestSessionId] = useState<string | null>(null);
 
   useEffect(() => {
     authService.checkAuth().then(u => {
@@ -75,6 +76,10 @@ export default function App() {
     setUser(u);
   }
 
+  function handleUserUpdate(updated: AuthedUser) {
+    setUser(updated);
+  }
+
   function handleLogout() {
     authService.logout();
     setUser(null);
@@ -83,9 +88,13 @@ export default function App() {
   }
 
   async function addSession() {
-    const newSession = makeSession();
+    const mePlayer = `${user!.firstName || user!.username} (me)`;
+    const newSession = makeSession({ players: [mePlayer] });
+    const firstGame = makeRecord({ sessionId: newSession.oid, participants: newSession.players, date: newSession.dateTime.split('T')[0] });
     setSessions(prev => [newSession, ...prev]);
-    await mahjSessionService.save(newSession);
+    setRecords(prev => [firstGame, ...prev]);
+    setNewestSessionId(newSession.oid);
+    await Promise.all([mahjSessionService.save(newSession), gameService.save(firstGame)]);
   }
 
   async function updateSession(oid: string, patch: Partial<MahjSession>) {
@@ -144,14 +153,16 @@ export default function App() {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         isSaving={false}
-        username={user.username}
+        user={user}
         onLogout={handleLogout}
+        onUserUpdate={handleUserUpdate}
       />
       <Box component="main" sx={{ flexGrow: 1 }}>
         <Box sx={{ display: activeTab !== 'tracker' ? 'none' : 'block' }}>
           <TrackerTab
             sessions={sortedSessions}
             records={records}
+            newestSessionId={newestSessionId}
             onAddSession={addSession}
             onUpdateSession={updateSession}
             onDeleteSession={deleteSession}
@@ -166,12 +177,6 @@ export default function App() {
         <Box sx={{ display: activeTab !== 'summary' ? 'none' : 'block' }}>
           <SummaryTab records={records} />
         </Box>
-      </Box>
-      <Box
-        component="footer"
-        sx={{ mt: 6, textAlign: 'center', fontSize: '0.75rem', fontWeight: 500, color: 'rgba(46,94,66,0.85)', pb: 3 }}
-      >
-        Designed for 2026 NMJL Official Rules &bull; Always Play Responsibly
       </Box>
     </Box>
   );

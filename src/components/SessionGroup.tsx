@@ -17,6 +17,7 @@ import { PlusIcon, PencilIcon, TrashIcon, ChevronDownIcon } from './icons/Icons'
 interface SessionGroupProps {
   session: MahjSession;
   games: GameRecord[];
+  initialEditing?: boolean;
   onAddGame: () => void;
   onUpdate: (id: string, patch: Partial<GameRecord>, skipSave?: boolean) => void;
   onDelete: (id: string) => void;
@@ -26,30 +27,22 @@ interface SessionGroupProps {
 
 function formatDateTime(dt: string): string {
   if (!dt) return '—';
-  const [datePart, timePart] = dt.split('T');
+  const [datePart] = dt.split('T');
   const [y, m, d] = datePart.split('-');
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const date = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
   const dayName = days[date.getDay()];
   const monthName = months[parseInt(m) - 1];
-  const dayNum = parseInt(d);
-
-  if (!timePart) return `${dayName}, ${monthName} ${dayNum}`;
-
-  const [h, min] = timePart.split(':');
-  const hour = parseInt(h);
-  const ampm = hour >= 12 ? 'pm' : 'am';
-  const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-  return `${dayName}, ${monthName} ${dayNum} · ${hour12}:${min}${ampm}`;
+  return `${dayName}, ${monthName} ${parseInt(d)}`;
 }
 
 export default function SessionGroup({
-  session, games, onAddGame, onUpdate, onDelete, onUpdateSession, onDeleteSession
+  session, games, initialEditing, onAddGame, onUpdate, onDelete, onUpdateSession, onDeleteSession
 }: SessionGroupProps) {
   const isMobile = useIsMobile();
   const [isExpanded, setIsExpanded] = useState(true);
-  const [isEditing, setIsEditing] = useState(session.players.length === 0);
+  const [isEditing, setIsEditing] = useState(initialEditing ?? false);
 
   const [editTitle, setEditTitle] = useState(session.title ?? '');
   const [editDateTime, setEditDateTime] = useState(session.dateTime);
@@ -227,11 +220,11 @@ export default function SessionGroup({
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
               <Typography sx={{ fontSize: '0.8125rem', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                Date &amp; Time
+                Date
               </Typography>
               <TextField
-                type="datetime-local"
-                value={editDateTime}
+                type="date"
+                value={editDateTime.split('T')[0]}
                 onChange={e => setEditDateTime(e.target.value)}
                 fullWidth
               />
@@ -347,10 +340,9 @@ export default function SessionGroup({
               <table className="custom-table">
                 <thead>
                   <tr>
-                    <th className="col-date">Date</th>
-                    <th className="col-cat">Category</th>
-                    <th>Exact Hand</th>
-                    <th className="center col-result">Result</th>
+                    <th className="col-cat">My Category</th>
+                    <th>My Exact Hand</th>
+                    <th className="center col-result">Winner</th>
                     <th className="center col-pts">Points</th>
                     <th className="col-opp">Players</th>
                     <th className="col-del"></th>

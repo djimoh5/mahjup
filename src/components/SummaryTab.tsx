@@ -44,7 +44,7 @@ const statCards = [
 
 export default function SummaryTab({ records }: SummaryTabProps) {
   const valid = records.filter(d => d.category);
-  const wins = valid.filter(d => d.wl === 'Win');
+  const wins = valid.filter(d => d.winner.endsWith(' (me)'));
   const total = valid.length;
   const points = wins.reduce((acc, d) => acc + d.score, 0);
   const winRate = total > 0 ? `${Math.round((wins.length / total) * 100)}%` : '0%';

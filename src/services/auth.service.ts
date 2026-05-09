@@ -4,6 +4,8 @@ export interface AuthedUser {
   oid: string;
   username: string;
   token: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 interface ApiResponse<T> {
@@ -49,6 +51,19 @@ export class AuthService extends BaseService {
         return { user: res.data };
       }
       return { user: null, error: res.msg ?? 'Registration failed' };
+    } catch {
+      return { user: null, error: 'Unable to connect to the server' };
+    }
+  }
+
+  async updateProfile(firstName: string, lastName: string): Promise<{ user: AuthedUser | null; error?: string }> {
+    try {
+      const res = await this.post<ApiResponse<AuthedUser>>('/user/profile', { firstName: firstName.trim(), lastName: lastName.trim() });
+      if (res.success && res.data) {
+        if (res.data.token) this.setToken(res.data.token);
+        return { user: res.data };
+      }
+      return { user: null, error: res.msg ?? 'Update failed' };
     } catch {
       return { user: null, error: 'Unable to connect to the server' };
     }

@@ -34,12 +34,24 @@ export class AuthService extends BaseService {
         return new ApiResponse(false, null, 'unauthorized access');
     }
 
+    async updateProfile(username: string, firstName: string, lastName: string): Promise<ApiResponse<UserAuth>> {
+        const auth = await this.authRepository.getByUsernameWithCredentials(username);
+        if (!auth) {
+            return new ApiResponse(false, null, 'user not found');
+        }
+        auth.firstName = firstName;
+        auth.lastName = lastName;
+        const updated = await this.authRepository.update(auth);
+        delete updated.password;
+        return new ApiResponse(true, updated);
+    }
+
     update(auth: UserAuth) {
         return this.authRepository.update(auth);
     }
 
     async authenticate(username: string, password: string, create?: boolean, bypassPassword?: boolean): Promise<ApiResponse<UserAuth>> {
-        const auth = (await this.authRepository.getByUsernameWithCredentials(username))[0];
+        const auth = await this.authRepository.getByUsernameWithCredentials(username);
 
         if(create) {
             return this.register(auth, username, password);

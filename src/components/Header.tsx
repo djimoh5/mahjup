@@ -1,26 +1,97 @@
+import { useState } from 'react';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
+import Avatar from '@mui/material/Avatar';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Divider from '@mui/material/Divider';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Stack from '@mui/material/Stack';
+import Alert from '@mui/material/Alert';
 import type { Tab as AppTab } from '../App';
+import type { AuthedUser } from '../services/auth.service';
+import { authService } from '../services/auth.service';
 import logoUrl from '../../Assets/mahjup-logo-white.svg';
 
 interface HeaderProps {
   activeTab: AppTab;
   onTabChange: (tab: AppTab) => void;
   isSaving: boolean;
-  username: string;
+  user: AuthedUser;
   onLogout: () => void;
+  onUserUpdate: (updated: AuthedUser) => void;
 }
 
-export default function Header({ activeTab, onTabChange, isSaving, username, onLogout }: HeaderProps) {
+function getInitials(user: AuthedUser): string {
+  if (user.firstName && user.lastName) {
+    return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+  }
+  if (user.firstName) return user.firstName[0].toUpperCase();
+  return user.username[0].toUpperCase();
+}
+
+function getDisplayName(user: AuthedUser): string {
+  if (user.firstName || user.lastName) {
+    return [user.firstName, user.lastName].filter(Boolean).join(' ');
+  }
+  return user.username;
+}
+
+export default function Header({ activeTab, onTabChange, isSaving, user, onLogout, onUserUpdate }: HeaderProps) {
   const dateStr = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   });
+
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [firstName, setFirstName] = useState(user.firstName ?? '');
+  const [lastName, setLastName] = useState(user.lastName ?? '');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  function handleOpenMenu(e: React.MouseEvent<HTMLElement>) {
+    setMenuAnchor(e.currentTarget);
+  }
+
+  function handleCloseMenu() {
+    setMenuAnchor(null);
+  }
+
+  function handleOpenAccount() {
+    setFirstName(user.firstName ?? '');
+    setLastName(user.lastName ?? '');
+    setError('');
+    setAccountOpen(true);
+    handleCloseMenu();
+  }
+
+  function handleCloseAccount() {
+    setAccountOpen(false);
+  }
+
+  async function handleSaveAccount() {
+    setSaving(true);
+    setError('');
+    const { user: updated, error: err } = await authService.updateProfile(firstName.trim(), lastName.trim());
+    setSaving(false);
+    if (updated) {
+      onUserUpdate(updated);
+      setAccountOpen(false);
+    } else {
+      setError(err ?? 'Update failed');
+    }
+  }
 
   return (
     <Box
@@ -103,29 +174,40 @@ export default function Header({ activeTab, onTabChange, isSaving, username, onL
               Syncing
             </Box>
           )}
-          <Typography component="span" sx={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(250,208,200,0.9)' }}>
-            {username}
-          </Typography>
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={onLogout}
-            sx={{
-              border: '1px solid rgba(255,255,255,0.4)',
-              borderRadius: '0.5rem',
-              background: 'rgba(255,255,255,0.15)',
-              color: 'rgba(255,255,255,0.9)',
-              fontSize: '0.75rem',
-              fontWeight: 600,
-              minWidth: 'unset',
-              '&:hover': {
-                background: 'rgba(255,255,255,0.25)',
-                borderColor: 'rgba(255,255,255,0.65)',
-              },
-            }}
+
+          <IconButton onClick={handleOpenMenu} size="small" sx={{ p: 0 }}>
+            <Avatar
+              sx={{
+                width: 36,
+                height: 36,
+                bgcolor: 'rgba(232,135,122,0.85)',
+                fontSize: '0.875rem',
+                fontWeight: 700,
+                color: '#fff',
+                border: '2px solid rgba(255,255,255,0.3)',
+              }}
+            >
+              {getInitials(user)}
+            </Avatar>
+          </IconButton>
+
+          <Menu
+            anchorEl={menuAnchor}
+            open={Boolean(menuAnchor)}
+            onClose={handleCloseMenu}
+            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
           >
-            Sign Out
-          </Button>
+            <Box sx={{ px: 2, py: 1, minWidth: 180 }}>
+              <Typography sx={{ fontWeight: 600, fontSize: '0.875rem' }}>{getDisplayName(user)}</Typography>
+              <Typography sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>{user.username}</Typography>
+            </Box>
+            <Divider />
+            <MenuItem onClick={handleOpenAccount}>My Account</MenuItem>
+            <MenuItem onClick={() => { handleCloseMenu(); onLogout(); }} sx={{ color: 'error.main' }}>
+              Log Out
+            </MenuItem>
+          </Menu>
         </Box>
       </Box>
 
@@ -154,6 +236,35 @@ export default function Header({ activeTab, onTabChange, isSaving, username, onL
           <Tab label="Summary Insights" value="summary" />
         </Tabs>
       </Box>
+
+      {/* My Account dialog */}
+      <Dialog open={accountOpen} onClose={handleCloseAccount} maxWidth="xs" fullWidth>
+        <DialogTitle>My Account</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ pt: 1 }}>
+            {error && <Alert severity="error">{error}</Alert>}
+            <TextField
+              label="First Name"
+              value={firstName}
+              onChange={e => setFirstName(e.target.value)}
+              fullWidth
+              autoFocus
+            />
+            <TextField
+              label="Last Name"
+              value={lastName}
+              onChange={e => setLastName(e.target.value)}
+              fullWidth
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseAccount} disabled={saving}>Cancel</Button>
+          <Button variant="contained" onClick={handleSaveAccount} disabled={saving}>
+            {saving ? 'Saving…' : 'Save'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

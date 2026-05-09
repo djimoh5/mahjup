@@ -31,7 +31,6 @@ body {
 
 .custom-table th.center { text-align: center; }
 
-.col-date   { width: 9rem; }
 .col-cat    { width: 11rem; }
 .col-result { width: 7rem; }
 .col-pts    { width: 6rem; }
@@ -44,7 +43,6 @@ body {
 }
 
 .custom-table tr.data-row:hover {
-  transform: scale(1.002);
   box-shadow: 0 4px 12px -2px rgba(13, 74, 47, 0.1);
 }
 
