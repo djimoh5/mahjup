@@ -1,4 +1,4 @@
-import { uniqueid } from "../../model/id.model";
+import { uniqueid, uniqueMd5Id } from "../model/id.model";
 const { v4: uuidv4 } = require('uuid');
 
 declare const md5: any;
@@ -22,12 +22,6 @@ class DateFormat {
     static longDate = 'MMMM d, yyyy';
 }
 
-export enum ProRatedBy {
-    Annually = 'annually',
-    Quarterly = 'quarterly', //Jan, April, July, October 
-    Monthly = 'monthly'
-}
- 
 export class Common {
     static passwordMask = '.................';
     
@@ -479,7 +473,7 @@ export class Common {
 		return uuidv4();
     }
 
-    static uniqueMd5(data?: string) {
+    static uniqueMd5(data?: string): uniqueMd5Id {
         return md5(data ? data : ("" + Date.now() + Math.round(Math.random() * 1000000) + Math.round(Math.random() * 1000000)));
     }
 

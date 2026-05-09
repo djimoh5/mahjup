@@ -1,5 +1,7 @@
+import { uniqueid } from './id.model';
+
 export interface MahjSession {
-    oid: string;
+    oid: uniqueid;
     userId?: string;
     dateTime: string;     // YYYY-MM-DDTHH:mm
     title?: string;

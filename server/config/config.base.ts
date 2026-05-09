@@ -10,6 +10,7 @@ export class BaseConfig {
     static DATABASE_MAINTENANCE_MODE: boolean = false;
 
     static APP_API_SECRET = '';
+    static APP_URL = 'https://mahjup.ai';
 
     static MONGO_CONNECTIONS = {
         APP: { ip: '127.0.0.1:27017', db: 'mahjup', user: '', password: '' },
@@ -20,8 +21,8 @@ export class BaseConfig {
 
     static EMAIL = {
         tag: 'mahjong',
-        from: '',
-        fromName: '',
+        from: 'no-reply@mahjup.ai',
+        fromName: 'MahjUp',
         admin: ['']
     }
 

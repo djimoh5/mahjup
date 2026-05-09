@@ -1,7 +1,7 @@
 import { Bootstrap, Injectable } from '../config/bootstrap';
 import { ApiResponse, BaseService } from './base.service';
 import { AppService } from './app.service';
-import { GameRepository } from '../respository/game.repository';
+import { GameRepository } from '../repository/game.repository';
 import { GameRecord } from '../../model/game.model';
 
 @Injectable()

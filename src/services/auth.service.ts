@@ -1,12 +1,7 @@
 import { BaseService } from './base.service';
+import { UserAuth } from '../../model/auth.model';
 
-export interface AuthedUser {
-  oid: string;
-  username: string;
-  token: string;
-  firstName?: string;
-  lastName?: string;
-}
+export type AuthedUser = UserAuth;
 
 interface ApiResponse<T> {
   success: boolean;
@@ -15,10 +10,10 @@ interface ApiResponse<T> {
 }
 
 export class AuthService extends BaseService {
-  async checkAuth(): Promise<AuthedUser | null> {
+  async checkAuth(): Promise<UserAuth | null> {
     if (!this.getToken()) return null;
     try {
-      const res = await this.post<ApiResponse<AuthedUser>>('/auth');
+      const res = await this.post<ApiResponse<UserAuth>>('/auth');
       if (res.success && res.data) {
         if (res.data.token) this.setToken(res.data.token);
         return res.data;
@@ -30,9 +25,9 @@ export class AuthService extends BaseService {
     return null;
   }
 
-  async login(username: string, password: string): Promise<{ user: AuthedUser | null; error?: string }> {
+  async login(username: string, password: string): Promise<{ user: UserAuth | null; error?: string }> {
     try {
-      const res = await this.post<ApiResponse<AuthedUser>>('/auth', { username, password });
+      const res = await this.post<ApiResponse<UserAuth>>('/auth', { username, password });
       if (res.success && res.data) {
         if (res.data.token) this.setToken(res.data.token);
         return { user: res.data };
@@ -43,9 +38,9 @@ export class AuthService extends BaseService {
     }
   }
 
-  async register(username: string, password: string): Promise<{ user: AuthedUser | null; error?: string }> {
+  async register(username: string, password: string): Promise<{ user: UserAuth | null; error?: string }> {
     try {
-      const res = await this.post<ApiResponse<AuthedUser>>('/auth/create', { username, password });
+      const res = await this.post<ApiResponse<UserAuth>>('/auth/create', { username, password });
       if (res.success && res.data) {
         if (res.data.token) this.setToken(res.data.token);
         return { user: res.data };
@@ -56,9 +51,9 @@ export class AuthService extends BaseService {
     }
   }
 
-  async updateProfile(firstName: string, lastName: string): Promise<{ user: AuthedUser | null; error?: string }> {
+  async updateProfile(firstName: string, lastName: string): Promise<{ user: UserAuth | null; error?: string }> {
     try {
-      const res = await this.post<ApiResponse<AuthedUser>>('/user/profile', { firstName: firstName.trim(), lastName: lastName.trim() });
+      const res = await this.post<ApiResponse<UserAuth>>('/user/profile', { firstName: firstName.trim(), lastName: lastName.trim() });
       if (res.success && res.data) {
         if (res.data.token) this.setToken(res.data.token);
         return { user: res.data };

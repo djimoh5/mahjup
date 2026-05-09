@@ -1,8 +1,8 @@
 import { Bootstrap, Injectable } from '../config/bootstrap';
 import { ApiResponse, BaseService } from './base.service';
 import { AppService } from './app.service';
-import { MahjSessionRepository } from '../respository/mahj-session.repository';
-import { GameRepository } from '../respository/game.repository';
+import { MahjSessionRepository } from '../repository/mahj-session.repository';
+import { GameRepository } from '../repository/game.repository';
 import { MahjSession } from '../../model/mahj-session.model';
 
 @Injectable()

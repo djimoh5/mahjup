@@ -17,30 +17,32 @@ import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
 import Alert from '@mui/material/Alert';
 import type { Tab as AppTab } from '../App';
-import type { AuthedUser } from '../services/auth.service';
+
 import { authService } from '../services/auth.service';
 import logoUrl from '../../Assets/mahjup-logo-white.svg';
+
+import { UserAuth } from '../../model/auth.model';
 
 interface HeaderProps {
   activeTab: AppTab;
   onTabChange: (tab: AppTab) => void;
   isSaving: boolean;
-  user: AuthedUser;
+  user: UserAuth;
   onLogout: () => void;
-  onUserUpdate: (updated: AuthedUser) => void;
+  onUserUpdate: (updated: UserAuth) => void;
 }
 
-function getInitials(user: AuthedUser): string {
-  if (user.firstName && user.lastName) {
-    return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+function getInitials(user: UserAuth): string {
+  if (user.profile?.firstName && user.profile?.lastName) {
+    return `${user.profile.firstName[0]}${user.profile.lastName[0]}`.toUpperCase();
   }
-  if (user.firstName) return user.firstName[0].toUpperCase();
+  if (user.profile?.firstName) return user.profile.firstName[0].toUpperCase();
   return user.username[0].toUpperCase();
 }
 
-function getDisplayName(user: AuthedUser): string {
-  if (user.firstName || user.lastName) {
-    return [user.firstName, user.lastName].filter(Boolean).join(' ');
+function getDisplayName(user: UserAuth): string {
+  if (user.profile?.firstName || user.profile?.lastName) {
+    return [user.profile?.firstName, user.profile?.lastName].filter(Boolean).join(' ');
   }
   return user.username;
 }
@@ -55,8 +57,8 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
 
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const [accountOpen, setAccountOpen] = useState(false);
-  const [firstName, setFirstName] = useState(user.firstName ?? '');
-  const [lastName, setLastName] = useState(user.lastName ?? '');
+  const [firstName, setFirstName] = useState(user.profile?.firstName ?? '');
+  const [lastName, setLastName] = useState(user.profile?.lastName ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -69,8 +71,8 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
   }
 
   function handleOpenAccount() {
-    setFirstName(user.firstName ?? '');
-    setLastName(user.lastName ?? '');
+    setFirstName(user.profile?.firstName ?? '');
+    setLastName(user.profile?.lastName ?? '');
     setError('');
     setAccountOpen(true);
     handleCloseMenu();

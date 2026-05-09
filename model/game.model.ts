@@ -1,5 +1,7 @@
+import { uniqueid } from "./id.model";
+
 export interface GameRecord {
-    oid: string;
+    oid: uniqueid;
     userId?: string;
     sessionId: string;
     date: string;

@@ -88,7 +88,7 @@ export default function App() {
   }
 
   async function addSession() {
-    const mePlayer = `${user!.firstName || user!.username} (me)`;
+    const mePlayer = `${user!.profile?.firstName || user!.username} (me)`;
     const newSession = makeSession({ players: [mePlayer] });
     const firstGame = makeRecord({ sessionId: newSession.oid, participants: newSession.players, date: newSession.dateTime.split('T')[0] });
     setSessions(prev => [newSession, ...prev]);
