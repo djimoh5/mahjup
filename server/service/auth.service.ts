@@ -74,7 +74,7 @@ export class AuthService extends BaseService {
     private register(auth: UserAuth, username: string, password: string) {
         if (!auth || auth.virtual) {
             if (PasswordUtility.isPasswordSecure(password)) {
-                return this.persistAuth(username, password, auth?.virtual ? auth : undefined);
+                return this.persistAuth(username, password);
             }
             return new ApiResponse(false, null, PasswordUtility.insecurePasswordMessage(password));
         }
@@ -102,14 +102,14 @@ export class AuthService extends BaseService {
         }
 
         const secret = speakeasy.generateSecret();
-        const code: string = speakeasy.totp.generate({ secret: secret.base32, encoding: 'base32' });
+        const code: string = speakeasy.totp({ secret: secret.base32, encoding: 'base32' });
 
         await this.loginCodeRepository.save(new LoginCode(username, secret.base32, LoginCodePurpose.Login));
 
         const email: Email = {
             to: [username],
-            subject: 'Your login code',
-            html: `<p>Your one-time login code is: <strong>${code}</strong></p><p>This code expires in 15 minutes.</p>`
+            subject: 'Your MahjUp login code',
+            html: `<div style="text-align: center; font-size: 16px;">Your one-time login code is: <strong>${code}</strong><br><br>This code expires in 5 minutes.</div>`
         };
         this.emailService.sendEmail(email, auth.oid as string);
 
@@ -117,7 +117,7 @@ export class AuthService extends BaseService {
     }
 
     async verifyLoginCode(username: string, code: string): Promise<ApiResponse<UserAuth>> {
-        const EXPIRY_MS = 15 * 60 * 1000;
+        const EXPIRY_MS = 5 * 60 * 1000;
         const loginCode = await this.loginCodeRepository.getByUsername(username);
 
         if (!loginCode || (Date.now() - loginCode.createdAt) > EXPIRY_MS) {
@@ -155,22 +155,23 @@ export class AuthService extends BaseService {
         }
 
         const secret = speakeasy.generateSecret();
-        const code: string = speakeasy.totp.generate({ secret: secret.base32, encoding: 'base32' });
+        const code: string = speakeasy.totp({ secret: secret.base32, encoding: 'base32' });
 
         await this.loginCodeRepository.save(new LoginCode(username, secret.base32, LoginCodePurpose.PasswordReset));
 
         const email: Email = {
             to: [username],
-            subject: 'Reset your password',
-            html: `<p>Your password reset code is: <strong>${code}</strong></p><p>This code expires in 15 minutes. If you did not request a password reset, you can ignore this email.</p>`
+            subject: 'Reset your MahjUp password',
+            html: `<div style="font-size: 16px;">Your password reset code is: <strong>${code}</strong><br><br>This code expires in 5 minutes. If you did not request a password reset, you can ignore this email.</div>`
         };
+
         this.emailService.sendEmail(email, auth.oid as string);
 
         return new ApiResponse(true, null, 'If an account exists, a reset code has been sent.');
     }
 
     async resetPassword(username: string, code: string, newPassword: string): Promise<ApiResponse<null>> {
-        const EXPIRY_MS = 15 * 60 * 1000;
+        const EXPIRY_MS = 5 * 60 * 1000;
         const loginCode = await this.loginCodeRepository.getByUsernameForReset(username);
 
         if (!loginCode || (Date.now() - loginCode.createdAt) > EXPIRY_MS) {
@@ -194,7 +195,7 @@ export class AuthService extends BaseService {
 
         loginCode.used = true;
         await this.loginCodeRepository.save(loginCode);
-
+        
         await this.persistAuth(username, newPassword);
 
         return new ApiResponse(true, null, 'Password has been reset successfully.');
@@ -273,9 +274,12 @@ export class AuthService extends BaseService {
         return new ApiResponse(true, auth);
     }
 
-    private async persistAuth(username: string, password: string, existingAuth?: UserAuth) {
+    private async persistAuth(username: string, password: string) {
         const hash = await bcrypt.hash(password, this.saltRounds);
         let auth: UserAuth;
+
+        const existingAuth = await this.authRepository.getByUsernameWithCredentials(username);
+
         if (existingAuth) {
             existingAuth.password = hash;
             delete existingAuth.virtual;

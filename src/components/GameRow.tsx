@@ -1,6 +1,7 @@
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
+
 import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import IconButton from '@mui/material/IconButton';
@@ -57,6 +58,12 @@ export default function GameRow({ record, sessionPlayers, usersMap, onUpdate, on
           </Select>
         </td>
         <td className="center">
+          <TextField type="number" size="small" value={record.jokers ?? 0}
+            onChange={e => onUpdate({ jokers: Math.max(0, parseInt(e.target.value) || 0) })}
+            inputProps={{ min: 0, max: 9, style: { textAlign: 'center' } }}
+            sx={{ width: '4rem' }} />
+        </td>
+        <td className="center">
           <Select value={record.winner} size="small" fullWidth displayEmpty
             onChange={e => onUpdate({ winner: e.target.value })}>
             <MenuItem value=""><em>Winner…</em></MenuItem>
@@ -84,7 +91,7 @@ export default function GameRow({ record, sessionPlayers, usersMap, onUpdate, on
         </td>
       </tr>
       <tr className="notes-row">
-        <td colSpan={6}>
+        <td colSpan={7}>
           <TextField multiline rows={2} fullWidth size="small" placeholder="Notes…"
             value={record.notes}
             onChange={e => onUpdate({ notes: e.target.value }, true)}

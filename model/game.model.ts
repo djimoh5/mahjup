@@ -7,6 +7,7 @@ export interface GameRecord {
     date: string;
     category: string;
     hand: string;
+    jokers: number;
     winner: string;
     score: number;
     participants: string[];

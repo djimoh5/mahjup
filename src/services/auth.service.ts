@@ -87,6 +87,47 @@ export class AuthService extends BaseService {
     }
   }
 
+  async requestLoginCode(username: string): Promise<{ error?: string }> {
+    try {
+      await this.post<ApiResponse<null>>('/auth/code/request', { username });
+      return {};
+    } catch {
+      return { error: 'Unable to connect to the server' };
+    }
+  }
+
+  async verifyLoginCode(username: string, code: string): Promise<{ user: UserAuth | null; error?: string }> {
+    try {
+      const res = await this.post<ApiResponse<UserAuth>>('/auth/code/verify', { username, code });
+      if (res.success && res.data) {
+        if (res.data.token) this.setToken(res.data.token);
+        return { user: res.data };
+      }
+      return { user: null, error: res.msg ?? 'Invalid or expired code' };
+    } catch {
+      return { user: null, error: 'Unable to connect to the server' };
+    }
+  }
+
+  async requestPasswordReset(username: string): Promise<{ error?: string }> {
+    try {
+      await this.post<ApiResponse<null>>('/auth/password/reset', { username });
+      return {};
+    } catch {
+      return { error: 'Unable to connect to the server' };
+    }
+  }
+
+  async confirmPasswordReset(username: string, code: string, newPassword: string): Promise<{ error?: string }> {
+    try {
+      const res = await this.post<ApiResponse<null>>('/auth/password/reset/confirm', { username, code, newPassword });
+      if (res.success) return {};
+      return { error: res.msg ?? 'Reset failed' };
+    } catch {
+      return { error: 'Unable to connect to the server' };
+    }
+  }
+
   logout(): void {
     this.clearToken();
   }

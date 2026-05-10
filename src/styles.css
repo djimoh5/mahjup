@@ -32,6 +32,7 @@ body {
 .custom-table th.center { text-align: center; }
 
 .col-cat    { width: 11rem; }
+.col-jokers { width: 5rem; }
 .col-result { width: 7rem; }
 .col-pts    { width: 6rem; }
 .col-opp    { width: 11rem; }

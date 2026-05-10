@@ -39,6 +39,7 @@ function makeRecord(partial: Partial<GameRecord> = {}): GameRecord {
     date,
     category: '',
     hand: '',
+    jokers: 0,
     winner: '',
     score: 0,
     participants: [],

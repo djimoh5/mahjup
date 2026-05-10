@@ -44,19 +44,24 @@ export default function GameCardMobile({ record, sessionPlayers, usersMap, onUpd
   return (
     <Paper elevation={1} variant="outlined">
       {/* Summary row */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1, flexWrap: 'wrap' }}>
-        <Typography variant="body2" sx={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {record.category && <Typography component="span" variant="body2" color="text.secondary">{record.category} · </Typography>}
-          {record.hand || <Typography component="em" variant="body2" color="text.disabled">No hand</Typography>}
-        </Typography>
-        {record.score > 0 && (
-          <Chip label={record.score} size="small" color={record.winner ? 'success' : 'default'} />
-        )}
-        {record.winner && (
-          <Chip label={`W: ${resolveDisplayName(record.winner, usersMap)}`} size="small" color="success" variant="outlined" />
-        )}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1 }}>
+        <Box sx={{ flex: 1, overflowX: 'auto', display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+          <Typography variant="body2" sx={{ whiteSpace: 'nowrap' }}>
+            {record.category && <Typography component="span" variant="body2" color="text.secondary">{record.category} · </Typography>}
+            {record.hand || <Typography component="em" variant="body2" color="text.disabled">No hand</Typography>}
+          </Typography>
+          {record.score > 0 && (
+            <Chip label={record.score} size="small" color={record.winner ? 'success' : 'default'} />
+          )}
+          {(record.jokers ?? 0) > 0 && (
+            <Chip label={`${record.jokers}J`} size="small" variant="outlined" />
+          )}
+          {record.winner && (
+            <Chip label={`W: ${resolveDisplayName(record.winner, usersMap)}`} size="small" color="success" variant="outlined" />
+          )}
+        </Box>
         {!isEditing && (
-          <IconButton size="small" onClick={() => setIsEditing(true)} aria-label="Edit">
+          <IconButton size="small" onClick={() => setIsEditing(true)} aria-label="Edit" sx={{ flexShrink: 0 }}>
             <PencilIcon style={{ width: '1rem', height: '1rem' }} />
           </IconButton>
         )}
@@ -78,6 +83,11 @@ export default function GameCardMobile({ record, sessionPlayers, usersMap, onUpd
               <MenuItem value=""><em>Choose hand…</em></MenuItem>
               {categoryHands.map(item => <MenuItem key={item.h} value={item.h}>{item.h}</MenuItem>)}
             </Select>
+
+            <TextField label="Jokers" type="number" size="small" value={record.jokers ?? 0}
+              onChange={e => onUpdate({ jokers: Math.max(0, parseInt(e.target.value) || 0) })}
+              inputProps={{ min: 0, max: 9 }}
+              sx={{ width: '8rem' }} />
 
             <Select value={record.winner} size="small" fullWidth displayEmpty
               onChange={e => onUpdate({ winner: e.target.value })}>

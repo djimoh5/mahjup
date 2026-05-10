@@ -346,6 +346,7 @@ export default function SessionGroup({
                   <tr>
                     <th className="col-cat">Winning Category</th>
                     <th>Winning Hand</th>
+                    <th className="center col-jokers">Jokers</th>
                     <th className="center col-result">Winner</th>
                     <th className="center col-pts">Points</th>
                     <th className="col-opp">Players</th>

@@ -234,8 +234,8 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
           }}
         >
           <Tab label="My Tracker" value="tracker" />
-          <Tab label="2026 NMJL Reference" value="hands" />
-          <Tab label="Summary Insights" value="summary" />
+          <Tab label="Card Reference" value="hands" />
+          <Tab label="Summary" value="summary" />
         </Tabs>
       </Box>
 
