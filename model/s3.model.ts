@@ -13,7 +13,7 @@ export interface S3Object {
 }
 
 export interface RawDocument {
-    content: string | Buffer;
+    content: string | Uint8Array;
     filename: string;
     contentType: string;
     contentLength: number;

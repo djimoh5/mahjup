@@ -86,7 +86,7 @@ export default function GameCardMobile({ record, sessionPlayers, usersMap, onUpd
 
             <TextField label="Jokers" type="number" size="small" value={record.jokers ?? 0}
               onChange={e => onUpdate({ jokers: Math.max(0, parseInt(e.target.value) || 0) })}
-              inputProps={{ min: 0, max: 9 }}
+              slotProps={{ htmlInput: { min: 0, max: 9 } }}
               sx={{ width: '8rem' }} />
 
             <Select value={record.winner} size="small" fullWidth displayEmpty

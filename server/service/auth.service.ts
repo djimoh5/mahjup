@@ -109,9 +109,14 @@ export class AuthService extends BaseService {
         const email: Email = {
             to: [username],
             subject: 'Your MahjUp login code',
-            html: `<div style="text-align: center; font-size: 16px;">Your one-time login code is: <strong>${code}</strong><br><br>This code expires in 5 minutes.</div>`
+            html: `<div style="font-size: 16px;">
+                <img src="https://s3.us-east-1.amazonaws.com/mahjup.release/assets/mahjup-logo.png" style="width: 200px" /><br><br>
+                Your one-time login code is: <strong>${code}</strong><br><br>
+                This code expires in 5 minutes.
+            </div>`
         };
-        this.emailService.sendEmail(email, auth.oid as string);
+
+        await this.emailService.sendEmail(email, auth.oid as string);
 
         return new ApiResponse(true, null, 'If an account exists, a code has been sent.');
     }
@@ -162,10 +167,14 @@ export class AuthService extends BaseService {
         const email: Email = {
             to: [username],
             subject: 'Reset your MahjUp password',
-            html: `<div style="font-size: 16px;">Your password reset code is: <strong>${code}</strong><br><br>This code expires in 5 minutes. If you did not request a password reset, you can ignore this email.</div>`
+            html: `<div style="font-size: 16px;">
+                <img src="https://s3.us-east-1.amazonaws.com/mahjup.release/assets/mahjup-logo.png" style="width: 200px" /><br><br>
+                Your password reset code is: <strong>${code}</strong><br><br>
+                This code expires in 5 minutes. If you did not request a password reset, you can ignore this email.
+            </div>`
         };
 
-        this.emailService.sendEmail(email, auth.oid as string);
+        await this.emailService.sendEmail(email, auth.oid as string);
 
         return new ApiResponse(true, null, 'If an account exists, a reset code has been sent.');
     }
@@ -234,7 +243,12 @@ export class AuthService extends BaseService {
         const email: Email = {
             to: [username],
             subject: "You've been invited to MahjUp!",
-            html: `<div style="text-align: center; font-size: 16px;">You've been invited to join a session on MahjUp!<br><br>Click the link below to get started.<br><a href="${Config.APP_URL}/invite?code=${inviteCode}">Accept Invite</a></div>`
+            html: `<div style="text-align: center; font-size: 16px;">
+                <img src="https://s3.us-east-1.amazonaws.com/mahjup.release/assets/mahjup-logo.png" style="width: 200px" /><br><br>
+                You've been invited to join a session on MahjUp!<br><br>
+                Click the link below to get started.<br>
+                <a href="${Config.APP_URL}/invite?code=${inviteCode}">Accept Invite</a>
+            </div>`
         };
         
         await this.emailService.sendEmail(email, invitedBy);

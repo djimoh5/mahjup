@@ -1,5 +1,5 @@
 import { uniqueid } from "../../model/id.model";
-const { v4: uuidv4 } = require('uuid');
+import { v4 as uuidv4 } from 'uuid';
 
 declare const md5: any;
 declare const jaroDistance: any;
@@ -476,7 +476,7 @@ export class Common {
     }
 
 	static uniqueId(): uniqueid {
-		return uuidv4();
+		return uuidv4() as uniqueid;
     }
 
     static uniqueMd5(data?: string) {
@@ -484,7 +484,7 @@ export class Common {
     }
 
     static base64Encode(text: string) {
-        return Buffer.from(text).toString('base64');
+        return btoa(text);
     }
     
     static pad(width: number, content: any, pad = '0'){

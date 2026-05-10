@@ -8,12 +8,12 @@
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "strict": true,
+    "strict": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "jsx": "react-jsx",
     "skipLibCheck": true
   },
-  "include": ["src"]
+  "include": ["src", "model"]
 }

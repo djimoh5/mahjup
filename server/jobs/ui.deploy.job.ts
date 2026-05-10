@@ -23,7 +23,8 @@ export class UIDeployJob extends Job {
     };
 
     excludedFiles = [
-        'favicon.ico'
+        'favicon.ico',
+        'assets/mahjup-logo.png'
     ];
 
     ignoreAssets = false;
@@ -155,7 +156,7 @@ export class UIDeployJob extends Job {
     }
 
     private async invalidateCloudFrontCache(distributionId: string) {
-        const files = ['/', '/index.html', '/favicon.ico'];
+        const files = ['/', '/index.html', '/favicon.ico', '/assets/*'];
 
         const res = await this.cloudFrontService.invalidateCache(distributionId, files);
 

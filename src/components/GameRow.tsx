@@ -60,7 +60,7 @@ export default function GameRow({ record, sessionPlayers, usersMap, onUpdate, on
         <td className="center">
           <TextField type="number" size="small" value={record.jokers ?? 0}
             onChange={e => onUpdate({ jokers: Math.max(0, parseInt(e.target.value) || 0) })}
-            inputProps={{ min: 0, max: 9, style: { textAlign: 'center' } }}
+            slotProps={{ htmlInput: { min: 0, max: 9, style: { textAlign: 'center' } } }}
             sx={{ width: '4rem' }} />
         </td>
         <td className="center">

@@ -8,13 +8,13 @@ else
     echo "Version $version"
 fi
 
-sh ./npm-install.sh
-
 #update version numbers
-cd deploy
-skipFlag="${3:-noSkip}"
+#cd deploy
+#skipFlag="${3:-noSkip}"
 #sh ./version.build.sh build-versions/build-version-$version.txt core $skipFlag
 cd ../
+
+sh ./npm-install.sh
 
 echo "Transpiling started..."
 tsc -p server
