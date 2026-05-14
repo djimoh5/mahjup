@@ -75,6 +75,7 @@ export default function SessionGroup({
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteError, setInviteError] = useState('');
+  const [inviteFromGameOid, setInviteFromGameOid] = useState<string | null>(null);
 
   function handleOpenEdit() {
     setEditTitle(session.title ?? '');
@@ -99,6 +100,11 @@ export default function SessionGroup({
     setIsEditing(false);
   }
 
+  function handleGameInvite(gameOid: string) {
+    setInviteFromGameOid(gameOid);
+    setInviteOpen(true);
+  }
+
   async function handleInviteConfirm() {
     if (!inviteEmail.trim()) return;
     setInviteLoading(true);
@@ -110,8 +116,22 @@ export default function SessionGroup({
       return;
     }
     const newUser: UserSummary = { oid: oid as authid, username: inviteEmail.trim() };
-    setEditPlayers(prev => [...prev, oid]);
     onUserAdded(newUser);
+    if (inviteFromGameOid) {
+      if (!session.players.includes(oid as authid)) {
+        onUpdateSession({ players: [...session.players, oid] as authid[] });
+      }
+      const game = games.find(g => g.oid === inviteFromGameOid);
+      if (game) {
+        const updatedParticipants = game.participants.includes(oid)
+          ? game.participants
+          : [...game.participants, oid];
+        onUpdate(inviteFromGameOid, { winner: oid, participants: updatedParticipants });
+      }
+      setInviteFromGameOid(null);
+    } else {
+      setEditPlayers(prev => [...prev, oid]);
+    }
     setInviteEmail('');
     setInviteOpen(false);
   }
@@ -336,6 +356,7 @@ export default function SessionGroup({
                   usersMap={usersMap}
                   onUpdate={(patch, skipSave) => onUpdate(game.oid, patch, skipSave)}
                   onDelete={() => onDelete(game.oid)}
+                  onInvitePlayer={() => handleGameInvite(game.oid)}
                 />
               ))}
             </Stack>
@@ -362,6 +383,7 @@ export default function SessionGroup({
                       usersMap={usersMap}
                       onUpdate={(patch, skipSave) => onUpdate(game.oid, patch, skipSave)}
                       onDelete={() => onDelete(game.oid)}
+                      onInvitePlayer={() => handleGameInvite(game.oid)}
                     />
                   ))}
                 </tbody>
@@ -372,7 +394,7 @@ export default function SessionGroup({
       )}
 
       {/* Invite dialog */}
-      <Dialog open={inviteOpen} onClose={() => { setInviteOpen(false); setInviteEmail(''); setInviteError(''); }} maxWidth="xs" fullWidth>
+      <Dialog open={inviteOpen} onClose={() => { setInviteOpen(false); setInviteEmail(''); setInviteError(''); setInviteFromGameOid(null); }} maxWidth="xs" fullWidth>
         <DialogTitle>Invite new player</DialogTitle>
         <DialogContent>
           <TextField
@@ -389,7 +411,7 @@ export default function SessionGroup({
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => { setInviteOpen(false); setInviteEmail(''); setInviteError(''); }}>
+          <Button onClick={() => { setInviteOpen(false); setInviteEmail(''); setInviteError(''); setInviteFromGameOid(null); }}>
             Cancel
           </Button>
           <Button

@@ -19,9 +19,10 @@ interface GameRowProps {
   usersMap: Record<string, UserSummary>;
   onUpdate: (patch: Partial<GameRecord>, skipSave?: boolean) => void;
   onDelete: () => void;
+  onInvitePlayer: () => void;
 }
 
-export default function GameRow({ record, sessionPlayers, usersMap, onUpdate, onDelete }: GameRowProps) {
+export default function GameRow({ record, sessionPlayers, usersMap, onUpdate, onDelete, onInvitePlayer }: GameRowProps) {
   const categoryHands = handData[record.category] ?? [];
 
   function handleCategoryChange(cat: string) {
@@ -66,8 +67,15 @@ export default function GameRow({ record, sessionPlayers, usersMap, onUpdate, on
         </td>
         <td className="center">
           <Select value={record.winner} size="small" fullWidth displayEmpty
-            onChange={e => onUpdate({ winner: e.target.value })}>
+            onChange={e => {
+              if (e.target.value === '__invite__') {
+                onInvitePlayer();
+              } else {
+                onUpdate({ winner: e.target.value });
+              }
+            }}>
             <MenuItem value=""><em>Winner…</em></MenuItem>
+            <MenuItem value="__invite__" sx={{ color: 'primary.main', fontWeight: 500 }}>+ Invite new player…</MenuItem>
             {sessionPlayers.map(p => <MenuItem key={p} value={p}>{resolveDisplayName(p, usersMap)}</MenuItem>)}
           </Select>
         </td>

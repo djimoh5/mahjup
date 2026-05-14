@@ -17,6 +17,7 @@ import { Email } from '../../model/email.model';
 import { PasswordUtility } from '../../utility/password.utility';
 import { Config } from '../config/config';
 import { Common } from '../../utility/common';
+import { authid } from '../../model/id.model';
 
 const bcrypt = require('bcrypt');
 const speakeasy = require('speakeasy');
@@ -220,7 +221,7 @@ export class AuthService extends BaseService {
         return new ApiResponse(true, null, 'Password has been reset successfully.');
     }
 
-    async invite(username: string, invitedBy: string): Promise<ApiResponse<{ oid: string }>> {
+    async invite(username: string, invitedBy: authid, invitedByName: string): Promise<ApiResponse<{ oid: string }>> {
         const auth = await this.authRepository.getByUsername(username);
         if (auth && !auth.virtual) {
             return new ApiResponse(false, null, 'user already exists');
@@ -250,12 +251,17 @@ export class AuthService extends BaseService {
         }
         await this.inviteRepository.save(invite);
 
+        const inviter = await this.userProfileRepository.getByAuthOid(invitedBy);
+        if(inviter && (inviter.firstName || inviter.lastName)) {
+            invitedByName = `${inviter.firstName || ''} ${inviter.lastName || ''} (${invitedByName})`;
+        }
+
         const email: Email = {
             to: [username],
             subject: "You've been invited to MahjUp!",
             html: `<div style="text-align: center; font-size: 16px;">
                 <img src="https://s3.us-east-1.amazonaws.com/mahjup.release/assets/mahjup-logo.png" style="width: 200px" /><br><br>
-                You've been invited to join a session on MahjUp!<br><br>
+                ${invitedByName} has invited you to join a session on MahjUp!<br><br>
                 Click the link below to get started.<br>
                 <a href="${Config.APP_URL}/invite?code=${inviteCode}">Accept Invite</a>
             </div>`

@@ -25,9 +25,10 @@ interface GameCardMobileProps {
   usersMap: Record<string, UserSummary>;
   onUpdate: (patch: Partial<GameRecord>, skipSave?: boolean) => void;
   onDelete: () => void;
+  onInvitePlayer: () => void;
 }
 
-export default function GameCardMobile({ record, sessionPlayers, usersMap, onUpdate, onDelete }: GameCardMobileProps) {
+export default function GameCardMobile({ record, sessionPlayers, usersMap, onUpdate, onDelete, onInvitePlayer }: GameCardMobileProps) {
   const [isEditing, setIsEditing] = useState(false);
   const categoryHands = handData[record.category] ?? [];
 
@@ -90,8 +91,15 @@ export default function GameCardMobile({ record, sessionPlayers, usersMap, onUpd
               sx={{ width: '8rem' }} />
 
             <Select value={record.winner} size="small" fullWidth displayEmpty
-              onChange={e => onUpdate({ winner: e.target.value })}>
+              onChange={e => {
+                if (e.target.value === '__invite__') {
+                  onInvitePlayer();
+                } else {
+                  onUpdate({ winner: e.target.value });
+                }
+              }}>
               <MenuItem value=""><em>Select winner…</em></MenuItem>
+              <MenuItem value="__invite__" sx={{ color: 'primary.main', fontWeight: 500 }}>+ Invite new player…</MenuItem>
               {sessionPlayers.map(p => <MenuItem key={p} value={p}>{resolveDisplayName(p, usersMap)}</MenuItem>)}
             </Select>
 

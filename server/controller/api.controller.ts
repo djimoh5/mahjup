@@ -9,7 +9,7 @@ import { UserProfileService } from '../service/user-profile.service';
 
 import { ApiResponse } from '../../model/shared.model';
 import { UserAuth } from '../../model/auth.model';
-import { AuthId } from '../../model/id.model';
+import { authid, AuthId } from '../../model/id.model';
 
 @Injectable()
 @Bootstrap()
@@ -147,7 +147,7 @@ export class APIController extends BaseController {
 		if (!username) {
 			return this.sendError(res, 'username is required');
 		}
-		const data = await this.authService.invite(username, req.session.user.oid);
+		const data = await this.authService.invite(username, <authid>req.session.user.oid, req.session.user.username);
 		res.send(data);
 	}
 
