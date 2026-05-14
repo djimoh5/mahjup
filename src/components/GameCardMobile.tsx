@@ -85,10 +85,11 @@ export default function GameCardMobile({ record, sessionPlayers, usersMap, onUpd
               {categoryHands.map(item => <MenuItem key={item.h} value={item.h}>{item.h}</MenuItem>)}
             </Select>
 
-            <TextField label="Jokers" type="number" size="small" value={record.jokers ?? 0}
-              onChange={e => onUpdate({ jokers: Math.max(0, parseInt(e.target.value) || 0) })}
-              slotProps={{ htmlInput: { min: 0, max: 9 } }}
-              sx={{ width: '8rem' }} />
+            <Select value={record.jokers ?? 0} size="small" displayEmpty
+              onChange={e => onUpdate({ jokers: Number(e.target.value) })}
+              sx={{ width: '8rem' }}>
+              {[0,1,2,3,4,5,6,7,8].map(n => <MenuItem key={n} value={n}>{n} Joker{n !== 1 ? 's' : ''}</MenuItem>)}
+            </Select>
 
             <Select value={record.winner} size="small" fullWidth displayEmpty
               onChange={e => {
