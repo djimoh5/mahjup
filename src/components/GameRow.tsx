@@ -1,29 +1,42 @@
+import { useState } from 'react';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
+import ListSubheader from '@mui/material/ListSubheader';
 import TextField from '@mui/material/TextField';
-
 import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
 import Chip from '@mui/material/Chip';
 import Box from '@mui/material/Box';
 import { handData } from '../data/hands';
 import type { GameRecord } from '../../model/game.model';
 import type { UserSummary } from '../../model/user.model';
-import { TrashIcon } from './icons/Icons';
+import { TrashIcon, NotesIcon } from './icons/Icons';
 import { resolveDisplayName } from '../utils/user';
 
 interface GameRowProps {
   record: GameRecord;
   sessionPlayers: string[];
+  users: UserSummary[];
   usersMap: Record<string, UserSummary>;
   onUpdate: (patch: Partial<GameRecord>, skipSave?: boolean) => void;
   onDelete: () => void;
   onInvitePlayer: () => void;
+  onAddExistingPlayer: (oid: string) => void;
 }
 
-export default function GameRow({ record, sessionPlayers, usersMap, onUpdate, onDelete, onInvitePlayer }: GameRowProps) {
+export default function GameRow({ record, sessionPlayers, users, usersMap, onUpdate, onDelete, onInvitePlayer, onAddExistingPlayer }: GameRowProps) {
+  const [notesOpen, setNotesOpen] = useState(!!record.notes);
   const categoryHands = handData[record.category] ?? [];
+
+  const sessionSet = new Set(sessionPlayers);
+  const sessionSorted = [...sessionPlayers].sort((a, b) =>
+    resolveDisplayName(a, usersMap).localeCompare(resolveDisplayName(b, usersMap))
+  );
+  const otherUsersSorted = users
+    .filter(u => !sessionSet.has(u.oid))
+    .sort((a, b) => resolveDisplayName(a.oid, usersMap).localeCompare(resolveDisplayName(b.oid, usersMap)));
 
   function handleCategoryChange(cat: string) {
     onUpdate({ category: cat, hand: '', score: 0 });
@@ -39,6 +52,16 @@ export default function GameRow({ record, sessionPlayers, usersMap, onUpdate, on
       ? [...record.participants, player]
       : record.participants.filter(p => p !== player);
     onUpdate({ participants: updated });
+  }
+
+  function handleWinnerChange(val: string) {
+    if (val === '__invite__') {
+      onInvitePlayer();
+    } else if (!sessionSet.has(val)) {
+      onAddExistingPlayer(val);
+    } else {
+      onUpdate({ winner: val });
+    }
   }
 
   return (
@@ -67,16 +90,13 @@ export default function GameRow({ record, sessionPlayers, usersMap, onUpdate, on
         </td>
         <td className="center">
           <Select value={record.winner} size="small" fullWidth displayEmpty
-            onChange={e => {
-              if (e.target.value === '__invite__') {
-                onInvitePlayer();
-              } else {
-                onUpdate({ winner: e.target.value });
-              }
-            }}>
-            <MenuItem value=""><em>Winner…</em></MenuItem>
+            renderValue={val => val ? resolveDisplayName(val as string, usersMap) : <em>Winner…</em>}
+            onChange={e => handleWinnerChange(e.target.value)}>
             <MenuItem value="__invite__" sx={{ color: 'primary.main', fontWeight: 500 }}>+ Invite new player…</MenuItem>
-            {sessionPlayers.map(p => <MenuItem key={p} value={p}>{resolveDisplayName(p, usersMap)}</MenuItem>)}
+            {sessionSorted.length > 0 && <ListSubheader sx={{ fontWeight: 700, fontSize: '0.8rem' }}>In Session</ListSubheader>}
+            {sessionSorted.map(p => <MenuItem key={p} value={p}>{resolveDisplayName(p, usersMap)}</MenuItem>)}
+            {otherUsersSorted.length > 0 && <ListSubheader sx={{ fontWeight: 700, fontSize: '0.8rem' }}>All Players</ListSubheader>}
+            {otherUsersSorted.map(u => <MenuItem key={u.oid} value={u.oid}>{resolveDisplayName(u.oid, usersMap)}</MenuItem>)}
           </Select>
         </td>
         <td>
@@ -94,19 +114,29 @@ export default function GameRow({ record, sessionPlayers, usersMap, onUpdate, on
           </Box>
         </td>
         <td className="center">
-          <IconButton size="small" onClick={onDelete} color="error" aria-label="Delete">
-            <TrashIcon style={{ width: '1rem', height: '1rem' }} />
-          </IconButton>
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.25 }}>
+            <Tooltip title="Add notes">
+              <IconButton size="small" onClick={() => setNotesOpen(o => !o)}
+                color={notesOpen ? 'primary' : 'default'} aria-label="Notes">
+                <NotesIcon style={{ width: '1rem', height: '1rem' }} />
+              </IconButton>
+            </Tooltip>
+            <IconButton size="small" onClick={onDelete} color="error" aria-label="Delete">
+              <TrashIcon style={{ width: '1rem', height: '1rem' }} />
+            </IconButton>
+          </Box>
         </td>
       </tr>
-      <tr className="notes-row">
-        <td colSpan={7}>
-          <TextField multiline rows={2} fullWidth size="small" placeholder="Notes…"
-            value={record.notes}
-            onChange={e => onUpdate({ notes: e.target.value }, true)}
-            onBlur={() => onUpdate({})} />
-        </td>
-      </tr>
+      {notesOpen && (
+        <tr className="notes-row">
+          <td colSpan={7}>
+            <TextField multiline rows={2} fullWidth size="small" placeholder="Notes…"
+              value={record.notes}
+              onChange={e => onUpdate({ notes: e.target.value }, true)}
+              onBlur={() => onUpdate({})} />
+          </td>
+        </tr>
+      )}
     </>
   );
 }

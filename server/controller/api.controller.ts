@@ -56,6 +56,7 @@ export class APIController extends BaseController {
 			data = await this.authService.authenticate(req.session.user.username, null, false, true);
 		}
 		else if (req.body) {
+			console.log(req.body);
 			data = await this.authService.authenticate(req.body.username, req.body.password);
 		}
 

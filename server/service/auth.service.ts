@@ -86,6 +86,7 @@ export class AuthService extends BaseService {
         if (!auth || auth.virtual) {
             return new ApiResponse(false, null, 'username or password incorrect');
         }
+        
         const valid = bypassPassword || await bcrypt.compare(password, auth.password);
         if (!valid) {
             return new ApiResponse(false, null, 'username or password incorrect');
@@ -222,33 +223,18 @@ export class AuthService extends BaseService {
     }
 
     async invite(username: string, invitedBy: authid, invitedByName: string): Promise<ApiResponse<{ oid: string }>> {
-        const auth = await this.authRepository.getByUsername(username);
-        if (auth && !auth.virtual) {
-            return new ApiResponse(false, null, 'user already exists');
-        }
-
-        let userAuth: UserAuth;
-        if (!auth) {
+        let userAuth = await this.authRepository.getByUsername(username);
+        
+        if (!userAuth) {
             userAuth = new UserAuth(username, '');
             userAuth.virtual = true;
             await this.authRepository.update(userAuth);
-        } else {
-            userAuth = auth;
         }
 
         const inviteCode = Common.uniqueId();
-        const inviteExpiry = Date.now() + 7 * 24 * 60 * 60 * 1000;
+        const inviteExpiry = Date.now() + (7 * 24 * 60 * 60 * 1000);
 
-        const existing = await this.inviteRepository.getByUsername(username);
-        let invite: Invite;
-        if (existing) {
-            existing.inviteCode = inviteCode;
-            existing.inviteExpiry = inviteExpiry;
-            existing.invitedBy = invitedBy;
-            invite = existing;
-        } else {
-            invite = new Invite(username, inviteCode, inviteExpiry, invitedBy);
-        }
+        const invite = new Invite(username, inviteCode, inviteExpiry, invitedBy);
         await this.inviteRepository.save(invite);
 
         const inviter = await this.userProfileRepository.getByAuthOid(invitedBy);
@@ -258,7 +244,7 @@ export class AuthService extends BaseService {
 
         const email: Email = {
             to: [username],
-            subject: "You've been invited to MahjUp!",
+            subject: "You've been invited to a game on MahjUp!",
             html: `<div style="text-align: center; font-size: 16px;">
                 <img src="https://s3.us-east-1.amazonaws.com/mahjup.release/assets/mahjup-logo.png" style="width: 200px" /><br><br>
                 ${invitedByName} has invited you to join a session on MahjUp!<br><br>

@@ -5,6 +5,7 @@ import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
+import ListSubheader from '@mui/material/ListSubheader';
 import TextField from '@mui/material/TextField';
 import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
@@ -22,15 +23,25 @@ import { resolveDisplayName } from '../utils/user';
 interface GameCardMobileProps {
   record: GameRecord;
   sessionPlayers: string[];
+  users: UserSummary[];
   usersMap: Record<string, UserSummary>;
   onUpdate: (patch: Partial<GameRecord>, skipSave?: boolean) => void;
   onDelete: () => void;
   onInvitePlayer: () => void;
+  onAddExistingPlayer: (oid: string) => void;
 }
 
-export default function GameCardMobile({ record, sessionPlayers, usersMap, onUpdate, onDelete, onInvitePlayer }: GameCardMobileProps) {
+export default function GameCardMobile({ record, sessionPlayers, users, usersMap, onUpdate, onDelete, onInvitePlayer, onAddExistingPlayer }: GameCardMobileProps) {
   const [isEditing, setIsEditing] = useState(false);
   const categoryHands = handData[record.category] ?? [];
+
+  const sessionSet = new Set(sessionPlayers);
+  const sessionSorted = [...sessionPlayers].sort((a, b) =>
+    resolveDisplayName(a, usersMap).localeCompare(resolveDisplayName(b, usersMap))
+  );
+  const otherUsersSorted = users
+    .filter(u => !sessionSet.has(u.oid))
+    .sort((a, b) => resolveDisplayName(a.oid, usersMap).localeCompare(resolveDisplayName(b.oid, usersMap)));
 
   function handleCategoryChange(cat: string) { onUpdate({ category: cat, hand: '', score: 0 }); }
   function handleHandChange(hand: string) {
@@ -40,6 +51,15 @@ export default function GameCardMobile({ record, sessionPlayers, usersMap, onUpd
   function handleParticipantToggle(player: string, checked: boolean) {
     const updated = checked ? [...record.participants, player] : record.participants.filter(p => p !== player);
     onUpdate({ participants: updated });
+  }
+  function handleWinnerChange(val: string) {
+    if (val === '__invite__') {
+      onInvitePlayer();
+    } else if (!sessionSet.has(val)) {
+      onAddExistingPlayer(val);
+    } else {
+      onUpdate({ winner: val });
+    }
   }
 
   return (
@@ -92,16 +112,13 @@ export default function GameCardMobile({ record, sessionPlayers, usersMap, onUpd
             </Select>
 
             <Select value={record.winner} size="small" fullWidth displayEmpty
-              onChange={e => {
-                if (e.target.value === '__invite__') {
-                  onInvitePlayer();
-                } else {
-                  onUpdate({ winner: e.target.value });
-                }
-              }}>
-              <MenuItem value=""><em>Select winner…</em></MenuItem>
+              renderValue={val => val ? resolveDisplayName(val as string, usersMap) : <em>Select winner…</em>}
+              onChange={e => handleWinnerChange(e.target.value)}>
               <MenuItem value="__invite__" sx={{ color: 'primary.main', fontWeight: 500 }}>+ Invite new player…</MenuItem>
-              {sessionPlayers.map(p => <MenuItem key={p} value={p}>{resolveDisplayName(p, usersMap)}</MenuItem>)}
+              {sessionSorted.length > 0 && <ListSubheader sx={{ fontWeight: 700, fontSize: '0.8rem' }}>In Session</ListSubheader>}
+              {sessionSorted.map(p => <MenuItem key={p} value={p}>{resolveDisplayName(p, usersMap)}</MenuItem>)}
+              {otherUsersSorted.length > 0 && <ListSubheader sx={{ fontWeight: 700, fontSize: '0.8rem' }}>All Players</ListSubheader>}
+              {otherUsersSorted.map(u => <MenuItem key={u.oid} value={u.oid}>{resolveDisplayName(u.oid, usersMap)}</MenuItem>)}
             </Select>
 
             {sessionPlayers.length > 0 && (

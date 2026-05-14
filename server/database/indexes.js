@@ -1,1 +1,1 @@
-db.auth.createIndex({ username: 1 }, { unique: true });
+db.user_auth.createIndex({ username: 1 }, { unique: true });

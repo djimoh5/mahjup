@@ -105,6 +105,19 @@ export default function SessionGroup({
     setInviteOpen(true);
   }
 
+  function handleAddExistingPlayer(gameOid: string, playerOid: string) {
+    if (!session.players.includes(playerOid as authid)) {
+      onUpdateSession({ players: [...session.players, playerOid] as authid[] });
+    }
+    const game = games.find(g => g.oid === gameOid);
+    if (game) {
+      const updatedParticipants = game.participants.includes(playerOid)
+        ? game.participants
+        : [...game.participants, playerOid];
+      onUpdate(gameOid, { winner: playerOid, participants: updatedParticipants });
+    }
+  }
+
   async function handleInviteConfirm() {
     if (!inviteEmail.trim()) return;
     setInviteLoading(true);
@@ -314,7 +327,7 @@ export default function SessionGroup({
                     </li>
                   );
                 }}
-                renderInput={params => <TextField {...params} placeholder="Search players…" />}
+                renderInput={params => <TextField {...params} placeholder="Add players to this session" />}
               />
             </Box>
 
@@ -353,10 +366,12 @@ export default function SessionGroup({
                   key={game.oid}
                   record={game}
                   sessionPlayers={session.players}
+                  users={users}
                   usersMap={usersMap}
                   onUpdate={(patch, skipSave) => onUpdate(game.oid, patch, skipSave)}
                   onDelete={() => onDelete(game.oid)}
                   onInvitePlayer={() => handleGameInvite(game.oid)}
+                  onAddExistingPlayer={oid => handleAddExistingPlayer(game.oid, oid)}
                 />
               ))}
             </Stack>
@@ -380,10 +395,12 @@ export default function SessionGroup({
                       key={game.oid}
                       record={game}
                       sessionPlayers={session.players}
+                      users={users}
                       usersMap={usersMap}
                       onUpdate={(patch, skipSave) => onUpdate(game.oid, patch, skipSave)}
                       onDelete={() => onDelete(game.oid)}
                       onInvitePlayer={() => handleGameInvite(game.oid)}
+                      onAddExistingPlayer={oid => handleAddExistingPlayer(game.oid, oid)}
                     />
                   ))}
                 </tbody>
