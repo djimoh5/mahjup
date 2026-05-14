@@ -133,7 +133,7 @@ export class AuthService extends BaseService {
             secret: loginCode.secret,
             encoding: 'base32',
             token: code,
-            window: 1
+            window: 10
         });
 
         if (!isValid) {
@@ -164,6 +164,8 @@ export class AuthService extends BaseService {
 
         await this.loginCodeRepository.save(new LoginCode(username, secret.base32, LoginCodePurpose.PasswordReset));
 
+        console.log(code, secret.base32);
+        
         const email: Email = {
             to: [username],
             subject: 'Reset your MahjUp password',
@@ -183,6 +185,8 @@ export class AuthService extends BaseService {
         const EXPIRY_MS = 5 * 60 * 1000;
         const loginCode = await this.loginCodeRepository.getByUsernameForReset(username);
 
+        console.log(loginCode, Date.now() - loginCode.createdAt, EXPIRY_MS);
+
         if (!loginCode || (Date.now() - loginCode.createdAt) > EXPIRY_MS) {
             return new ApiResponse(false, null, 'Invalid or expired code.');
         }
@@ -191,16 +195,22 @@ export class AuthService extends BaseService {
             secret: loginCode.secret,
             encoding: 'base32',
             token: code,
-            window: 1
+            window: 10
         });
+
+        console.log('isValid', isValid);
 
         if (!isValid) {
             return new ApiResponse(false, null, 'Invalid or expired code.');
         }
 
+        console.log('newPassword', newPassword);
+
         if (!PasswordUtility.isPasswordSecure(newPassword)) {
             return new ApiResponse(false, null, PasswordUtility.insecurePasswordMessage(newPassword));
         }
+
+        console.log('done', newPassword);
 
         loginCode.used = true;
         await this.loginCodeRepository.save(loginCode);

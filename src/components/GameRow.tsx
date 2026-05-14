@@ -58,10 +58,11 @@ export default function GameRow({ record, sessionPlayers, usersMap, onUpdate, on
           </Select>
         </td>
         <td className="center">
-          <TextField type="number" size="small" value={record.jokers ?? 0}
-            onChange={e => onUpdate({ jokers: Math.max(0, parseInt(e.target.value) || 0) })}
-            slotProps={{ htmlInput: { min: 0, max: 9, style: { textAlign: 'center' } } }}
-            sx={{ width: '4rem' }} />
+          <Select value={record.jokers ?? 0} size="small"
+            onChange={e => onUpdate({ jokers: Number(e.target.value) })}
+            sx={{ width: '4rem' }}>
+            {[0,1,2,3,4,5,6,7,8].map(n => <MenuItem key={n} value={n}>{n}</MenuItem>)}
+          </Select>
         </td>
         <td className="center">
           <Select value={record.winner} size="small" fullWidth displayEmpty

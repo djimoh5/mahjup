@@ -18,6 +18,6 @@ export class LoginCodeRepository extends BaseRepository {
     }
 
     save(loginCode: LoginCode): Promise<LoginCode> {
-        return this.context.update( { username: loginCode.username }, loginCode, null, { upsert: true });
+        return this.context.update( { username: loginCode.username, used: false, purpose: loginCode.purpose }, loginCode, null, { upsert: true });
     }
 }

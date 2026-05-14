@@ -325,7 +325,7 @@ export default function AuthScreen({ onAuthenticated }: Props) {
                   size="small"
                   sx={{ color: 'text.secondary', fontWeight: 500, fontSize: '0.8rem', px: 0, textTransform: 'none', '&:hover': { background: 'transparent', color: 'primary.main' } }}
                 >
-                  Forgot your password?
+                  Forgot password?
                 </Button>
                 <Button
                   type="button"
@@ -333,7 +333,7 @@ export default function AuthScreen({ onAuthenticated }: Props) {
                   size="small"
                   sx={{ color: 'text.secondary', fontWeight: 500, fontSize: '0.8rem', px: 0, textTransform: 'none', '&:hover': { background: 'transparent', color: 'primary.main' } }}
                 >
-                  Sign in without a password
+                  Get a sign-in code
                 </Button>
               </Box>
             )}
