@@ -44,15 +44,19 @@ const statCards = [
 ];
 
 export default function SummaryTab({ records, currentUserOid }: SummaryTabProps) {
-  const valid = records.filter(d => d.category);
-  const wins = valid.filter(d => d.winner === currentUserOid);
+  const valid = records.filter(d => d.players?.some(p => p.userId === currentUserOid));
+  const wins = valid.filter(d => d.players.some(p => p.isWinner && p.userId === currentUserOid));
   const total = valid.length;
-  const points = wins.reduce((acc, d) => acc + d.score, 0);
+  const points = wins.reduce((acc, d) => {
+    const myWin = d.players.find(p => p.isWinner && p.userId === currentUserOid);
+    return acc + (myWin?.score ?? 0);
+  }, 0);
   const winRate = total > 0 ? `${Math.round((wins.length / total) * 100)}%` : '0%';
 
   const counts: Record<string, number> = {};
   valid.forEach(d => {
-    counts[d.category] = (counts[d.category] ?? 0) + 1;
+    const mine = d.players.find(p => p.userId === currentUserOid);
+    if (mine?.category) counts[mine.category] = (counts[mine.category] ?? 0) + 1;
   });
 
   const values = { total, winRate, points };

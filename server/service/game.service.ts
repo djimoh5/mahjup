@@ -15,8 +15,14 @@ export class GameService extends BaseService {
 
     async getByUser(userId: string): Promise<ApiResponse<GameRecord[]>> {
         const sessions = await this.mahjSessionRepository.getByUser(userId);
-        const records = await this.gameRepository.getBySessions(sessions.map(s => s.oid));
-        return new ApiResponse(true, records ?? []);
+        const recordsBySessions = await this.gameRepository.getBySessions(sessions.map(s => s.oid));
+        const recordsByParticipation = await this.gameRepository.getByParticipant(userId);
+        const existingOids = new Set(recordsBySessions.map(r => r.oid as string));
+        const merged = [...(recordsBySessions ?? [])];
+        for (const r of (recordsByParticipation ?? [])) {
+            if (!existingOids.has(r.oid as string)) merged.push(r);
+        }
+        return new ApiResponse(true, merged);
     }
 
     async save(record: GameRecord, userId: string): Promise<ApiResponse<GameRecord>> {

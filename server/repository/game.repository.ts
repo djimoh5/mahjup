@@ -21,6 +21,10 @@ export class GameRepository extends BaseRepository {
         return this.context.find({ sessionId: { $in: sessionId } });
     }
 
+    getByParticipant(userId: string): Promise<GameRecord[]> {
+        return this.context.find({ 'players.userId': userId });
+    }
+
     save(record: GameRecord): Promise<GameRecord> {
         return super.updateObject(record);
     }

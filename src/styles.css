@@ -16,7 +16,7 @@ body {
 .custom-table {
   width: 100%;
   border-collapse: separate;
-  border-spacing: 0 4px;
+  border-spacing: 0;
 }
 
 .custom-table th {
@@ -33,40 +33,19 @@ body {
 
 .col-cat    { width: 11rem; }
 .col-jokers { width: 5rem; }
-.col-result { width: 7rem; }
-.col-pts    { width: 6rem; }
-.col-opp    { width: 11rem; }
-.col-del    { width: 2.5rem; }
-
-.custom-table tr.data-row {
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
-  background: rgba(255, 255, 255, 0.88);
-}
-
-.custom-table tr.data-row:hover {
-  box-shadow: 0 4px 12px -2px rgba(13, 74, 47, 0.1);
-}
 
 .custom-table td {
   padding: 8px;
-  border-top: 1px solid rgba(242, 171, 164, 0.55);
-  border-bottom: 1px solid rgba(242, 171, 164, 0.55);
+  border-bottom: 1px solid rgba(242, 171, 164, 0.4);
 }
 
-.custom-table td:first-child {
-  border-left: 1px solid rgba(242, 171, 164, 0.55);
-  border-radius: 8px 0 0 8px;
-}
-
-.custom-table td:last-child {
-  border-right: 1px solid rgba(242, 171, 164, 0.55);
-  border-radius: 0 8px 8px 0;
+.custom-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .custom-table td.center { text-align: center; }
 
 .custom-table tr.notes-row td {
-  border: none;
-  border-radius: 0;
-  padding: 5px;
+  border-bottom: 1px solid rgba(242, 171, 164, 0.3);
+  padding: 5px 8px;
 }

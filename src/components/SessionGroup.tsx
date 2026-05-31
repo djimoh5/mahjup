@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
@@ -7,7 +7,6 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
-import Autocomplete from '@mui/material/Autocomplete';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -27,24 +26,18 @@ import { resolveDisplayName } from '../utils/user';
 interface SessionGroupProps {
   session: MahjSession;
   games: GameRecord[];
+  isExpanded: boolean;
+  onToggle: () => void;
+  onExpand: () => void;
   initialEditing?: boolean;
   users: UserSummary[];
   usersMap: Record<string, UserSummary>;
-  currentUserOid: string;
   onAddGame: () => void;
   onUpdate: (id: string, patch: Partial<GameRecord>, skipSave?: boolean) => void;
   onDelete: (id: string) => void;
   onUpdateSession: (patch: Partial<MahjSession>) => void;
   onDeleteSession: () => void;
   onUserAdded: (newUser: UserSummary) => void;
-}
-
-const INVITE_SENTINEL: UserSummary = { oid: '__invite__' as authid, username: '__invite__' };
-
-function userDisplayLabel(u: UserSummary): string {
-  if (u.firstName || u.lastName)
-    return [u.firstName, u.lastName].filter(Boolean).join(' ');
-  return u.username;
 }
 
 function formatDateTime(dt: string): string {
@@ -60,12 +53,25 @@ function formatDateTime(dt: string): string {
 }
 
 export default function SessionGroup({
-  session, games, initialEditing, users, usersMap, currentUserOid,
+  session, games, isExpanded, onToggle, onExpand, initialEditing, users, usersMap,
   onAddGame, onUpdate, onDelete, onUpdateSession, onDeleteSession, onUserAdded,
 }: SessionGroupProps) {
   const isMobile = useIsMobile();
-  const [isExpanded, setIsExpanded] = useState(true);
   const [isEditing, setIsEditing] = useState(initialEditing ?? false);
+
+  const [expandedGameId, setExpandedGameId] = useState<string | null>(
+    () => games.find(g => g.players.length === 0)?.oid ?? null
+  );
+
+  const prevGamesRef = useRef(games);
+  useEffect(() => {
+    if (games.length > prevGamesRef.current.length) {
+      const prevIds = new Set(prevGamesRef.current.map(g => g.oid));
+      const newGame = games.find(g => !prevIds.has(g.oid));
+      if (newGame) setExpandedGameId(newGame.oid);
+    }
+    prevGamesRef.current = games;
+  }, [games]);
 
   const [editTitle, setEditTitle] = useState(session.title ?? '');
   const [editDateTime, setEditDateTime] = useState(session.dateTime);
@@ -75,9 +81,10 @@ export default function SessionGroup({
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteError, setInviteError] = useState('');
-  const [inviteFromGameOid, setInviteFromGameOid] = useState<string | null>(null);
+  const [pendingInviteCallback, setPendingInviteCallback] = useState<((userId: string) => void) | null>(null);
 
   function handleOpenEdit() {
+    onExpand();
     setEditTitle(session.title ?? '');
     setEditDateTime(session.dateTime);
     setEditPlayers([...session.players]);
@@ -100,22 +107,16 @@ export default function SessionGroup({
     setIsEditing(false);
   }
 
-  function handleGameInvite(gameOid: string) {
-    setInviteFromGameOid(gameOid);
+  function handleInviteOpen(cb: (userId: string) => void) {
+    setPendingInviteCallback(() => cb);
     setInviteOpen(true);
   }
 
-  function handleAddExistingPlayer(gameOid: string, playerOid: string) {
-    if (!session.players.includes(playerOid as authid)) {
-      onUpdateSession({ players: [...session.players, playerOid] as authid[] });
-    }
-    const game = games.find(g => g.oid === gameOid);
-    if (game) {
-      const updatedParticipants = game.participants.includes(playerOid)
-        ? game.participants
-        : [...game.participants, playerOid];
-      onUpdate(gameOid, { winner: playerOid, participants: updatedParticipants });
-    }
+  function handleInviteClose() {
+    setInviteOpen(false);
+    setInviteEmail('');
+    setInviteError('');
+    setPendingInviteCallback(null);
   }
 
   async function handleInviteConfirm() {
@@ -130,28 +131,15 @@ export default function SessionGroup({
     }
     const newUser: UserSummary = { oid: oid as authid, username: inviteEmail.trim() };
     onUserAdded(newUser);
-    if (inviteFromGameOid) {
-      if (!session.players.includes(oid as authid)) {
-        onUpdateSession({ players: [...session.players, oid] as authid[] });
-      }
-      const game = games.find(g => g.oid === inviteFromGameOid);
-      if (game) {
-        const updatedParticipants = game.participants.includes(oid)
-          ? game.participants
-          : [...game.participants, oid];
-        onUpdate(inviteFromGameOid, { winner: oid, participants: updatedParticipants });
-      }
-      setInviteFromGameOid(null);
+    if (pendingInviteCallback) {
+      pendingInviteCallback(oid);
+      setPendingInviteCallback(null);
     } else {
       setEditPlayers(prev => [...prev, oid]);
     }
     setInviteEmail('');
     setInviteOpen(false);
   }
-
-  const selectedUsers: UserSummary[] = editPlayers.map(
-    oid => usersMap[oid] ?? { oid: oid as authid, username: oid }
-  );
 
   return (
     <Paper sx={{ borderRadius: '1rem', overflow: 'hidden', border: '1px solid rgba(242,171,164,0.55)' }}>
@@ -169,7 +157,7 @@ export default function SessionGroup({
       >
         <IconButton
           size="small"
-          onClick={() => setIsExpanded(prev => !prev)}
+          onClick={onToggle}
           aria-label={isExpanded ? 'Collapse' : 'Expand'}
           sx={{ color: 'text.secondary', flexShrink: 0 }}
         >
@@ -206,7 +194,7 @@ export default function SessionGroup({
                 variant="contained"
                 color="primary"
                 size="small"
-                onClick={onAddGame}
+                onClick={() => { onExpand(); onAddGame(); }}
                 startIcon={<PlusIcon style={{ width: '0.875rem', height: '0.875rem' }} />}
                 sx={{ borderRadius: '0.5rem', fontSize: '0.8125rem', py: '0.375rem', px: '0.75rem' }}
               >
@@ -280,57 +268,6 @@ export default function SessionGroup({
               />
             </Box>
 
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-              <Typography sx={{ fontSize: '0.8125rem', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                Players
-              </Typography>
-              <Autocomplete
-                multiple
-                options={users}
-                value={selectedUsers}
-                getOptionLabel={u => u.oid === '__invite__' ? '+ Invite new player…' : userDisplayLabel(u)}
-                isOptionEqualToValue={(option, value) => option.oid === value.oid}
-                filterOptions={(options, state) => {
-                  const filtered = options.filter(u => {
-                    const name = [u.firstName, u.lastName, u.username].filter(Boolean).join(' ').toLowerCase();
-                    return name.includes(state.inputValue.toLowerCase());
-                  });
-                  return [...filtered, INVITE_SENTINEL];
-                }}
-                onChange={(_, selected) => {
-                  if (selected.some(u => u.oid === '__invite__')) {
-                    setInviteOpen(true);
-                  } else {
-                    setEditPlayers(selected.map(u => u.oid as string));
-                  }
-                }}
-                renderOption={(props, option) => {
-                  if (option.oid === '__invite__') {
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    const { key: _k, ...rest } = props as React.HTMLAttributes<HTMLLIElement> & { key?: unknown };
-                    return (
-                      <li key="__invite__" {...rest} style={{ color: '#2e5e42', fontWeight: 500 }}>
-                        + Invite new player…
-                      </li>
-                    );
-                  }
-                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                  const { key: _k, ...rest } = props as React.HTMLAttributes<HTMLLIElement> & { key?: unknown };
-                  return (
-                    <li key={option.oid} {...rest}>
-                      {userDisplayLabel(option)}
-                      {option.oid === currentUserOid && (
-                        <Typography component="span" sx={{ ml: 1, fontSize: '0.75rem', color: 'text.secondary' }}>
-                          (me)
-                        </Typography>
-                      )}
-                    </li>
-                  );
-                }}
-                renderInput={params => <TextField {...params} placeholder="Add players to this session" />}
-              />
-            </Box>
-
             <Stack direction="row" spacing={1} sx={{ pt: 0.5 }}>
               <Button variant="contained" color="primary" onClick={handleSave}>
                 Save Session
@@ -370,48 +307,33 @@ export default function SessionGroup({
                   usersMap={usersMap}
                   onUpdate={(patch, skipSave) => onUpdate(game.oid, patch, skipSave)}
                   onDelete={() => onDelete(game.oid)}
-                  onInvitePlayer={() => handleGameInvite(game.oid)}
-                  onAddExistingPlayer={oid => handleAddExistingPlayer(game.oid, oid)}
+                  onInvitePlayer={handleInviteOpen}
                 />
               ))}
             </Stack>
           ) : (
-            <div className="table-wrapper">
-              <table className="custom-table">
-                <thead>
-                  <tr>
-                    <th className="col-cat">Winning Category</th>
-                    <th>Winning Hand</th>
-                    <th className="center col-jokers">Jokers</th>
-                    <th className="center col-result">Winner</th>
-                    <th className="center col-pts">Points</th>
-                    <th className="col-opp">Players</th>
-                    <th className="col-del"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {games.map(game => (
-                    <GameRow
-                      key={game.oid}
-                      record={game}
-                      sessionPlayers={session.players}
-                      users={users}
-                      usersMap={usersMap}
-                      onUpdate={(patch, skipSave) => onUpdate(game.oid, patch, skipSave)}
-                      onDelete={() => onDelete(game.oid)}
-                      onInvitePlayer={() => handleGameInvite(game.oid)}
-                      onAddExistingPlayer={oid => handleAddExistingPlayer(game.oid, oid)}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Stack spacing={1}>
+              {games.map(game => (
+                <GameRow
+                  key={game.oid}
+                  record={game}
+                  isExpanded={expandedGameId === game.oid}
+                  onToggle={() => setExpandedGameId(id => id === game.oid ? null : game.oid)}
+                  sessionPlayers={session.players}
+                  users={users}
+                  usersMap={usersMap}
+                  onUpdate={(patch, skipSave) => onUpdate(game.oid, patch, skipSave)}
+                  onDelete={() => onDelete(game.oid)}
+                  onInvitePlayer={handleInviteOpen}
+                />
+              ))}
+            </Stack>
           )}
         </Box>
       )}
 
       {/* Invite dialog */}
-      <Dialog open={inviteOpen} onClose={() => { setInviteOpen(false); setInviteEmail(''); setInviteError(''); setInviteFromGameOid(null); }} maxWidth="xs" fullWidth>
+      <Dialog open={inviteOpen} onClose={handleInviteClose} maxWidth="xs" fullWidth>
         <DialogTitle>Invite new player</DialogTitle>
         <DialogContent>
           <TextField
@@ -428,9 +350,7 @@ export default function SessionGroup({
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => { setInviteOpen(false); setInviteEmail(''); setInviteError(''); setInviteFromGameOid(null); }}>
-            Cancel
-          </Button>
+          <Button onClick={handleInviteClose}>Cancel</Button>
           <Button
             variant="contained"
             onClick={handleInviteConfirm}

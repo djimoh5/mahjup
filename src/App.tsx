@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
-import type { GameRecord } from '../model/game.model';
+import type { GameRecord, PlayerHand } from '../model/game.model';
 import type { MahjSession } from '../model/mahj-session.model';
 import type { UserSummary } from '../model/user.model';
 import { UniqueId } from '../model/id.model';
@@ -37,13 +37,7 @@ function makeRecord(partial: Partial<GameRecord> = {}): GameRecord {
     oid: UniqueId(crypto.randomUUID()),
     sessionId: '',
     date,
-    category: '',
-    hand: '',
-    jokers: 0,
-    winner: '',
-    score: 0,
-    participants: [],
-    notes: '',
+    players: [],
     ...partial,
   };
 }
@@ -81,7 +75,7 @@ export default function App() {
       userService.getAll().catch(() => ({ users: [] as UserSummary[] })),
     ]).then(([{ sessions: fetchedSessions }, { records: fetchedRecords }, { users: fetchedUsers }]) => {
       setSessions(fetchedSessions);
-      setRecords(fetchedRecords);
+      setRecords(fetchedRecords.map(r => ({ ...r, players: r.players ?? [] })));
       setUsers(fetchedUsers);
     }).catch(() => {}).finally(() => {
       setIsLoadingRecords(false);
@@ -114,8 +108,8 @@ export default function App() {
   }
 
   async function addSession() {
-    const newSession = makeSession({ players: [user!.oid] });
-    const firstGame = makeRecord({ sessionId: newSession.oid, participants: newSession.players, date: newSession.dateTime.split('T')[0] });
+    const newSession = makeSession();
+    const firstGame = makeRecord({ sessionId: newSession.oid, date: newSession.dateTime.split('T')[0] });
     setSessions(prev => [newSession, ...prev]);
     setRecords(prev => [firstGame, ...prev]);
     setNewestSessionId(newSession.oid);
@@ -136,8 +130,14 @@ export default function App() {
     await mahjSessionService.remove(oid);
   }
 
-  async function addRecord(sessionId: string, sessionPlayers: string[], sessionDate: string) {
-    const newRecord = makeRecord({ sessionId, participants: sessionPlayers, date: sessionDate });
+  async function addRecord(sessionId: string, _sessionPlayers: string[], sessionDate: string) {
+    const prevGame = records.filter(r => r.sessionId === sessionId).find(r => r.players.length > 0);
+    const copiedPlayers: PlayerHand[] = prevGame
+      ? prevGame.players
+          .filter(p => p.userId)
+          .map(p => ({ userId: p.userId, category: '', hand: '', jokers: 0, isWinner: false, score: 0 }))
+      : [];
+    const newRecord = makeRecord({ sessionId, date: sessionDate, players: copiedPlayers });
     setRecords(prev => [newRecord, ...prev]);
     await gameService.save(newRecord);
   }
@@ -203,7 +203,6 @@ export default function App() {
             newestSessionId={newestSessionId}
             users={users}
             usersMap={usersMap}
-            currentUserOid={user!.oid}
             onAddSession={addSession}
             onUpdateSession={updateSession}
             onDeleteSession={deleteSession}

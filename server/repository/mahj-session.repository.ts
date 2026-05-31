@@ -17,6 +17,10 @@ export class MahjSessionRepository extends BaseRepository {
         return this.context.find({ $or: [{ userId }, { players: userId }] });
     }
 
+    getByOids(oids: string[]): Promise<MahjSession[]> {
+        return this.context.find({ oid: { $in: oids } });
+    }
+
     save(session: MahjSession): Promise<MahjSession> {
         return super.updateObject(session);
     }

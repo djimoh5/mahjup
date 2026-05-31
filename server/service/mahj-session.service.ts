@@ -17,8 +17,15 @@ export class MahjSessionService extends BaseService {
     }
 
     async getByUser(userId: string): Promise<ApiResponse<MahjSession[]>> {
-        const sessions = await this.mahjSessionRepository.getByUser(userId);
-        return new ApiResponse(true, sessions ?? []);
+        const sessionsByMembership = await this.mahjSessionRepository.getByUser(userId);
+        const gamesByParticipation = await this.gameRepository.getByParticipant(userId);
+        const participantSessionIds = [...new Set(gamesByParticipation.map(g => g.sessionId))];
+        const membershipOids = new Set(sessionsByMembership.map(s => s.oid as string));
+        const missingIds = participantSessionIds.filter(id => !membershipOids.has(id));
+        const sessionsByParticipation = missingIds.length > 0
+            ? await this.mahjSessionRepository.getByOids(missingIds)
+            : [];
+        return new ApiResponse(true, [...(sessionsByMembership ?? []), ...sessionsByParticipation]);
     }
 
     async save(session: MahjSession, userId: string): Promise<ApiResponse<MahjSession>> {

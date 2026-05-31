@@ -55,6 +55,21 @@ export function NotesIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+export function TrophyIcon({ filled, ...props }: React.SVGProps<SVGSVGElement> & { filled?: boolean }) {
+  return filled ? (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+      width="1em" height="1em" {...props}>
+      <path d="M11.25 3v2.25H6.75A.75.75 0 006 6v2.25c0 2.9 2.1 5.306 4.875 5.768V15H9a.75.75 0 000 1.5h6a.75.75 0 000-1.5h-1.875v-1.482C15.9 13.556 18 11.15 18 8.25V6a.75.75 0 00-.75-.75h-4.5V3a.75.75 0 00-1.5 0zM6 19.5a.75.75 0 000 1.5h12a.75.75 0 000-1.5H6z" />
+    </svg>
+  ) : (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+      stroke="currentColor" width="1em" height="1em" {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+        d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-4.5A3.75 3.75 0 0012 10.5a3.75 3.75 0 00-3.75 3.75v4.5m11.25-9A2.25 2.25 0 0021.75 7.5V6h-3.75M3 7.5A2.25 2.25 0 005.25 9.75M5.25 9.75V6H9M9 3h6M9 3v3m6-3v3" />
+    </svg>
+  );
+}
+
 export function CheckCircleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"

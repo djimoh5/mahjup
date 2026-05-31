@@ -1,142 +1,170 @@
-import { useState } from 'react';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import ListSubheader from '@mui/material/ListSubheader';
-import TextField from '@mui/material/TextField';
-import Checkbox from '@mui/material/Checkbox';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
-import Chip from '@mui/material/Chip';
+import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import Chip from '@mui/material/Chip';
+import Divider from '@mui/material/Divider';
 import { handData } from '../data/hands';
-import type { GameRecord } from '../../model/game.model';
+import type { GameRecord, PlayerHand } from '../../model/game.model';
 import type { UserSummary } from '../../model/user.model';
-import { TrashIcon, NotesIcon } from './icons/Icons';
+import { TrashIcon, PlusIcon, TrophyIcon, ChevronDownIcon } from './icons/Icons';
+import PlayerHandRow from './PlayerHandRow';
 import { resolveDisplayName } from '../utils/user';
 
 interface GameRowProps {
   record: GameRecord;
+  isExpanded: boolean;
+  onToggle: () => void;
   sessionPlayers: string[];
   users: UserSummary[];
   usersMap: Record<string, UserSummary>;
   onUpdate: (patch: Partial<GameRecord>, skipSave?: boolean) => void;
   onDelete: () => void;
-  onInvitePlayer: () => void;
-  onAddExistingPlayer: (oid: string) => void;
+  onInvitePlayer: (cb: (userId: string) => void) => void;
 }
 
-export default function GameRow({ record, sessionPlayers, users, usersMap, onUpdate, onDelete, onInvitePlayer, onAddExistingPlayer }: GameRowProps) {
-  const [notesOpen, setNotesOpen] = useState(!!record.notes);
-  const categoryHands = handData[record.category] ?? [];
+export default function GameRow({ record, isExpanded, onToggle, sessionPlayers, users, usersMap, onUpdate, onDelete, onInvitePlayer }: GameRowProps) {
 
-  const sessionSet = new Set(sessionPlayers);
-  const sessionSorted = [...sessionPlayers].sort((a, b) =>
-    resolveDisplayName(a, usersMap).localeCompare(resolveDisplayName(b, usersMap))
-  );
-  const otherUsersSorted = users
-    .filter(u => !sessionSet.has(u.oid))
-    .sort((a, b) => resolveDisplayName(a.oid, usersMap).localeCompare(resolveDisplayName(b.oid, usersMap)));
+  const winner = record.players.find(p => p.isWinner);
+  const winnerName = winner?.userId ? resolveDisplayName(winner.userId, usersMap) : null;
 
-  function handleCategoryChange(cat: string) {
-    onUpdate({ category: cat, hand: '', score: 0 });
+  function handlePlayerUpdate(idx: number, patch: Partial<PlayerHand>, skipSave?: boolean) {
+    const updated = record.players.map((p, i) => i === idx ? { ...p, ...patch } : p);
+    onUpdate({ players: updated }, skipSave);
   }
 
-  function handleHandChange(hand: string) {
-    const match = handData[record.category]?.find(item => item.h === hand);
-    onUpdate({ hand, score: match ? match.v : 0 });
+  function handleWinnerSelect(idx: number) {
+    const updated = record.players.map((p, i) => {
+      if (i !== idx) return { ...p, isWinner: false };
+      const match = p.category && p.hand ? handData[p.category]?.find(item => item.h === p.hand) : null;
+      return { ...p, isWinner: true, score: match?.v ?? p.score };
+    });
+    onUpdate({ players: updated });
   }
 
-  function handleParticipantToggle(player: string, checked: boolean) {
-    const updated = checked
-      ? [...record.participants, player]
-      : record.participants.filter(p => p !== player);
-    onUpdate({ participants: updated });
+  function handleDeletePlayer(idx: number) {
+    onUpdate({ players: record.players.filter((_, i) => i !== idx) });
   }
 
-  function handleWinnerChange(val: string) {
-    if (val === '__invite__') {
-      onInvitePlayer();
-    } else if (!sessionSet.has(val)) {
-      onAddExistingPlayer(val);
-    } else {
-      onUpdate({ winner: val });
-    }
+  function handleAddPlayer() {
+    const newPlayer: PlayerHand = { userId: '', category: '', hand: '', jokers: 0, isWinner: false, score: 0 };
+    onUpdate({ players: [...record.players, newPlayer] });
   }
+
+  const usedUserIds = record.players.map(p => p.userId).filter(Boolean);
 
   return (
-    <>
-      <tr className="data-row">
-        <td>
-          <Select value={record.category} size="small" fullWidth displayEmpty
-            onChange={e => handleCategoryChange(e.target.value)}>
-            <MenuItem value=""><em>Select…</em></MenuItem>
-            {Object.keys(handData).map(cat => <MenuItem key={cat} value={cat}>{cat}</MenuItem>)}
-          </Select>
-        </td>
-        <td>
-          <Select value={record.hand} size="small" fullWidth displayEmpty
-            onChange={e => handleHandChange(e.target.value)}>
-            <MenuItem value=""><em>Choose Hand</em></MenuItem>
-            {categoryHands.map(item => <MenuItem key={item.h} value={item.h}>{item.h}</MenuItem>)}
-          </Select>
-        </td>
-        <td className="center">
-          <Select value={record.jokers ?? 0} size="small"
-            onChange={e => onUpdate({ jokers: Number(e.target.value) })}
-            sx={{ width: '4rem' }}>
-            {[0,1,2,3,4,5,6,7,8].map(n => <MenuItem key={n} value={n}>{n}</MenuItem>)}
-          </Select>
-        </td>
-        <td className="center">
-          <Select value={record.winner} size="small" fullWidth displayEmpty
-            renderValue={val => val ? resolveDisplayName(val as string, usersMap) : <em>Winner…</em>}
-            onChange={e => handleWinnerChange(e.target.value)}>
-            <MenuItem value="__invite__" sx={{ color: 'primary.main', fontWeight: 500 }}>+ Invite new player…</MenuItem>
-            {sessionSorted.length > 0 && <ListSubheader sx={{ fontWeight: 700, fontSize: '0.8rem' }}>In Session</ListSubheader>}
-            {sessionSorted.map(p => <MenuItem key={p} value={p}>{resolveDisplayName(p, usersMap)}</MenuItem>)}
-            {otherUsersSorted.length > 0 && <ListSubheader sx={{ fontWeight: 700, fontSize: '0.8rem' }}>All Players</ListSubheader>}
-            {otherUsersSorted.map(u => <MenuItem key={u.oid} value={u.oid}>{resolveDisplayName(u.oid, usersMap)}</MenuItem>)}
-          </Select>
-        </td>
-        <td>
-          <Chip label={record.score} size="small" color={record.winner ? 'success' : 'default'} />
-        </td>
-        <td>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: .5 }}>
-            {sessionPlayers.map(player => (
-              <FormControlLabel key={player} label={resolveDisplayName(player, usersMap)} sx={{ mr: 0, marginLeft: "2px" }}
-                control={
-                  <Checkbox size="small" checked={record.participants.includes(player)}
-                    onChange={e => handleParticipantToggle(player, e.target.checked)} />
-                } />
-            ))}
+    <Paper elevation={0} variant="outlined" sx={{ borderRadius: '0.75rem', overflow: 'hidden' }}>
+      {/* Summary header */}
+      <Box
+        onClick={onToggle}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          px: 2,
+          py: 1.25,
+          cursor: 'pointer',
+          userSelect: 'none',
+          '&:hover': { background: 'rgba(0,0,0,0.02)' },
+        }}
+      >
+        <Box sx={{ flex: 1, overflowX: 'auto', display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+          {winner ? (
+            <>
+              <TrophyIcon filled style={{ width: '0.875rem', height: '0.875rem', color: '#c9920a', flexShrink: 0 }} />
+              <Typography variant="body2" sx={{ whiteSpace: 'nowrap', fontWeight: 600 }}>{winnerName}</Typography>
+              {winner.hand && (
+                <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+                  · {winner.hand}
+                </Typography>
+              )}
+              {winner.score > 0 && (
+                <Chip label={`${winner.score}pts`} size="small" color="success" sx={{ fontWeight: 700 }} />
+              )}
+            </>
+          ) : (
+            <Typography variant="body2" color="text.disabled">
+              <em>{record.players.length > 0 ? 'No winner set' : 'No players'}</em>
+            </Typography>
+          )}
+          {record.players.length > 0 && (
+            <Chip
+              label={`${record.players.length} player${record.players.length !== 1 ? 's' : ''}`}
+              size="small"
+              variant="outlined"
+            />
+          )}
+        </Box>
+        <ChevronDownIcon
+          style={{
+            width: '1rem',
+            height: '1rem',
+            flexShrink: 0,
+            transition: 'transform 0.2s',
+            transform: isExpanded ? 'none' : 'rotate(-90deg)',
+          }}
+        />
+      </Box>
+
+      {isExpanded && (
+        <>
+          <Divider />
+          <Box sx={{ px: 1, pt: 0.5, pb: 1 }}>
+            <div className="table-wrapper">
+              <table className="custom-table">
+                <thead>
+                  <tr>
+                    <th>Player</th>
+                    <th className="col-cat">Hand Category</th>
+                    <th>Hand</th>
+                    <th className="center col-jokers">Jokers</th>
+                    <th className="center">Winner</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {record.players.map((playerHand, idx) => (
+                    <PlayerHandRow
+                      key={idx}
+                      playerHand={playerHand}
+                      isOnlyRow={record.players.length === 1}
+                      sessionPlayers={sessionPlayers}
+                      usedUserIds={usedUserIds}
+                      users={users}
+                      usersMap={usersMap}
+                      onUpdate={(patch, skipSave) => handlePlayerUpdate(idx, patch, skipSave)}
+                      onDelete={() => handleDeletePlayer(idx)}
+                      onWinnerSelect={() => handleWinnerSelect(idx)}
+                      onInvitePlayer={onInvitePlayer}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 1, pt: 0.5 }}>
+              <Button
+                size="small"
+                startIcon={<PlusIcon style={{ width: '0.875rem', height: '0.875rem' }} />}
+                onClick={handleAddPlayer}
+                sx={{ fontSize: '0.75rem', color: 'primary.main', fontWeight: 600, px: 1 }}
+              >
+                Add Player
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                color="error"
+                onClick={onDelete}
+                startIcon={<TrashIcon style={{ width: '0.875rem', height: '0.875rem' }} />}
+                sx={{ fontSize: '0.75rem' }}
+              >
+                Delete Game
+              </Button>
+            </Box>
           </Box>
-        </td>
-        <td className="center">
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.25 }}>
-            <Tooltip title="Add notes">
-              <IconButton size="small" onClick={() => setNotesOpen(o => !o)}
-                color={notesOpen ? 'primary' : 'default'} aria-label="Notes">
-                <NotesIcon style={{ width: '1rem', height: '1rem' }} />
-              </IconButton>
-            </Tooltip>
-            <IconButton size="small" onClick={onDelete} color="error" aria-label="Delete">
-              <TrashIcon style={{ width: '1rem', height: '1rem' }} />
-            </IconButton>
-          </Box>
-        </td>
-      </tr>
-      {notesOpen && (
-        <tr className="notes-row">
-          <td colSpan={7}>
-            <TextField multiline rows={2} fullWidth size="small" placeholder="Notes…"
-              value={record.notes}
-              onChange={e => onUpdate({ notes: e.target.value }, true)}
-              onBlur={() => onUpdate({})} />
-          </td>
-        </tr>
+        </>
       )}
-    </>
+    </Paper>
   );
 }

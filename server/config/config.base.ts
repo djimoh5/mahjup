@@ -23,7 +23,7 @@ export class BaseConfig {
         tag: 'mahjong',
         from: 'no-reply@mahjup.ai',
         fromName: 'MahjUp',
-        admin: ['deji@secondfriday.ai']
+        admin: ['jetrjimoh@gmail.com']
     }
 
     static RATE_LIMIT = {

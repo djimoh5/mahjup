@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
@@ -13,7 +14,6 @@ interface TrackerTabProps {
   newestSessionId: string | null;
   users: UserSummary[];
   usersMap: Record<string, UserSummary>;
-  currentUserOid: string;
   onAddSession: () => void;
   onUpdateSession: (oid: string, patch: Partial<MahjSession>) => void;
   onDeleteSession: (oid: string) => void;
@@ -24,10 +24,18 @@ interface TrackerTabProps {
 }
 
 export default function TrackerTab({
-  sessions, records, newestSessionId, users, usersMap, currentUserOid,
+  sessions, records, newestSessionId, users, usersMap,
   onAddSession, onUpdateSession, onDeleteSession,
   onAddGame, onUpdate, onDelete, onUserAdded,
 }: TrackerTabProps) {
+  const [expandedSessionId, setExpandedSessionId] = useState<string | null>(
+    () => sessions[0]?.oid ?? null
+  );
+
+  useEffect(() => {
+    if (newestSessionId) setExpandedSessionId(newestSessionId);
+  }, [newestSessionId]);
+
   return (
     <>
       <Box
@@ -75,10 +83,12 @@ export default function TrackerTab({
               key={session.oid}
               session={session}
               games={sessionGames}
+              isExpanded={expandedSessionId === session.oid}
+              onToggle={() => setExpandedSessionId(id => id === session.oid ? null : session.oid)}
+              onExpand={() => setExpandedSessionId(session.oid)}
               initialEditing={session.oid === newestSessionId}
               users={users}
               usersMap={usersMap}
-              currentUserOid={currentUserOid}
               onAddGame={() => onAddGame(session.oid, session.players, sessionDate)}
               onUpdate={onUpdate}
               onDelete={onDelete}
