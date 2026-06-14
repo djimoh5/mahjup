@@ -118,9 +118,14 @@ export class APIController extends BaseController {
 		res.send(data);
 	}
 
-	@Get('user/list')
-	async getUserList(_req: Request, res: Response) {
-		const data = await this.authService.getUserList();
+	@Get('user/affiliated')
+	async getAffiliatedUsers(req: Request, res: Response) {
+		const userId = req.session.user.oid;
+		const { data: records } = await this.gameService.getByUser(userId);
+		const playerIds = [...new Set(
+			[userId, ...(records ?? []).flatMap(r => (r.players ?? []).map(p => p.userId)).filter(id => !!id)]
+		)];
+		const data = await this.authService.getUsersByOids(playerIds);
 		res.send(data);
 	}
 
@@ -134,7 +139,7 @@ export class APIController extends BaseController {
 	async updateProfile(req: Request, res: Response) {
 		const { firstName, lastName } = req.body;
 		if (!firstName || !lastName) {
-			return this.sendError(res, 'firstName and lastName are required');
+			return this.sendError(res, 'First name and last name are required');
 		}
 		const profileResult = await this.userProfileService.updateProfile(AuthId(req.session.user.oid), firstName, lastName);
 		if (!profileResult.success) return res.send(profileResult);

@@ -72,7 +72,7 @@ export default function App() {
     Promise.all([
       mahjSessionService.getAll(),
       gameService.getAll(),
-      userService.getAll().catch(() => ({ users: [] as UserSummary[] })),
+      userService.getAffiliated().catch(() => ({ users: [] as UserSummary[] })),
     ]).then(([{ sessions: fetchedSessions }, { records: fetchedRecords }, { users: fetchedUsers }]) => {
       setSessions(fetchedSessions);
       setRecords(fetchedRecords.map(r => ({ ...r, players: r.players ?? [] })));
@@ -86,6 +86,7 @@ export default function App() {
     () => Object.fromEntries(users.map(u => [u.oid, u])),
     [users]
   );
+
 
   function handleAuthenticated(u: AuthedUser) {
     setUser(u);

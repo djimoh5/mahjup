@@ -7,8 +7,8 @@ interface ApiResponse<T> {
 }
 
 export class UserService extends BaseService {
-  async getAll(): Promise<{ users: UserSummary[] }> {
-    const res = await this.get<ApiResponse<UserSummary[]>>('/user/list');
+  async getAffiliated(): Promise<{ users: UserSummary[] }> {
+    const res = await this.get<ApiResponse<UserSummary[]>>('/user/affiliated');
     return { users: res.data ?? [] };
   }
 }

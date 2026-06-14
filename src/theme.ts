@@ -3,8 +3,9 @@ import { createTheme } from '@mui/material/styles';
 const theme = createTheme({
   palette: {
     primary: { main: '#e8877a', dark: '#cf6e62', contrastText: '#fff' },
+    info: { main: '#e8877a', light: 'rgba(232,135,122,0.15)', dark: '#7a2e24', contrastText: '#fff' },
     text: { primary: '#0a2818', secondary: '#2e5e42' },
-    background: { paper: 'rgba(255,255,255,0.88)' },
+    background: { paper: 'rgba(255, 255, 255, 0.88)' },
     divider: 'rgba(242,171,164,0.55)',
   },
   typography: { fontFamily: '"Inter", sans-serif' },
@@ -76,6 +77,21 @@ const theme = createTheme({
           background: 'rgba(250,208,200,0.55)',
         },
         bar: { background: '#e8877a', borderRadius: 9999 },
+      },
+    },
+    MuiAlert: {
+      styleOverrides: {
+        root: ({ ownerState }: { ownerState: { severity?: string } }) =>
+          ownerState.severity === 'info' ? {
+            background: 'rgba(232,135,122,0.15)',
+            backdropFilter: 'none',
+            WebkitBackdropFilter: 'none',
+            border: '1px solid rgba(232,135,122,0.4)',
+            color: '#4a1810',
+            borderRadius: '0.75rem',
+          } : {},
+        icon: ({ ownerState }: { ownerState: { severity?: string } }) =>
+          ownerState.severity === 'info' ? { color: '#e8877a' } : {},
       },
     },
     MuiCheckbox: {

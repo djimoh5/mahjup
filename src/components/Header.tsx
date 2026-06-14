@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -55,12 +55,20 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
     day: 'numeric',
   });
 
+  const hasName = !!(user.profile?.firstName || user.profile?.lastName);
+
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const [accountOpen, setAccountOpen] = useState(false);
   const [firstName, setFirstName] = useState(user.profile?.firstName ?? '');
   const [lastName, setLastName] = useState(user.profile?.lastName ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!hasName) {
+      setAccountOpen(true);
+    }
+  }, []);
 
   function handleOpenMenu(e: React.MouseEvent<HTMLElement>) {
     setMenuAnchor(e.currentTarget);
@@ -240,8 +248,8 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
       </Box>
 
       {/* My Account dialog */}
-      <Dialog open={accountOpen} onClose={handleCloseAccount} maxWidth="xs" fullWidth>
-        <DialogTitle>My Account</DialogTitle>
+      <Dialog open={accountOpen} onClose={hasName ? handleCloseAccount : undefined} maxWidth="xs" fullWidth>
+        <DialogTitle>{hasName ? 'My Account' : 'Welcome to MahjUp! Enter your name'}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
             {error && <Alert severity="error">{error}</Alert>}
@@ -258,11 +266,14 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
               onChange={e => setLastName(e.target.value)}
               fullWidth
             />
+            {!hasName && (
+              <Alert severity="info">Please enter your name so others can identify you in games.</Alert>
+            )}
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseAccount} disabled={saving}>Cancel</Button>
-          <Button variant="contained" onClick={handleSaveAccount} disabled={saving}>
+          {hasName && <Button onClick={handleCloseAccount} disabled={saving}>Cancel</Button>}
+          <Button variant="contained" onClick={handleSaveAccount} disabled={saving || (!firstName.trim() && !lastName.trim())}>
             {saving ? 'Saving…' : 'Save'}
           </Button>
         </DialogActions>

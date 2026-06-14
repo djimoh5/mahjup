@@ -258,11 +258,11 @@ export class AuthService extends BaseService {
         return new ApiResponse(true, { oid: userAuth.oid as string });
     }
 
-    async getUserList(): Promise<ApiResponse<UserSummary[]>> {
-        const users = await this.authRepository.getAll();
-        const profile = await this.userProfileRepository.getByAuthOids(users.map(u => u.oid));
-        const profileMap = Common.arrayToHashTable(profile, 'authOid');
-
+    async getUsersByOids(oids: string[]): Promise<ApiResponse<UserSummary[]>> {
+        if (!oids.length) return new ApiResponse(true, []);
+        const users = await this.authRepository.getByOids(oids);
+        const profiles = await this.userProfileRepository.getByAuthOids(users.map(u => u.oid));
+        const profileMap = Common.arrayToHashTable(profiles, 'authOid');
         const summaries: UserSummary[] = users.map(u => ({
             oid: u.oid,
             username: u.username,

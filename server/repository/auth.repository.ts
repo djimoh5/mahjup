@@ -29,4 +29,8 @@ export class AuthRepository extends BaseRepository {
     getAll(): Promise<UserAuth[]> {
         return this.context.find({}, { password: 0 });
     }
+
+    getByOids(oids: string[]): Promise<UserAuth[]> {
+        return this.context.find({ oid: { $in: oids } }, { password: 0 });
+    }
 }
