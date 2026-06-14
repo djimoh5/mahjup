@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import type { GameRecord, PlayerHand } from '../model/game.model';
@@ -17,6 +18,18 @@ import ReferenceTab from './components/ReferenceTab';
 import SummaryTab from './components/SummaryTab';
 
 export type Tab = 'tracker' | 'hands' | 'summary';
+
+const TAB_PATHS: Record<Tab, string> = {
+  tracker: '/tracker',
+  hands: '/reference',
+  summary: '/summary',
+};
+
+const PATH_TO_TAB: Record<string, Tab> = {
+  '/tracker': 'tracker',
+  '/reference': 'hands',
+  '/summary': 'summary',
+};
 
 function makeSession(partial: Partial<MahjSession> = {}): MahjSession {
   const now = new Date();
@@ -43,6 +56,9 @@ function makeRecord(partial: Partial<GameRecord> = {}): GameRecord {
 }
 
 export default function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [inviteCode, setInviteCode] = useState<string | null>(() => {
     if (window.location.pathname === '/invite') {
       return new URLSearchParams(window.location.search).get('code');
@@ -56,8 +72,9 @@ export default function App() {
   const [records, setRecords] = useState<GameRecord[]>([]);
   const [users, setUsers] = useState<UserSummary[]>([]);
   const [isLoadingRecords, setIsLoadingRecords] = useState(false);
-  const [activeTab, setActiveTab] = useState<Tab>('tracker');
   const [newestSessionId, setNewestSessionId] = useState<string | null>(null);
+
+  const activeTab: Tab = PATH_TO_TAB[location.pathname] ?? 'tracker';
 
   useEffect(() => {
     authService.checkAuth().then(u => {
@@ -90,6 +107,9 @@ export default function App() {
 
   function handleAuthenticated(u: AuthedUser) {
     setUser(u);
+    if (!PATH_TO_TAB[location.pathname]) {
+      navigate('/tracker', { replace: true });
+    }
   }
 
   function handleUserUpdate(updated: AuthedUser) {
@@ -102,6 +122,7 @@ export default function App() {
     setSessions([]);
     setRecords([]);
     setUsers([]);
+    navigate('/', { replace: true });
   }
 
   function handleUserAdded(newUser: UserSummary) {
@@ -164,7 +185,6 @@ export default function App() {
       <InviteRedeemScreen
         code={inviteCode}
         onAuthenticated={u => {
-          window.history.replaceState({}, '', '/');
           setInviteCode(null);
           handleAuthenticated(u);
         }}
@@ -190,7 +210,7 @@ export default function App() {
     <Box sx={{ maxWidth: '80rem', mx: 'auto', minHeight: '100vh', display: 'flex', flexDirection: 'column', px: { xs: '0.75rem', md: '1.5rem' }, py: { xs: '0.75rem', md: '1.5rem' } }}>
       <Header
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={(tab) => navigate(TAB_PATHS[tab])}
         isSaving={false}
         user={user}
         onLogout={handleLogout}

@@ -1,4 +1,5 @@
 import * as express from 'express';
+import * as path from 'path';
 var cors = require('cors');
 import { BaseRouter } from './router/base.router';
 import { Config } from './config/config';
@@ -14,8 +15,10 @@ export class Server {
     private app: express.Application;
     private server: any;
     routesInitialized: boolean;
-    
+    private hasStaticContent: boolean;
+
     constructor(private router: BaseRouter, hasStaticContent: boolean = true) {
+        this.hasStaticContent = hasStaticContent;
         this.app = express();
 
         if(hasStaticContent) {
@@ -54,6 +57,12 @@ export class Server {
             this.router.init().forEach((route) => {
                 this.app.use(route.path, (<BaseController>Injector.get(route.controller)).getRouter(route.path));
             });
+
+            if (this.hasStaticContent) {
+                this.app.get('*', (_req, res) => {
+                    res.sendFile(path.resolve('../ui/dist/browser/index.html'));
+                });
+            }
 
             this.routesInitialized = true;
         }
