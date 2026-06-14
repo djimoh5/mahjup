@@ -32,6 +32,7 @@ interface SessionGroupProps {
   initialEditing?: boolean;
   users: UserSummary[];
   usersMap: Record<string, UserSummary>;
+  currentUserOid: string;
   onAddGame: () => void;
   onUpdate: (id: string, patch: Partial<GameRecord>, skipSave?: boolean) => void;
   onDelete: (id: string) => void;
@@ -53,11 +54,13 @@ function formatDateTime(dt: string): string {
 }
 
 export default function SessionGroup({
-  session, games, isExpanded, onToggle, onExpand, initialEditing, users, usersMap,
+  session, games, isExpanded, onToggle, onExpand, initialEditing, users, usersMap, currentUserOid,
   onAddGame, onUpdate, onDelete, onUpdateSession, onDeleteSession, onUserAdded,
 }: SessionGroupProps) {
+  const isSessionCreator = session.userId === currentUserOid;
   const isMobile = useIsMobile();
   const [isEditing, setIsEditing] = useState(initialEditing ?? false);
+  const [confirmDeleteSession, setConfirmDeleteSession] = useState(false);
 
   const [expandedGameId, setExpandedGameId] = useState<string | null>(
     () => games.find(g => g.players.length === 0)?.oid ?? null
@@ -172,14 +175,14 @@ export default function SessionGroup({
         </IconButton>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
-          <Typography sx={{ fontWeight: 600, fontSize: '0.9375rem', color: 'text.primary', whiteSpace: 'nowrap' }}>
-            {formatDateTime(session.dateTime)}
-          </Typography>
           {session.title && (
-            <Typography sx={{ fontSize: '0.875rem', color: 'text.secondary', fontStyle: 'italic' }}>
+            <Typography sx={{ fontWeight: 600, fontSize: '0.9375rem', color: 'text.primary', whiteSpace: 'nowrap' }}>
               {session.title}
             </Typography>
           )}
+          <Typography sx={{ fontSize: '0.875rem', color: 'text.secondary', fontStyle: 'italic', whiteSpace: 'nowrap' }}>
+            {formatDateTime(session.dateTime)}
+          </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem' }}>
             {session.players.map(p => (
               <Chip key={p} label={resolveDisplayName(p, usersMap)} size="small" />
@@ -188,18 +191,8 @@ export default function SessionGroup({
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
-          {!isEditing && (
+          {!isEditing && isSessionCreator && (
             <>
-              <Button
-                variant="contained"
-                color="primary"
-                size="small"
-                onClick={() => { onExpand(); onAddGame(); }}
-                startIcon={<PlusIcon style={{ width: '0.875rem', height: '0.875rem' }} />}
-                sx={{ borderRadius: '0.5rem', fontSize: '0.8125rem', py: '0.375rem', px: '0.75rem' }}
-              >
-                Add Game
-              </Button>
               <IconButton
                 size="small"
                 onClick={handleOpenEdit}
@@ -215,7 +208,7 @@ export default function SessionGroup({
               </IconButton>
               <IconButton
                 size="small"
-                onClick={onDeleteSession}
+                onClick={() => setConfirmDeleteSession(true)}
                 aria-label="Delete session"
                 sx={{
                   border: '1px solid rgba(242,171,164,0.55)',
@@ -294,7 +287,7 @@ export default function SessionGroup({
         <Box sx={{ p: '0.75rem' }}>
           {games.length === 0 ? (
             <Box sx={{ p: '1.5rem', textAlign: 'center', color: 'text.secondary', fontSize: '0.875rem' }}>
-              No games yet — click "Add Game" to record the first one.
+              No games yet — add one below.
             </Box>
           ) : isMobile ? (
             <Stack spacing={1}>
@@ -302,9 +295,12 @@ export default function SessionGroup({
                 <GameCardMobile
                   key={game.oid}
                   record={game}
+                  isExpanded={expandedGameId === game.oid}
+                  onToggle={() => setExpandedGameId(id => id === game.oid ? null : game.oid)}
                   sessionPlayers={session.players}
                   users={users}
                   usersMap={usersMap}
+                  canDeleteGame={game.userId === currentUserOid || isSessionCreator}
                   onUpdate={(patch, skipSave) => onUpdate(game.oid, patch, skipSave)}
                   onDelete={() => onDelete(game.oid)}
                   onInvitePlayer={handleInviteOpen}
@@ -322,6 +318,7 @@ export default function SessionGroup({
                   sessionPlayers={session.players}
                   users={users}
                   usersMap={usersMap}
+                  canDeleteGame={game.userId === currentUserOid || isSessionCreator}
                   onUpdate={(patch, skipSave) => onUpdate(game.oid, patch, skipSave)}
                   onDelete={() => onDelete(game.oid)}
                   onInvitePlayer={handleInviteOpen}
@@ -329,6 +326,14 @@ export default function SessionGroup({
               ))}
             </Stack>
           )}
+          <Button
+            size="small"
+            onClick={onAddGame}
+            startIcon={<PlusIcon style={{ width: '0.875rem', height: '0.875rem' }} />}
+            sx={{ mt: 1, fontSize: '0.75rem', fontWeight: 600 }}
+          >
+            Add Game
+          </Button>
         </Box>
       )}
 
@@ -358,6 +363,16 @@ export default function SessionGroup({
             startIcon={inviteLoading ? <CircularProgress size={16} /> : undefined}
           >
             Send Invite
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={confirmDeleteSession} onClose={() => setConfirmDeleteSession(false)}>
+        <DialogTitle>Delete this session?</DialogTitle>
+        <DialogActions>
+          <Button onClick={() => setConfirmDeleteSession(false)}>Cancel</Button>
+          <Button color="error" variant="contained" onClick={() => { setConfirmDeleteSession(false); onDeleteSession(); }}>
+            Delete
           </Button>
         </DialogActions>
       </Dialog>

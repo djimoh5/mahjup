@@ -59,6 +59,15 @@ export default function SummaryTab({ records, currentUserOid }: SummaryTabProps)
     if (mine?.category) counts[mine.category] = (counts[mine.category] ?? 0) + 1;
   });
 
+  const winCounts: Record<string, number> = {};
+  wins.forEach(d => {
+    const mine = d.players.find(p => p.isWinner && p.userId === currentUserOid);
+    if (mine?.category) winCounts[mine.category] = (winCounts[mine.category] ?? 0) + 1;
+  });
+
+  const sortedCounts = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const sortedWinCounts = Object.entries(winCounts).sort((a, b) => b[1] - a[1]);
+
   const values = { total, winRate, points };
 
   return (
@@ -95,29 +104,68 @@ export default function SummaryTab({ records, currentUserOid }: SummaryTabProps)
         ))}
       </Grid>
 
-      <Paper sx={{ p: '2rem', borderRadius: '1.5rem', border: '1px solid rgba(232,135,122,0.12)' }}>
-        <Typography
-          variant="h6"
-          sx={{ fontWeight: 700, color: 'text.primary', mb: 3, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-        >
-          <Box sx={{ width: '0.5rem', height: '1.5rem', background: '#e8877a', borderRadius: '9999px', flexShrink: 0 }} />
-          Category Distribution
-        </Typography>
-        <Grid container spacing={3}>
-          {Object.entries(counts).map(([cat, count]) => (
-            <Grid key={cat} size={{ xs: 12, sm: 6 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 700, color: 'text.secondary', mb: '0.5rem' }}>
-                <span>{cat}</span>
-                <span>{count} games</span>
-              </Box>
-              <LinearProgress
-                variant="determinate"
-                value={total > 0 ? (count / total) * 100 : 0}
-              />
-            </Grid>
-          ))}
+      <Grid container spacing={3}>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Paper sx={{ p: '2rem', borderRadius: '1.5rem', border: '1px solid rgba(232,135,122,0.12)', height: '100%' }}>
+            <Typography
+              variant="h6"
+              sx={{ fontWeight: 700, color: 'text.primary', mb: 3, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+            >
+              <Box sx={{ width: '0.5rem', height: '1.5rem', background: 'rgba(46,94,66,0.6)', borderRadius: '9999px', flexShrink: 0 }} />
+              Overall Category Distribution
+            </Typography>
+            {sortedCounts.length === 0 ? (
+              <Typography sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>No games played yet.</Typography>
+            ) : (
+              <Grid container spacing={2}>
+                {sortedCounts.map(([cat, count]) => (
+                  <Grid key={cat} size={12}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 700, color: 'text.secondary', mb: '0.375rem' }}>
+                      <span>{cat}</span>
+                      <span>{count} game{count !== 1 ? 's' : ''}</span>
+                    </Box>
+                    <LinearProgress
+                      variant="determinate"
+                      value={total > 0 ? (count / total) * 100 : 0}
+                      sx={{ '& .MuiLinearProgress-bar': { background: 'rgba(46,94,66,0.6)' } }}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+            )}
+          </Paper>
         </Grid>
-      </Paper>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Paper sx={{ p: '2rem', borderRadius: '1.5rem', border: '1px solid rgba(232,135,122,0.12)', height: '100%' }}>
+            <Typography
+              variant="h6"
+              sx={{ fontWeight: 700, color: 'text.primary', mb: 3, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+            >
+              <Box sx={{ width: '0.5rem', height: '1.5rem', background: '#e8877a', borderRadius: '9999px', flexShrink: 0 }} />
+              Win Category Distribution
+            </Typography>
+            {sortedWinCounts.length === 0 ? (
+              <Typography sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>No wins recorded yet.</Typography>
+            ) : (
+              <Grid container spacing={2}>
+                {sortedWinCounts.map(([cat, count]) => (
+                  <Grid key={cat} size={12}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 700, color: 'text.secondary', mb: '0.375rem' }}>
+                      <span>{cat}</span>
+                      <span>{count} win{count !== 1 ? 's' : ''}</span>
+                    </Box>
+                    <LinearProgress
+                      variant="determinate"
+                      value={wins.length > 0 ? (count / wins.length) * 100 : 0}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+            )}
+          </Paper>
+        </Grid>
+      </Grid>
     </>
   );
 }

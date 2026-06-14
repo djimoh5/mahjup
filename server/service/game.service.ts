@@ -37,7 +37,10 @@ export class GameService extends BaseService {
             return new ApiResponse(false, null, 'record not found');
         }
         if (record.userId !== userId) {
-            return new ApiResponse(false, null, 'forbidden');
+            const session = await this.mahjSessionRepository.getByOid(record.sessionId);
+            if (!session || session.userId !== userId) {
+                return new ApiResponse(false, null, 'forbidden');
+            }
         }
         await this.gameRepository.remove(oid);
         return new ApiResponse(true, null);

@@ -14,6 +14,7 @@ interface TrackerTabProps {
   newestSessionId: string | null;
   users: UserSummary[];
   usersMap: Record<string, UserSummary>;
+  currentUserOid: string;
   onAddSession: () => void;
   onUpdateSession: (oid: string, patch: Partial<MahjSession>) => void;
   onDeleteSession: (oid: string) => void;
@@ -24,7 +25,7 @@ interface TrackerTabProps {
 }
 
 export default function TrackerTab({
-  sessions, records, newestSessionId, users, usersMap,
+  sessions, records, newestSessionId, users, usersMap, currentUserOid,
   onAddSession, onUpdateSession, onDeleteSession,
   onAddGame, onUpdate, onDelete, onUserAdded,
 }: TrackerTabProps) {
@@ -89,6 +90,7 @@ export default function TrackerTab({
               initialEditing={session.oid === newestSessionId}
               users={users}
               usersMap={usersMap}
+              currentUserOid={currentUserOid}
               onAddGame={() => onAddGame(session.oid, session.players, sessionDate)}
               onUpdate={onUpdate}
               onDelete={onDelete}

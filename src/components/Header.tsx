@@ -48,12 +48,6 @@ function getDisplayName(user: UserAuth): string {
 }
 
 export default function Header({ activeTab, onTabChange, isSaving, user, onLogout, onUserUpdate }: HeaderProps) {
-  const dateStr = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
 
   const hasName = !!(user.profile?.firstName || user.profile?.lastName);
 
@@ -123,7 +117,7 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
           px: '1.5rem',
           py: '1.25rem',
           display: 'flex',
-          flexDirection: { xs: 'column', sm: 'row' },
+          flexDirection: 'row',
           justifyContent: 'space-between',
           alignItems: 'center',
           gap: 2,
@@ -131,9 +125,6 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
       >
         <Box>
           <img src={logoUrl} alt="MahjUp" style={{ width: 170 }} />
-          <Typography sx={{ fontSize: '0.75rem', fontWeight: 500, color: 'rgba(250,208,200,0.8)', ml: '1rem', mt: 0.25 }}>
-            {dateStr}
-          </Typography>
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>

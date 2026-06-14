@@ -1,9 +1,13 @@
+import { useState } from 'react';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
 import { handData } from '../data/hands';
 import type { GameRecord, PlayerHand } from '../../model/game.model';
 import type { UserSummary } from '../../model/user.model';
@@ -18,13 +22,15 @@ interface GameRowProps {
   sessionPlayers: string[];
   users: UserSummary[];
   usersMap: Record<string, UserSummary>;
+  canDeleteGame: boolean;
   onUpdate: (patch: Partial<GameRecord>, skipSave?: boolean) => void;
   onDelete: () => void;
   onInvitePlayer: (cb: (userId: string) => void) => void;
 }
 
-export default function GameRow({ record, isExpanded, onToggle, sessionPlayers, users, usersMap, onUpdate, onDelete, onInvitePlayer }: GameRowProps) {
+export default function GameRow({ record, isExpanded, onToggle, sessionPlayers, users, usersMap, canDeleteGame, onUpdate, onDelete, onInvitePlayer }: GameRowProps) {
 
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const winner = record.players.find(p => p.isWinner);
   const winnerName = winner?.userId ? resolveDisplayName(winner.userId, usersMap) : null;
 
@@ -151,20 +157,31 @@ export default function GameRow({ record, isExpanded, onToggle, sessionPlayers, 
               >
                 Add Player
               </Button>
-              <Button
-                size="small"
-                variant="outlined"
-                color="error"
-                onClick={onDelete}
-                startIcon={<TrashIcon style={{ width: '0.875rem', height: '0.875rem' }} />}
-                sx={{ fontSize: '0.75rem' }}
-              >
-                Delete Game
-              </Button>
+              {canDeleteGame && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="error"
+                  onClick={() => setConfirmDelete(true)}
+                  startIcon={<TrashIcon style={{ width: '0.875rem', height: '0.875rem' }} />}
+                  sx={{ fontSize: '0.75rem' }}
+                >
+                  Delete Game
+                </Button>
+              )}
             </Box>
           </Box>
         </>
       )}
+      <Dialog open={confirmDelete} onClose={() => setConfirmDelete(false)}>
+        <DialogTitle>Delete this game?</DialogTitle>
+        <DialogActions>
+          <Button onClick={() => setConfirmDelete(false)}>Cancel</Button>
+          <Button color="error" variant="contained" onClick={() => { setConfirmDelete(false); onDelete(); }}>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   );
 }

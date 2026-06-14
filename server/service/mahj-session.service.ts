@@ -29,6 +29,12 @@ export class MahjSessionService extends BaseService {
     }
 
     async save(session: MahjSession, userId: string): Promise<ApiResponse<MahjSession>> {
+        if (session.oid) {
+            const existing = await this.mahjSessionRepository.getByOid(session.oid as string);
+            if (existing && existing.userId && existing.userId !== userId) {
+                return new ApiResponse(false, null, 'forbidden');
+            }
+        }
         session.userId = userId;
         const saved = await this.mahjSessionRepository.save(session);
         return new ApiResponse(true, saved);

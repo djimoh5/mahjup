@@ -12,17 +12,24 @@ import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
 import Tooltip from '@mui/material/Tooltip';
+import Collapse from '@mui/material/Collapse';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
 import { handData } from '../data/hands';
 import type { GameRecord, PlayerHand } from '../../model/game.model';
 import type { UserSummary } from '../../model/user.model';
-import { PencilIcon, TrashIcon, CheckIcon, PlusIcon, TrophyIcon, NotesIcon } from './icons/Icons';
+import { TrashIcon, PlusIcon, TrophyIcon, NotesIcon } from './icons/Icons';
 import { resolveDisplayName } from '../utils/user';
 
 interface GameCardMobileProps {
   record: GameRecord;
+  isExpanded: boolean;
+  onToggle: () => void;
   sessionPlayers: string[];
   users: UserSummary[];
   usersMap: Record<string, UserSummary>;
+  canDeleteGame: boolean;
   onUpdate: (patch: Partial<GameRecord>, skipSave?: boolean) => void;
   onDelete: () => void;
   onInvitePlayer: (cb: (userId: string) => void) => void;
@@ -46,6 +53,7 @@ function MobilePlayerRow({
   onUpdate, onDelete, onWinnerSelect, onInvitePlayer,
 }: PlayerRowProps) {
   const [notesOpen, setNotesOpen] = useState(!!playerHand.notes);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const categoryHands = handData[playerHand.category] ?? [];
   const excludeIds = new Set(usedUserIds.filter(id => id !== playerHand.userId));
   const sessionSet = new Set(sessionPlayers);
@@ -99,15 +107,16 @@ function MobilePlayerRow({
           {otherUsersSorted.map(u => <MenuItem key={u.oid} value={u.oid}>{resolveDisplayName(u.oid, usersMap)}</MenuItem>)}
         </Select>
 
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Select value={playerHand.category} size="small" fullWidth displayEmpty
+        <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto' }}>
+          <Select value={playerHand.category} size="small" displayEmpty
+            sx={{ flexShrink: 0 }}
             onChange={e => handleCategoryChange(e.target.value)}>
             <MenuItem value=""><em>Category…</em></MenuItem>
             {Object.keys(handData).map(cat => <MenuItem key={cat} value={cat}>{cat}</MenuItem>)}
           </Select>
           <Tooltip title={!playerHand.category ? 'Choose a category first' : ''} placement="top">
-            <span>
-              <Select value={playerHand.hand} size="small" fullWidth displayEmpty disabled={!playerHand.category}
+            <span style={{ flexShrink: 0 }}>
+              <Select value={playerHand.hand} size="small" displayEmpty disabled={!playerHand.category}
                 onChange={e => handleHandChange(e.target.value)}>
                 <MenuItem value=""><em>Hand…</em></MenuItem>
                 {categoryHands.map(item => <MenuItem key={item.h} value={item.h}>{item.h}</MenuItem>)}
@@ -146,7 +155,7 @@ function MobilePlayerRow({
           </Tooltip>
 
           {!isOnlyRow && (
-            <IconButton size="small" color="error" onClick={onDelete} aria-label="Remove player">
+            <IconButton size="small" color="error" onClick={() => setConfirmDelete(true)} aria-label="Remove player">
               <TrashIcon style={{ width: '0.875rem', height: '0.875rem' }} />
             </IconButton>
           )}
@@ -165,12 +174,21 @@ function MobilePlayerRow({
           />
         )}
       </Stack>
+      <Dialog open={confirmDelete} onClose={() => setConfirmDelete(false)}>
+        <DialogTitle>Remove this player?</DialogTitle>
+        <DialogActions>
+          <Button onClick={() => setConfirmDelete(false)}>Cancel</Button>
+          <Button color="error" variant="contained" onClick={() => { setConfirmDelete(false); onDelete(); }}>
+            Remove
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
 
-export default function GameCardMobile({ record, sessionPlayers, users, usersMap, onUpdate, onDelete, onInvitePlayer }: GameCardMobileProps) {
-  const [isEditing, setIsEditing] = useState(false);
+export default function GameCardMobile({ record, isExpanded, onToggle, sessionPlayers, users, usersMap, canDeleteGame, onUpdate, onDelete, onInvitePlayer }: GameCardMobileProps) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const winner = record.players.find(p => p.isWinner);
   const winnerName = winner?.userId ? resolveDisplayName(winner.userId, usersMap) : null;
@@ -201,9 +219,28 @@ export default function GameCardMobile({ record, sessionPlayers, users, usersMap
   const usedUserIds = record.players.map(p => p.userId).filter(Boolean);
 
   return (
+    <>
     <Paper elevation={0} variant="outlined" sx={{ borderRadius: '0.75rem', overflow: 'hidden' }}>
-      {/* Summary row */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.25 }}>
+      {/* Summary row — tap to expand */}
+      <Box
+        onClick={onToggle}
+        sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.25, cursor: 'pointer', userSelect: 'none' }}
+      >
+        <Box
+          component="svg"
+          viewBox="0 0 24 24"
+          sx={{
+            width: '1.25rem',
+            height: '1.25rem',
+            flexShrink: 0,
+            color: 'text.secondary',
+            transition: 'transform 0.2s',
+            transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+            fill: 'currentColor',
+          }}
+        >
+          <path d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z" />
+        </Box>
         <Box sx={{ flex: 1, overflowX: 'auto', display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
           {winner ? (
             <>
@@ -216,9 +253,6 @@ export default function GameCardMobile({ record, sessionPlayers, users, usersMap
                   · {winner.hand}
                 </Typography>
               )}
-              {winner.score > 0 && (
-                <Chip label={`${winner.score}pts`} size="small" color="success" sx={{ fontWeight: 700 }} />
-              )}
             </>
           ) : (
             <Typography variant="body2" color="text.disabled">
@@ -229,56 +263,57 @@ export default function GameCardMobile({ record, sessionPlayers, users, usersMap
             <Chip label={`${record.players.length} player${record.players.length !== 1 ? 's' : ''}`} size="small" variant="outlined" />
           )}
         </Box>
-        {!isEditing && (
-          <IconButton size="small" onClick={() => setIsEditing(true)} aria-label="Edit" sx={{ flexShrink: 0 }}>
-            <PencilIcon style={{ width: '1rem', height: '1rem' }} />
-          </IconButton>
-        )}
       </Box>
 
-      {/* Edit body */}
-      {isEditing && (
-        <>
-          <Divider />
-          <Stack spacing={1.5} sx={{ p: 1.5 }}>
-            {record.players.map((playerHand, idx) => (
-              <MobilePlayerRow
-                key={idx}
-                playerHand={playerHand}
-                isOnlyRow={record.players.length === 1}
-                sessionPlayers={sessionPlayers}
-                usedUserIds={usedUserIds}
-                users={users}
-                usersMap={usersMap}
-                onUpdate={(patch, skipSave) => handlePlayerUpdate(idx, patch, skipSave)}
-                onDelete={() => handleDeletePlayer(idx)}
-                onWinnerSelect={() => handleWinnerSelect(idx)}
-                onInvitePlayer={onInvitePlayer}
-              />
-            ))}
+      {/* Accordion body */}
+      <Collapse in={isExpanded}>
+        <Divider />
+        <Stack spacing={1.5} sx={{ p: 1.5 }}>
+          {record.players.map((playerHand, idx) => (
+            <MobilePlayerRow
+              key={idx}
+              playerHand={playerHand}
+              isOnlyRow={record.players.length === 1}
+              sessionPlayers={sessionPlayers}
+              usedUserIds={usedUserIds}
+              users={users}
+              usersMap={usersMap}
+              onUpdate={(patch, skipSave) => handlePlayerUpdate(idx, patch, skipSave)}
+              onDelete={() => handleDeletePlayer(idx)}
+              onWinnerSelect={() => handleWinnerSelect(idx)}
+              onInvitePlayer={onInvitePlayer}
+            />
+          ))}
 
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Button
               size="small"
               startIcon={<PlusIcon style={{ width: '0.875rem', height: '0.875rem' }} />}
               onClick={handleAddPlayer}
-              sx={{ alignSelf: 'flex-start', fontSize: '0.75rem', fontWeight: 600 }}
+              sx={{ fontSize: '0.75rem', fontWeight: 600 }}
             >
               Add Player
             </Button>
-
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Button variant="outlined" color="error" size="small" onClick={onDelete}
+            {canDeleteGame && (
+              <Button variant="outlined" color="error" size="small" onClick={() => setConfirmDelete(true)}
                 startIcon={<TrashIcon style={{ width: '1rem', height: '1rem' }} />}>
                 Delete
               </Button>
-              <Button variant="contained" size="small" onClick={() => setIsEditing(false)}
-                startIcon={<CheckIcon style={{ width: '1rem', height: '1rem' }} />}>
-                Done
-              </Button>
-            </Box>
-          </Stack>
-        </>
-      )}
+            )}
+          </Box>
+        </Stack>
+      </Collapse>
     </Paper>
+
+      <Dialog open={confirmDelete} onClose={() => setConfirmDelete(false)}>
+        <DialogTitle>Delete this game?</DialogTitle>
+        <DialogActions>
+          <Button onClick={() => setConfirmDelete(false)}>Cancel</Button>
+          <Button color="error" variant="contained" onClick={() => { setConfirmDelete(false); onDelete(); }}>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }

@@ -224,6 +224,7 @@ export default function App() {
             newestSessionId={newestSessionId}
             users={users}
             usersMap={usersMap}
+            currentUserOid={user!.oid}
             onAddSession={addSession}
             onUpdateSession={updateSession}
             onDeleteSession={deleteSession}

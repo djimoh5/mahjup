@@ -1,5 +1,9 @@
 import { useState } from 'react';
 import Select from '@mui/material/Select';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
+import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
@@ -30,6 +34,7 @@ export default function PlayerHandRow({
   onUpdate, onDelete, onWinnerSelect, onInvitePlayer,
 }: PlayerHandRowProps) {
   const [notesOpen, setNotesOpen] = useState(!!playerHand.notes);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const categoryHands = handData[playerHand.category] ?? [];
 
   const excludeIds = new Set(usedUserIds.filter(id => id !== playerHand.userId));
@@ -125,7 +130,7 @@ export default function PlayerHandRow({
               </IconButton>
             </Tooltip>
             {!isOnlyRow && (
-              <IconButton size="small" onClick={onDelete} color="error" aria-label="Remove player">
+              <IconButton size="small" onClick={() => setConfirmDelete(true)} color="error" aria-label="Remove player">
                 <TrashIcon style={{ width: '0.875rem', height: '0.875rem' }} />
               </IconButton>
             )}
@@ -142,6 +147,15 @@ export default function PlayerHandRow({
           </td>
         </tr>
       )}
+      <Dialog open={confirmDelete} onClose={() => setConfirmDelete(false)}>
+        <DialogTitle>Remove this player?</DialogTitle>
+        <DialogActions>
+          <Button onClick={() => setConfirmDelete(false)}>Cancel</Button>
+          <Button color="error" variant="contained" onClick={() => { setConfirmDelete(false); onDelete(); }}>
+            Remove
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }
