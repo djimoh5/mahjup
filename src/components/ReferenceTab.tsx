@@ -1,4 +1,3 @@
-import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -7,9 +6,15 @@ import { handData } from '../data/hands';
 
 export default function ReferenceTab() {
   return (
-    <Grid container spacing={3}>
+    <Box
+      sx={{
+        columns: { xs: 1, sm: 2, lg: 3 },
+        columnGap: '24px',
+        '& > *': { breakInside: 'avoid', marginBottom: '24px' },
+      }}
+    >
       {Object.entries(handData).map(([category, hands]) => (
-        <Grid key={category} size={{ xs: 12, sm: 6, lg: 4 }}>
+        <Box key={category} sx={{ display: 'inline-block', width: '100%' }}>
           <Paper
             sx={{
               borderRadius: '1.5rem',
@@ -71,8 +76,8 @@ export default function ReferenceTab() {
               ))}
             </Box>
           </Paper>
-        </Grid>
+        </Box>
       ))}
-    </Grid>
+    </Box>
   );
 }
