@@ -130,8 +130,8 @@ export default function App() {
   }
 
   async function addSession() {
-    const newSession = makeSession();
-    const firstGame = makeRecord({ sessionId: newSession.oid, date: newSession.dateTime.split('T')[0] });
+    const newSession = makeSession({ userId: user?.oid });
+    const firstGame = makeRecord({ userId: user?.oid, sessionId: newSession.oid, date: newSession.dateTime.split('T')[0], players: user ? [{ userId: user.oid, category: '', hand: '', jokers: 0, isWinner: false, score: 0 }] : [] });
     setSessions(prev => [newSession, ...prev]);
     setRecords(prev => [firstGame, ...prev]);
     setNewestSessionId(newSession.oid);
@@ -154,12 +154,11 @@ export default function App() {
 
   async function addRecord(sessionId: string, _sessionPlayers: string[], sessionDate: string) {
     const prevGame = records.filter(r => r.sessionId === sessionId).find(r => r.players.length > 0);
+    const blankPlayer = (userId: string): PlayerHand => ({ userId, category: '', hand: '', jokers: 0, isWinner: false, score: 0 });
     const copiedPlayers: PlayerHand[] = prevGame
-      ? prevGame.players
-          .filter(p => p.userId)
-          .map(p => ({ userId: p.userId, category: '', hand: '', jokers: 0, isWinner: false, score: 0 }))
-      : [];
-    const newRecord = makeRecord({ sessionId, date: sessionDate, players: copiedPlayers });
+      ? prevGame.players.filter(p => p.userId).map(p => blankPlayer(p.userId))
+      : user ? [blankPlayer(user.oid)] : [];
+    const newRecord = makeRecord({ userId: user?.oid, sessionId, date: sessionDate, players: copiedPlayers });
     setRecords(prev => [newRecord, ...prev]);
     await gameService.save(newRecord);
   }
