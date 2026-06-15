@@ -122,7 +122,6 @@ export default function GameRow({ record, isExpanded, onToggle, sessionPlayers, 
                 <thead>
                   <tr>
                     <th>Player</th>
-                    <th className="col-cat">Hand Category</th>
                     <th>Hand</th>
                     <th className="center col-jokers">Jokers</th>
                     <th className="center">Winner</th>

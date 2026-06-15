@@ -18,6 +18,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import { handData } from '../data/hands';
 import type { GameRecord, PlayerHand } from '../../model/game.model';
+import HandSelect from './HandSelect';
 import type { UserSummary } from '../../model/user.model';
 import { TrashIcon, PlusIcon, TrophyIcon, NotesIcon } from './icons/Icons';
 import { resolveDisplayName } from '../utils/user';
@@ -54,7 +55,6 @@ function MobilePlayerRow({
 }: PlayerRowProps) {
   const [notesOpen, setNotesOpen] = useState(!!playerHand.notes);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const categoryHands = handData[playerHand.category] ?? [];
   const excludeIds = new Set(usedUserIds.filter(id => id !== playerHand.userId));
   const sessionSet = new Set(sessionPlayers);
   const sessionSorted = sessionPlayers
@@ -72,13 +72,8 @@ function MobilePlayerRow({
     }
   }
 
-  function handleCategoryChange(cat: string) {
-    onUpdate({ category: cat, hand: '', score: 0 });
-  }
-
-  function handleHandChange(hand: string) {
-    const match = handData[playerHand.category]?.find(item => item.h === hand);
-    onUpdate({ hand, score: match?.v ?? 0 });
+  function handleHandSelect(cat: string, hand: string, score: number) {
+    onUpdate({ category: cat, hand, score });
   }
 
   return (
@@ -107,31 +102,21 @@ function MobilePlayerRow({
           {otherUsersSorted.map(u => <MenuItem key={u.oid} value={u.oid}>{resolveDisplayName(u.oid, usersMap)}</MenuItem>)}
         </Select>
 
-        <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto' }}>
-          <Select value={playerHand.category} size="small" displayEmpty
-            sx={{ flexShrink: 0 }}
-            onChange={e => handleCategoryChange(e.target.value)}>
-            <MenuItem value=""><em>Category…</em></MenuItem>
-            {Object.keys(handData).map(cat => <MenuItem key={cat} value={cat}>{cat}</MenuItem>)}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <HandSelect
+            category={playerHand.category}
+            hand={playerHand.hand}
+            onChange={handleHandSelect}
+            fullWidth
+          />
+          <Select value={playerHand.jokers ?? 0} size="small" displayEmpty
+            onChange={e => onUpdate({ jokers: Number(e.target.value) })}
+            sx={{ flexShrink: 0, width: '7rem' }}>
+            {[0,1,2,3,4,5,6,7,8].map(n => <MenuItem key={n} value={n}>{n} Joker{n !== 1 ? 's' : ''}</MenuItem>)}
           </Select>
-          <Tooltip title={!playerHand.category ? 'Choose a category first' : ''} placement="top">
-            <span style={{ flexShrink: 0 }}>
-              <Select value={playerHand.hand} size="small" displayEmpty disabled={!playerHand.category}
-                onChange={e => handleHandChange(e.target.value)}>
-                <MenuItem value=""><em>Hand…</em></MenuItem>
-                {categoryHands.map(item => <MenuItem key={item.h} value={item.h}>{item.h}</MenuItem>)}
-              </Select>
-            </span>
-          </Tooltip>
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Select value={playerHand.jokers ?? 0} size="small" displayEmpty
-            onChange={e => onUpdate({ jokers: Number(e.target.value) })}
-            sx={{ width: '7rem' }}>
-            {[0,1,2,3,4,5,6,7,8].map(n => <MenuItem key={n} value={n}>{n} Joker{n !== 1 ? 's' : ''}</MenuItem>)}
-          </Select>
-
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flex: 1 }}>
             <Tooltip title={playerHand.isWinner ? 'Winner' : 'Mark as winner'}>
               <IconButton

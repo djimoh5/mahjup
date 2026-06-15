@@ -10,8 +10,8 @@ import Tooltip from '@mui/material/Tooltip';
 import Chip from '@mui/material/Chip';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
-import { handData } from '../data/hands';
 import type { PlayerHand } from '../../model/game.model';
+import HandSelect from './HandSelect';
 import type { UserSummary } from '../../model/user.model';
 import { TrashIcon, TrophyIcon, NotesIcon } from './icons/Icons';
 import { resolveDisplayName } from '../utils/user';
@@ -35,7 +35,6 @@ export default function PlayerHandRow({
 }: PlayerHandRowProps) {
   const [notesOpen, setNotesOpen] = useState(!!playerHand.notes);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const categoryHands = handData[playerHand.category] ?? [];
 
   const excludeIds = new Set(usedUserIds.filter(id => id !== playerHand.userId));
   const sessionSet = new Set(sessionPlayers);
@@ -46,13 +45,8 @@ export default function PlayerHandRow({
     .filter(u => !sessionSet.has(u.oid) && !excludeIds.has(u.oid))
     .sort((a, b) => resolveDisplayName(a.oid, usersMap).localeCompare(resolveDisplayName(b.oid, usersMap)));
 
-  function handleCategoryChange(cat: string) {
-    onUpdate({ category: cat, hand: '', score: 0 });
-  }
-
-  function handleHandChange(hand: string) {
-    const match = handData[playerHand.category]?.find(item => item.h === hand);
-    onUpdate({ hand, score: match?.v ?? 0 });
+  function handleHandSelect(cat: string, hand: string, score: number) {
+    onUpdate({ category: cat, hand, score });
   }
 
   function handlePlayerSelect(val: string) {
@@ -81,22 +75,12 @@ export default function PlayerHandRow({
           </Select>
         </td>
         <td>
-          <Select value={playerHand.category} size="small" fullWidth displayEmpty
-            onChange={e => handleCategoryChange(e.target.value)}>
-            <MenuItem value=""><em>Category…</em></MenuItem>
-            {Object.keys(handData).map(cat => <MenuItem key={cat} value={cat}>{cat}</MenuItem>)}
-          </Select>
-        </td>
-        <td>
-          <Tooltip title={!playerHand.category ? 'Choose a category first' : ''} placement="top">
-            <span>
-              <Select value={playerHand.hand} size="small" fullWidth displayEmpty disabled={!playerHand.category}
-                onChange={e => handleHandChange(e.target.value)}>
-                <MenuItem value=""><em>Hand…</em></MenuItem>
-                {categoryHands.map(item => <MenuItem key={item.h} value={item.h}>{item.h}</MenuItem>)}
-              </Select>
-            </span>
-          </Tooltip>
+          <HandSelect
+            category={playerHand.category}
+            hand={playerHand.hand}
+            onChange={handleHandSelect}
+            fullWidth
+          />
         </td>
         <td className="center">
           <Select value={playerHand.jokers ?? 0} size="small"
@@ -139,7 +123,7 @@ export default function PlayerHandRow({
       </tr>
       {notesOpen && (
         <tr className="notes-row" style={{ background: playerHand.isWinner ? 'rgba(212,160,23,0.07)' : undefined }}>
-          <td colSpan={6}>
+          <td colSpan={5}>
             <TextField multiline rows={2} fullWidth size="small" placeholder="Notes for this player…"
               value={playerHand.notes ?? ''}
               onChange={e => onUpdate({ notes: e.target.value }, true)}
