@@ -1,8 +1,15 @@
+import React from 'react';
 import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
-import { handData } from '../data/hands';
+import { handData, SegmentColor } from '../data/hands';
+
+const SEGMENT_COLORS: Record<SegmentColor, string> = {
+  green: '#2e7d32',
+  blue: '#020736',
+  red: '#c62828',
+};
 
 export default function ReferenceTab() {
   return (
@@ -66,11 +73,43 @@ export default function ReferenceTab() {
                     '&:last-child': { borderBottom: 'none' },
                   }}
                 >
-                  <Typography component="span" sx={{ color: '#2e5e42', fontFamily: 'monospace', fontSize: '0.6875rem' }}>
-                    {h.h}
-                  </Typography>
-                  <Typography component="span" sx={{ fontWeight: 900, fontSize: '0.75rem', color: 'primary.main', fontFamily: 'monospace', flexShrink: 0 }}>
-                    {h.v}
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: '0.125rem' }}>
+                    <Typography component="span" sx={{ color: '#2e5e42', fontFamily: 'monospace', fontSize: '0.6875rem' }}>
+                      {h.s ? (
+                        <>
+                          {h.s.map((seg, i) => (
+                            <React.Fragment key={i}>
+                              {i > 0 && ' '}
+                              <span style={{ color: seg.c ? SEGMENT_COLORS[seg.c] : 'inherit', fontWeight: seg.c ? 700 : undefined }}>
+                                {seg.t}
+                              </span>
+                            </React.Fragment>
+                          ))}
+                          {h.s2 && (
+                            <>
+                              <span style={{ color: '#888', fontWeight: 400 }}> -or- </span>
+                              {h.s2.map((seg, i) => (
+                                <React.Fragment key={i}>
+                                  {i > 0 && ' '}
+                                  <span style={{ color: seg.c ? SEGMENT_COLORS[seg.c] : 'inherit', fontWeight: seg.c ? 700 : undefined }}>
+                                    {seg.t}
+                                  </span>
+                                </React.Fragment>
+                              ))}
+                            </>
+                          )}
+                        </>
+                      ) : h.h}
+                    </Typography>
+                    {h.d && (
+                      <Typography component="span" sx={{ color: '#6b8f78', fontFamily: 'monospace', fontSize: '0.5625rem', fontStyle: 'italic' }}>
+                        ({h.d})
+                      </Typography>
+                    )}
+                  </Box>
+                  <Typography component="span" sx={{ fontWeight: 900, fontSize: '0.75rem', fontFamily: 'monospace', flexShrink: 0 }}>
+                    <span style={{ color: h.closed ? SEGMENT_COLORS.blue : SEGMENT_COLORS.red }}>{h.closed ? 'C' : 'X'}</span>
+                    <span style={{ color: SEGMENT_COLORS.blue }}> {h.v}</span>
                   </Typography>
                 </Box>
               ))}

@@ -35,7 +35,16 @@ export default function GameRow({ record, isExpanded, onToggle, sessionPlayers, 
   const winnerName = winner?.userId ? resolveDisplayName(winner.userId, usersMap) : null;
 
   function handlePlayerUpdate(idx: number, patch: Partial<PlayerHand>, skipSave?: boolean) {
-    const updated = record.players.map((p, i) => i === idx ? { ...p, ...patch } : p);
+    const updated = record.players.map((p, i) => {
+      if (i !== idx) return p;
+      const merged = { ...p, ...patch };
+      if (merged.isWinner && 'jokers' in patch) {
+        const match = merged.category && merged.hand ? handData[merged.category]?.find(item => item.h === merged.hand) : null;
+        const baseScore = match?.v ?? 0;
+        merged.score = merged.jokers === 0 ? baseScore * 2 : baseScore;
+      }
+      return merged;
+    });
     onUpdate({ players: updated }, skipSave);
   }
 
@@ -43,7 +52,8 @@ export default function GameRow({ record, isExpanded, onToggle, sessionPlayers, 
     const updated = record.players.map((p, i) => {
       if (i !== idx) return { ...p, isWinner: false };
       const match = p.category && p.hand ? handData[p.category]?.find(item => item.h === p.hand) : null;
-      return { ...p, isWinner: true, score: match?.v ?? p.score };
+      const baseScore = match?.v ?? p.score;
+      return { ...p, isWinner: true, score: p.jokers === 0 ? baseScore * 2 : baseScore };
     });
     onUpdate({ players: updated });
   }
