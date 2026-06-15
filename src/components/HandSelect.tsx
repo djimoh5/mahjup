@@ -77,14 +77,11 @@ export default function HandSelect({ category, hand, onChange, size = 'small', f
         onClose={() => setAnchorEl(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-        PaperProps={{
-          sx: {
-            minWidth: 460,
-            maxWidth: 'calc(100vw - 16px)',
-          },
+        slotProps={{
+          paper: { sx: { overflow: 'hidden' } },
         }}
       >
-        <Box sx={{ display: 'flex', flexDirection: 'row', height: 380, overflow: 'hidden' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'row', width: 460, maxWidth: 'calc(100vw - 32px)', height: 380, overflow: 'hidden' }}>
           {/* Category column */}
           <MenuList
             sx={{

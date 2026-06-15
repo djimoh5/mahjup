@@ -86,8 +86,14 @@ export class AuthService extends BaseService {
         if (!auth || auth.virtual) {
             return new ApiResponse(false, null, 'username or password incorrect');
         }
+
+        let valid: boolean;
         
-        const valid = bypassPassword || await bcrypt.compare(password, auth.password);
+        try {
+            valid = bypassPassword || await bcrypt.compare(password, auth.password);
+        }
+        catch(err) {}
+
         if (!valid) {
             return new ApiResponse(false, null, 'username or password incorrect');
         }
