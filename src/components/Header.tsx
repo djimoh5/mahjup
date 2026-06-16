@@ -172,7 +172,6 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
                   }}
                 />
               </Box>
-              Syncing
             </Box>
           )}
 
@@ -233,8 +232,8 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
           }}
         >
           <Tab label="My Tracker" value="tracker" />
-          <Tab label="Card Reference" value="hands" />
           <Tab label="Summary" value="summary" />
+          <Tab label="Card Reference" value="hands" />
         </Tabs>
       </Box>
 
