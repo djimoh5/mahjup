@@ -149,14 +149,18 @@ export default function SummaryTab({ records, currentUserOid }: SummaryTabProps)
 
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Paper sx={{ p: '2rem', borderRadius: '1.5rem', border: '1px solid rgba(232,135,122,0.12)', height: '100%' }}>
+          <Paper sx={{ p: '2rem', borderRadius: '1.5rem', border: '1px solid rgba(232,135,122,0.12)', height: '100%', position: 'relative', overflow: 'hidden' }}>
+            <Box sx={{ position: 'absolute', top: 0, right: 0, p: '1rem', opacity: 0.05 }}>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: '4rem', height: '4rem' }}>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </Box>
             <Typography
               variant="h6"
               sx={{ fontWeight: 700, color: 'text.primary', mb: 3, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
             >
-              <Box sx={{ width: '0.5rem', height: '1.5rem', background: 'rgba(46,94,66,0.6)', borderRadius: '9999px', flexShrink: 0 }} />
-              Overall Category Distribution
-            </Typography>
+              Category Distribution Overall
+            </ Typography>
             {sortedCounts.length === 0 ? (
               <Typography sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>No games played yet.</Typography>
             ) : (
@@ -180,13 +184,17 @@ export default function SummaryTab({ records, currentUserOid }: SummaryTabProps)
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
-          <Paper sx={{ p: '2rem', borderRadius: '1.5rem', border: '1px solid rgba(232,135,122,0.12)', height: '100%' }}>
+          <Paper sx={{ p: '2rem', borderRadius: '1.5rem', border: '1px solid rgba(232,135,122,0.12)', height: '100%', position: 'relative', overflow: 'hidden' }}>
+            <Box sx={{ position: 'absolute', top: 0, right: 0, p: '1rem', opacity: 0.05 }}>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: '4rem', height: '4rem' }}>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15c-3.314 0-6-2.686-6-6V3h12v6c0 3.314-2.686 6-6 6zm0 0v4m-4 2h8M6 3H4a2 2 0 00-2 2v1c0 2.761 1.79 5.1 4.268 5.817M18 3h2a2 2 0 012 2v1c0 2.761-1.79 5.1-4.268 5.817" />
+              </svg>
+            </Box>
             <Typography
               variant="h6"
               sx={{ fontWeight: 700, color: 'text.primary', mb: 3, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
             >
-              <Box sx={{ width: '0.5rem', height: '1.5rem', background: '#e8877a', borderRadius: '9999px', flexShrink: 0 }} />
-              Win Category Distribution
+              Category Distribution on Wins
             </Typography>
             {sortedWinCounts.length === 0 ? (
               <Typography sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>No wins recorded yet.</Typography>
