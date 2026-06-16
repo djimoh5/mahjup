@@ -6,7 +6,7 @@ import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
 import { authService, type AuthedUser } from '../services/auth.service';
-import logoUrl from '../../Assets/mahjup-logo-green.svg';
+import logoUrl from '../../Assets/mahjup-logo-dark.png';
 
 interface Props {
   code: string;

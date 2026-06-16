@@ -19,7 +19,7 @@ import Alert from '@mui/material/Alert';
 import type { Tab as AppTab } from '../App';
 
 import { authService } from '../services/auth.service';
-import logoUrl from '../../Assets/mahjup-logo-white.svg';
+import logoUrl from '../../Assets/mahjup-logo-light.png';
 
 import { UserAuth } from '../../model/auth.model';
 

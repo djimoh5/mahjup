@@ -118,7 +118,7 @@ export class AuthService extends BaseService {
             to: [username],
             subject: 'Your MahjUp login code',
             html: `<div style="font-size: 16px;">
-                <img src="https://s3.us-east-1.amazonaws.com/mahjup.release/assets/mahjup-logo.png" style="width: 200px" /><br><br>
+                <img src="https://s3.us-east-1.amazonaws.com/mahjup.release/assets/mahjup-logo-dark.png" style="width: 200px" /><br><br>
                 Your one-time login code is: <strong>${code}</strong><br><br>
                 This code expires in 5 minutes.
             </div>`
@@ -178,7 +178,7 @@ export class AuthService extends BaseService {
             to: [username],
             subject: 'Reset your MahjUp password',
             html: `<div style="font-size: 16px;">
-                <img src="https://s3.us-east-1.amazonaws.com/mahjup.release/assets/mahjup-logo.png" style="width: 200px" /><br><br>
+                <img src="https://s3.us-east-1.amazonaws.com/mahjup.release/assets/mahjup-logo-dark.png" style="width: 200px" /><br><br>
                 Your password reset code is: <strong>${code}</strong><br><br>
                 This code expires in 5 minutes. If you did not request a password reset, you can ignore this email.
             </div>`
@@ -252,7 +252,7 @@ export class AuthService extends BaseService {
             to: [username],
             subject: "You've been invited to a game on MahjUp!",
             html: `<div style="text-align: center; font-size: 16px;">
-                <img src="https://s3.us-east-1.amazonaws.com/mahjup.release/assets/mahjup-logo.png" style="width: 200px" /><br><br>
+                <img src="https://s3.us-east-1.amazonaws.com/mahjup.release/assets/mahjup-logo-green-black.png" style="width: 200px" /><br><br>
                 ${invitedByName} has invited you to join a session on MahjUp!<br><br>
                 Click the link below to get started.<br>
                 <a href="${Config.APP_URL}/invite?code=${inviteCode}">Accept Invite</a>

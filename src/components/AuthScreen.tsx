@@ -6,7 +6,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
 import { authService, type AuthedUser } from '../services/auth.service';
-import logoUrl from '../../Assets/mahjup-logo-green.svg';
+import logoUrl from '../../Assets/mahjup-logo-dark.png';
 
 type AuthMode = 'login' | 'register' | 'code-request' | 'code-verify' | 'reset-request' | 'reset-confirm' | 'reset-done';
 

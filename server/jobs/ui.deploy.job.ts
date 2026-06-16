@@ -24,7 +24,7 @@ export class UIDeployJob extends Job {
 
     excludedFiles = [
         'favicon.ico',
-        'assets/mahjup-logo.png'
+        'assets/mahjup-logo-dark.png'
     ];
 
     ignoreAssets = false;
