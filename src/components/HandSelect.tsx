@@ -1,10 +1,16 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Box from '@mui/material/Box';
 import Popover from '@mui/material/Popover';
 import MenuItem from '@mui/material/MenuItem';
 import MenuList from '@mui/material/MenuList';
 import ButtonBase from '@mui/material/ButtonBase';
-import { handData } from '../data/hands';
+import { handData, SegmentColor } from '../data/hands';
+
+const SEGMENT_COLORS: Record<SegmentColor, string> = {
+  green: '#2e7d32',
+  blue: '#020736',
+  red: '#c62828',
+};
 
 interface HandSelectProps {
   category: string;
@@ -20,6 +26,8 @@ export default function HandSelect({ category, hand, onChange, size = 'small', f
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [activeCategory, setActiveCategory] = useState<string>(CATEGORIES[0]);
   const open = Boolean(anchorEl);
+
+  const selectedEntry = category && hand ? (handData[category] ?? []).find(item => item.h === hand) : null;
 
   function handleOpen(e: React.MouseEvent<HTMLElement>) {
     setActiveCategory(category || CATEGORIES[0]);
@@ -62,9 +70,21 @@ export default function HandSelect({ category, hand, onChange, size = 'small', f
             whiteSpace: 'nowrap',
             color: hand ? 'text.primary' : 'text.disabled',
             fontStyle: hand ? 'normal' : 'italic',
+            fontFamily: hand ? 'monospace' : 'inherit',
           }}
         >
-          {hand || 'Hand…'}
+          {selectedEntry?.s ? (
+            <>
+              {selectedEntry.s.map((seg, i) => (
+                <React.Fragment key={i}>
+                  {i > 0 && ' '}
+                  <span style={{ color: seg.c ? SEGMENT_COLORS[seg.c] : 'inherit', fontWeight: seg.c ? 700 : undefined }}>
+                    {seg.t}
+                  </span>
+                </React.Fragment>
+              ))}
+            </>
+          ) : (hand || 'Hand…')}
         </Box>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(0,0,0,0.54)" style={{ flexShrink: 0 }}>
           <path d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z" />
@@ -125,9 +145,33 @@ export default function HandSelect({ category, hand, onChange, size = 'small', f
                 key={item.h}
                 selected={item.h === hand && activeCategory === category}
                 onClick={() => handleSelectHand(activeCategory, item.h, item.v)}
-                sx={{ fontSize: '0.8125rem', whiteSpace: 'normal', lineHeight: 1.4 }}
+                sx={{ fontSize: '0.8125rem', whiteSpace: 'normal', lineHeight: 1.4, fontFamily: 'monospace' }}
               >
-                {item.h}
+                {item.s ? (
+                  <span>
+                    {item.s.map((seg, i) => (
+                      <React.Fragment key={i}>
+                        {i > 0 && ' '}
+                        <span style={{ color: seg.c ? SEGMENT_COLORS[seg.c] : 'inherit', fontWeight: seg.c ? 700 : undefined }}>
+                          {seg.t}
+                        </span>
+                      </React.Fragment>
+                    ))}
+                    {item.s2 && (
+                      <>
+                        <span style={{ color: '#888', fontWeight: 400 }}> -or- </span>
+                        {item.s2.map((seg, i) => (
+                          <React.Fragment key={i}>
+                            {i > 0 && ' '}
+                            <span style={{ color: seg.c ? SEGMENT_COLORS[seg.c] : 'inherit', fontWeight: seg.c ? 700 : undefined }}>
+                              {seg.t}
+                            </span>
+                          </React.Fragment>
+                        ))}
+                      </>
+                    )}
+                  </span>
+                ) : item.h}
               </MenuItem>
             ))}
           </MenuList>
