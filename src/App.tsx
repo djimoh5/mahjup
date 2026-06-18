@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import bgUrl from '../Assets/mahjong-table-backround.png';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -12,6 +13,7 @@ import { mahjSessionService } from './services/mahj-session.service';
 import { userService } from './services/user.service';
 import Header from './components/Header';
 import AuthScreen from './components/AuthScreen';
+import LandingPage from './components/LandingPage';
 import InviteRedeemScreen from './components/InviteRedeemScreen';
 import TrackerTab from './components/TrackerTab';
 import ReferenceTab from './components/ReferenceTab';
@@ -200,12 +202,32 @@ export default function App() {
   }
 
   if (!user) {
-    return <AuthScreen onAuthenticated={handleAuthenticated} />;
+    if (location.pathname === '/login') {
+      return <AuthScreen initialMode="login" onAuthenticated={handleAuthenticated} />;
+    }
+    if (location.pathname === '/register') {
+      return <AuthScreen initialMode="register" onAuthenticated={handleAuthenticated} />;
+    }
+    return (
+      <LandingPage
+        onLogin={() => navigate('/login')}
+        onSignUp={() => navigate('/register')}
+      />
+    );
   }
 
   const sortedSessions = [...sessions].sort((a, b) => b.dateTime.localeCompare(a.dateTime));
 
   return (
+    <Box
+      sx={{
+        minHeight: '100vh',
+        backgroundImage: `linear-gradient(rgba(255,240,238,0.6), rgba(255,240,238,0.6)), url(${bgUrl})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+      }}
+    >
     <Box sx={{ maxWidth: '80rem', mx: 'auto', minHeight: '100vh', display: 'flex', flexDirection: 'column', px: { xs: '0.75rem', md: '1.5rem' }, py: { xs: '0.75rem', md: '1.5rem' } }}>
       <Header
         activeTab={activeTab}
@@ -240,6 +262,7 @@ export default function App() {
           <SummaryTab records={records} currentUserOid={user!.oid} />
         </Box>
       </Box>
+    </Box>
     </Box>
   );
 }

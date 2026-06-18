@@ -35,14 +35,14 @@ export default function ReferenceTab() {
               sx={{
                 px: '1.25rem',
                 py: '0.75rem',
-                background: 'rgba(46,94,66,0.12)',
-                borderBottom: '1px solid rgba(242,171,164,0.35)',
+                background: 'rgba(232,135,122,0.07)',
+                borderBottom: '1px solid rgba(232,135,122,0.18)',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
               }}
             >
-              <Typography sx={{ fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.075em', color: '#0d4a2f' }}>
+              <Typography sx={{ fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.075em', color: '#1a1a1a' }}>
                 {category}
               </Typography>
               <Chip
@@ -54,7 +54,7 @@ export default function ReferenceTab() {
                   borderRadius: '9999px',
                   fontSize: '0.5625rem',
                   fontWeight: 900,
-                  color: '#2e5e42',
+                  color: '#1a1a1a',
                   height: 22,
                 }}
               />

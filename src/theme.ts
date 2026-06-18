@@ -4,7 +4,7 @@ const theme = createTheme({
   palette: {
     primary: { main: '#e8877a', dark: '#cf6e62', contrastText: '#fff' },
     info: { main: '#e8877a', light: 'rgba(232,135,122,0.15)', dark: '#7a2e24', contrastText: '#fff' },
-    text: { primary: '#0a2818', secondary: '#2e5e42' },
+    text: { primary: '#1a1a1a', secondary: 'rgba(0,0,0,0.5)' },
     background: { paper: 'rgba(255, 255, 255, 0.88)' },
     divider: 'rgba(242,171,164,0.55)',
   },
@@ -61,9 +61,9 @@ const theme = createTheme({
     MuiChip: {
       styleOverrides: {
         root: {
-          background: 'rgba(46,94,66,0.1)',
-          color: '#2e5e42',
-          border: '1px solid rgba(46,94,66,0.2)',
+          background: 'rgba(232,135,122,0.1)',
+          color: '#c0503f',
+          border: '1px solid rgba(232,135,122,0.25)',
           fontSize: '0.75rem',
           height: 24,
         },
@@ -97,7 +97,7 @@ const theme = createTheme({
     MuiCheckbox: {
       styleOverrides: {
         root: {
-          color: 'rgba(46,94,66,0.4)',
+          color: 'rgba(0,0,0,0.25)',
           padding: '2px',
           '&.Mui-checked': { color: '#e8877a' },
         },

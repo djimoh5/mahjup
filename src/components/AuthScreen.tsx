@@ -7,6 +7,7 @@ import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
 import { authService, type AuthedUser } from '../services/auth.service';
 import logoUrl from '../../Assets/mahjup-logo-dark.png';
+import bgUrl from '../../Assets/mahjong-table-backround.png';
 
 type AuthMode = 'login' | 'register' | 'code-request' | 'code-verify' | 'reset-request' | 'reset-confirm' | 'reset-done';
 
@@ -20,10 +21,11 @@ const BACK_MAP: Partial<Record<AuthMode, AuthMode>> = {
 
 interface Props {
   onAuthenticated: (user: AuthedUser) => void;
+  initialMode?: 'login' | 'register';
 }
 
-export default function AuthScreen({ onAuthenticated }: Props) {
-  const [mode, setMode] = useState<AuthMode>('login');
+export default function AuthScreen({ onAuthenticated, initialMode }: Props) {
+  const [mode, setMode] = useState<AuthMode>(initialMode ?? 'login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
@@ -115,7 +117,7 @@ export default function AuthScreen({ onAuthenticated }: Props) {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}>
+    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3, backgroundImage: `linear-gradient(rgba(255,240,238,0.6), rgba(255,240,238,0.6)), url(${bgUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }}>
       <Paper
         sx={{
           width: '100%',
@@ -132,7 +134,7 @@ export default function AuthScreen({ onAuthenticated }: Props) {
           gap: 2,
         }}
       >
-        <img src={logoUrl} alt="MahjUp" style={{ width: 300, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }} />
+        <img src={logoUrl} alt="MahjUp" style={{ width: 300}} />
 
         {showBack && (
           <Box sx={{ width: '100%' }}>
@@ -147,7 +149,7 @@ export default function AuthScreen({ onAuthenticated }: Props) {
         )}
 
         {showToggle && (
-          <Box sx={{ display: 'flex', width: '100%', background: 'rgba(46,94,66,0.1)', borderRadius: '0.75rem', p: '0.25rem', gap: '0.25rem' }}>
+          <Box sx={{ display: 'flex', width: '100%', background: 'rgba(232,135,122,0.1)', borderRadius: '0.75rem', p: '0.25rem', gap: '0.25rem' }}>
             {(['login', 'register'] as AuthMode[]).map(m => (
               <Button
                 key={m}

@@ -19,7 +19,7 @@ import Alert from '@mui/material/Alert';
 import type { Tab as AppTab } from '../App';
 
 import { authService } from '../services/auth.service';
-import logoUrl from '../../Assets/mahjup-logo-light.png';
+import logoUrl from '../../Assets/mahjup-logo-dark.png';
 
 import { UserAuth } from '../../model/auth.model';
 
@@ -101,12 +101,10 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
     <Box
       component="header"
       sx={{
-        background: 'rgba(13,74,47,0.88)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        border: '1px solid rgba(255,255,255,0.18)',
+        background: '#fff',
+        border: '1px solid rgba(232,135,122,0.18)',
         borderRadius: '1rem',
-        boxShadow: '0 10px 25px -5px rgba(0,0,0,0.25)',
+        boxShadow: '0 4px 20px rgba(232,135,122,0.1), 0 1px 4px rgba(0,0,0,0.06)',
         overflow: 'hidden',
         mb: 3,
       }}
@@ -143,7 +141,7 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
                 textTransform: 'uppercase',
                 letterSpacing: '0.1em',
                 fontWeight: 700,
-                color: 'rgba(255,255,255,0.9)',
+                color: 'rgba(0,0,0,0.7)',
               }}
             >
               <Box sx={{ position: 'relative', display: 'flex', height: '0.5rem', width: '0.5rem' }}>
@@ -184,7 +182,7 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
                 fontSize: '0.875rem',
                 fontWeight: 700,
                 color: '#fff',
-                border: '2px solid rgba(255,255,255,0.3)',
+                border: '2px solid rgba(232,135,122,0.25)',
               }}
             >
               {getInitials(user)}
@@ -212,7 +210,7 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
       </Box>
 
       {/* Nav tabs */}
-      <Box sx={{ background: 'rgba(46,94,66,0.88)', borderTop: '1px solid rgba(255,255,255,0.12)' }}>
+      <Box sx={{ background: 'rgba(232,135,122,0.06)', borderTop: '1px solid rgba(232,135,122,0.12)' }}>
         <Tabs
           value={activeTab}
           onChange={(_, v) => onTabChange(v as AppTab)}
@@ -220,14 +218,14 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
             px: 2,
             '& .MuiTabs-indicator': { background: '#e8877a', height: 3, borderRadius: '3px 3px 0 0' },
             '& .MuiTab-root': {
-              color: 'rgba(255,255,255,0.5)',
+              color: 'rgba(0,0,0,0.4)',
               textTransform: 'none',
               fontWeight: 500,
               fontSize: '0.875rem',
               minHeight: 52,
               fontFamily: '"Inter", sans-serif',
             },
-            '& .MuiTab-root:hover': { color: 'rgba(255,255,255,0.9)' },
+            '& .MuiTab-root:hover': { color: 'rgba(0,0,0,0.75)' },
             '& .Mui-selected': { color: '#e8877a !important', fontWeight: 600 },
           }}
         >
