@@ -67,7 +67,7 @@ export class EmailService extends BaseService {
             { name: "main_content", content: this.sanitize(template.content || '') },
             { name: "button_link", content: template.buttonLink },
             { name: "button_text", content: this.sanitize(template.buttonText) },
-            { name: "footer_text", content: this.sanitize(template.footer) }
+            { name: "footer_text", content: this.sanitize(template.footer) || '' }
         ];
 
         const body = {
