@@ -61,7 +61,9 @@ export class UIDeployJob extends Job {
     }
 
     private async oneTimeDeploy(_bucket: string) {
-        //await this.uploadFile('../dist/favicon.ico', 'favicon.ico', _bucket, 'no-cache');
+        await this.uploadFile('../dist/favicon.ico', 'favicon.ico', _bucket, 'no-cache');
+        await this.uploadFile('../Assets/mahjup-logo-dark.png', 'mahjup-logo-dark.png', _bucket);
+        await this.uploadFile('../Assets/mahjup-logo-light.png', 'mahjup-logo-light.png', _bucket);
     }
 
     private async deleteFiles(bucket: string, continuationToken?: string) {
