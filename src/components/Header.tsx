@@ -119,7 +119,7 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
           justifyContent: 'space-between',
           alignItems: 'center',
           gap: 2,
-          background: '#efefef',
+          background: '#fcfcfc',
         }}
       >
         <Box>
@@ -211,7 +211,7 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
       </Box>
 
       {/* Nav tabs */}
-      <Box sx={{ background: '#f6f1f1', borderTop: '1px solid rgba(242, 171, 164, 0.55)' }}>
+      <Box sx={{ background: '#fffcfc', borderTop: '1px solid rgba(242, 171, 164, 0.55)' }}>
         <Tabs
           value={activeTab}
           onChange={(_, v) => onTabChange(v as AppTab)}

@@ -31,7 +31,7 @@ const theme = createTheme({
       defaultProps: { elevation: 0 },
       styleOverrides: {
         root: {
-          background: '#f6f1f1',
+          background: '#fffcfc',
           backdropFilter: 'blur(8px)',
           WebkitBackdropFilter: 'blur(8px)',
           border: '1px solid rgba(232,135,122,0.15)',
