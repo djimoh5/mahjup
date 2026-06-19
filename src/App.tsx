@@ -236,6 +236,7 @@ export default function App() {
         user={user}
         onLogout={handleLogout}
         onUserUpdate={handleUserUpdate}
+        onUserAdded={handleUserAdded}
       />
       <Box component="main" sx={{ flexGrow: 1 }}>
         <Box sx={{ display: activeTab !== 'tracker' ? 'none' : 'block' }}>

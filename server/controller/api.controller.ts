@@ -121,9 +121,12 @@ export class APIController extends BaseController {
 	@Get('user/affiliated')
 	async getAffiliatedUsers(req: Request, res: Response) {
 		const userId = req.session.user.oid;
-		const { data: records } = await this.gameService.getByUser(userId);
+		const [{ data: records }, invitedOids] = await Promise.all([
+			this.gameService.getByUser(userId),
+			this.authService.getInvitedUserOids(userId),
+		]);
 		const playerIds = [...new Set(
-			[userId, ...(records ?? []).flatMap(r => (r.players ?? []).map(p => p.userId)).filter(id => !!id)]
+			[userId, ...(records ?? []).flatMap(r => (r.players ?? []).map(p => p.userId)).filter(id => !!id), ...invitedOids]
 		)];
 		const data = await this.authService.getUsersByOids(playerIds);
 		res.send(data);
@@ -149,11 +152,11 @@ export class APIController extends BaseController {
 
 	@Post('auth/invite')
 	async invite(req: Request, res: Response) {
-		const { username } = req.body;
+		const { username, sessionless } = req.body;
 		if (!username) {
 			return this.sendError(res, 'username is required');
 		}
-		const data = await this.authService.invite(username, <authid>req.session.user.oid, req.session.user.username);
+		const data = await this.authService.invite(username, <authid>req.session.user.oid, req.session.user.username, !!sessionless);
 		res.send(data);
 	}
 

@@ -16,12 +16,15 @@ import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
 import Alert from '@mui/material/Alert';
+import CircularProgress from '@mui/material/CircularProgress';
 import type { Tab as AppTab } from '../App';
 
 import { authService } from '../services/auth.service';
 import logoUrl from '../../Assets/mahjup-logo-dark.png';
 
 import { UserAuth } from '../../model/auth.model';
+import type { UserSummary } from '../../model/user.model';
+import type { authid } from '../../model/id.model';
 
 interface HeaderProps {
   activeTab: AppTab;
@@ -30,6 +33,7 @@ interface HeaderProps {
   user: UserAuth;
   onLogout: () => void;
   onUserUpdate: (updated: UserAuth) => void;
+  onUserAdded: (newUser: UserSummary) => void;
 }
 
 function getInitials(user: UserAuth): string {
@@ -47,7 +51,7 @@ function getDisplayName(user: UserAuth): string {
   return user.username;
 }
 
-export default function Header({ activeTab, onTabChange, isSaving, user, onLogout, onUserUpdate }: HeaderProps) {
+export default function Header({ activeTab, onTabChange, isSaving, user, onLogout, onUserUpdate, onUserAdded }: HeaderProps) {
 
   const hasName = !!(user.profile?.firstName || user.profile?.lastName);
 
@@ -57,6 +61,12 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
   const [lastName, setLastName] = useState(user.profile?.lastName ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteError, setInviteError] = useState('');
+  const [inviteSuccess, setInviteSuccess] = useState(false);
 
   useEffect(() => {
     if (!hasName) {
@@ -95,6 +105,37 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
     } else {
       setError(err ?? 'Update failed');
     }
+  }
+
+  function handleOpenInvite() {
+    setInviteEmail('');
+    setInviteError('');
+    setInviteSuccess(false);
+    setInviteOpen(true);
+    handleCloseMenu();
+  }
+
+  function handleCloseInvite() {
+    setInviteOpen(false);
+    setInviteEmail('');
+    setInviteError('');
+    setInviteSuccess(false);
+  }
+
+  async function handleInviteConfirm() {
+    if (!inviteEmail.trim()) return;
+    setInviteLoading(true);
+    setInviteError('');
+    const { oid, error } = await authService.invite(inviteEmail.trim(), true);
+    setInviteLoading(false);
+    if (!oid || error) {
+      setInviteError(error ?? 'Invite failed');
+      return;
+    }
+    const newUser: UserSummary = { oid: oid as authid, username: inviteEmail.trim() };
+    onUserAdded(newUser);
+    setInviteSuccess(true);
+    setInviteEmail('');
   }
 
   return (
@@ -203,6 +244,7 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
             </Box>
             <Divider />
             <MenuItem onClick={handleOpenAccount}>My Account</MenuItem>
+            <MenuItem onClick={handleOpenInvite}>Invite</MenuItem>
             <MenuItem onClick={() => { handleCloseMenu(); onLogout(); }} sx={{ color: 'error.main' }}>
               Log Out
             </MenuItem>
@@ -235,6 +277,37 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
           <Tab label="Card Reference" value="hands" />
         </Tabs>
       </Box>
+
+      {/* Invite dialog */}
+      <Dialog open={inviteOpen} onClose={handleCloseInvite} maxWidth="xs" fullWidth>
+        <DialogTitle>Invite someone</DialogTitle>
+        <DialogContent>
+          {inviteSuccess && <Alert severity="success" sx={{ mb: 1 }}>Invite sent!</Alert>}
+          <TextField
+            autoFocus
+            label="Email address"
+            type="email"
+            value={inviteEmail}
+            onChange={e => setInviteEmail(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') handleInviteConfirm(); }}
+            error={!!inviteError}
+            helperText={inviteError || ' '}
+            fullWidth
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseInvite}>Close</Button>
+          <Button
+            variant="contained"
+            onClick={handleInviteConfirm}
+            disabled={inviteLoading || !inviteEmail.trim()}
+            startIcon={inviteLoading ? <CircularProgress size={16} /> : undefined}
+          >
+            Send Invite
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* My Account dialog */}
       <Dialog open={accountOpen} onClose={hasName ? handleCloseAccount : undefined} maxWidth="xs" fullWidth>

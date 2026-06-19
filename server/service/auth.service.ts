@@ -228,7 +228,7 @@ export class AuthService extends BaseService {
         return new ApiResponse(true, null, 'Password has been reset successfully.');
     }
 
-    async invite(username: string, invitedBy: authid, invitedByName: string): Promise<ApiResponse<{ oid: string }>> {
+    async invite(username: string, invitedBy: authid, invitedByName: string, sessionless = false): Promise<ApiResponse<{ oid: string }>> {
         let userAuth = await this.authRepository.getByUsername(username);
         
         if (!userAuth) {
@@ -248,15 +248,23 @@ export class AuthService extends BaseService {
             invitedByName = `${inviter.firstName || ''} ${inviter.lastName || ''} (${invitedByName})`;
         }
 
+        const joinText = sessionless
+            ? `${invitedByName} has invited you to join MahjUp!`
+            : `${invitedByName} has invited you to join a session on MahjUp!`;
+
+        const titleText = sessionless
+            ? `You've been invited to MahjUp!`
+            : `You've been invited to a game on MahjUp!`;
+
         const email: EmailTemplate = {
             template: EmailTemplateTypes.MainCTA,
             to: [username],
-            subject: "You've been invited to a game on MahjUp!",
-            title: "You've been invited to a game on MahjUp!",
+            subject: titleText,
+            title: titleText,
             content: `<div style="text-align: center; font-size: 16px;">
-                ${invitedByName} has invited you to join a session on MahjUp!<br><br>
+                ${joinText}<br><br>
                 Click the button below to get started.<br>
-            </div>`, 
+            </div>`,
             buttonText: 'Accept Invite',
             buttonLink: `${Config.APP_URL}/invite?code=${inviteCode}`
         };
@@ -264,6 +272,14 @@ export class AuthService extends BaseService {
         await this.emailService.sendTemplate(email, invitedBy);
 
         return new ApiResponse(true, { oid: userAuth.oid as string });
+    }
+
+    async getInvitedUserOids(invitedBy: string): Promise<string[]> {
+        const invites = await this.inviteRepository.getByInvitedBy(invitedBy);
+        if (!invites?.length) return [];
+        const usernames = [...new Set(invites.map(i => i.username))];
+        const users = await this.authRepository.getByUsernames(usernames);
+        return users.map(u => u.oid as string);
     }
 
     async getUsersByOids(oids: string[]): Promise<ApiResponse<UserSummary[]>> {

@@ -77,9 +77,9 @@ export class AuthService extends BaseService {
     }
   }
 
-  async invite(email: string): Promise<{ oid: string | null; error?: string }> {
+  async invite(email: string, sessionless = false): Promise<{ oid: string | null; error?: string }> {
     try {
-      const res = await this.post<ApiResponse<{ oid: string }>>('/auth/invite', { username: email });
+      const res = await this.post<ApiResponse<{ oid: string }>>('/auth/invite', { username: email, sessionless });
       if (res.success && res.data) return { oid: res.data.oid };
       return { oid: null, error: res.msg ?? 'Invite failed' };
     } catch {
