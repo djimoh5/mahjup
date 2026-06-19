@@ -212,6 +212,28 @@ export default function LandingPage({ onLogin, onSignUp }: Props) {
           </Box>
         </Box>
 
+        {/* Mobile hero preview */}
+        <Box sx={{
+          display: { xs: 'block', md: 'none' },
+          width: '100%',
+          mt: 3,
+          position: 'relative',
+          height: { xs: 245, sm: 355 },
+          overflow: 'hidden',
+        }}>
+          <Box sx={{
+            position: 'absolute',
+            width: 640,
+            height: 440,
+            top: 0,
+            left: { xs: 'calc(50% - 195px)', sm: 'calc(50% - 284px)' },
+            transform: { xs: 'scale(0.55)', sm: 'scale(0.8)' },
+            transformOrigin: 'top left',
+          }}>
+            <HeroPreview />
+          </Box>
+        </Box>
+
         {/* Right: floating UI preview */}
         <Box
           sx={{

@@ -2,7 +2,6 @@ import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import LinearProgress from '@mui/material/LinearProgress';
 import type { GameRecord } from '../../model/game.model';
 
 interface SummaryTabProps {
@@ -12,7 +11,7 @@ interface SummaryTabProps {
 
 const statCards = [
   {
-    labelColor: 'rgba(46,94,66,0.6)',
+    labelColor: '#e8877a',
     label: 'Total Games',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: '4rem', height: '4rem' }}>
@@ -32,7 +31,7 @@ const statCards = [
     valueKey: 'winRate' as const,
   },
   {
-    labelColor: '#0d4a2f',
+    labelColor: '#5b3fa0',
     label: 'Total Points Earned',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: '4rem', height: '4rem' }}>
@@ -62,7 +61,7 @@ const statCards = [
     valueKey: 'avgWinJokers' as const,
   },
   {
-    labelColor: '#2e7a8c',
+    labelColor: '#b07d2e',
     label: 'Avg Jokers (Overall)',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: '4rem', height: '4rem' }}>
@@ -73,9 +72,88 @@ const statCards = [
   },
 ];
 
+const PIE_COLORS = ['#e8877a', '#5b3fa0', '#b07d2e', '#2e5e42', '#4a90d9', '#c45c9e', '#3d8b6f', '#d4732e'];
+
+function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
+  const rad = ((angleDeg - 90) * Math.PI) / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+
+function slicePath(cx: number, cy: number, r: number, startAngle: number, endAngle: number) {
+  const start = polarToCartesian(cx, cy, r, startAngle);
+  const end = polarToCartesian(cx, cy, r, endAngle);
+  const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+  return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 1 ${end.x} ${end.y} Z`;
+}
+
+function PieChart({ data }: { data: [string, number][] }) {
+  const total = data.reduce((acc, [, n]) => acc + n, 0);
+  const cx = 75, cy = 75, r = 65;
+  const innerR = r * 0.42;
+  const labelR = (r + innerR) / 2;
+  let cumAngle = 0;
+
+  const slices = data.map(([cat, count], i) => {
+    const angle = (count / total) * 360;
+    const startAngle = cumAngle;
+    const midAngle = cumAngle + angle / 2;
+    cumAngle += angle;
+    const pct = Math.round((count / total) * 100);
+    const labelPos = polarToCartesian(cx, cy, labelR, midAngle);
+    return { cat, count, i, startAngle, endAngle: cumAngle, pct, labelPos };
+  });
+
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+      <svg width={150} height={150} viewBox="0 0 150 150">
+        {data.length === 1 ? (
+          <>
+            <circle cx={cx} cy={cy} r={r} fill={PIE_COLORS[0]} />
+            <circle cx={cx} cy={cy} r={innerR} fill="var(--mui-palette-background-paper, #1e1e2e)" />
+            <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="13" fontWeight="700">100%</text>
+          </>
+        ) : (
+          <>
+            {slices.map(({ cat, startAngle, endAngle, i }) => (
+              <path key={cat} d={slicePath(cx, cy, r, startAngle, endAngle)} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+            ))}
+            <circle cx={cx} cy={cy} r={innerR} fill="var(--mui-palette-background-paper, #1e1e2e)" />
+            {slices.map(({ cat, pct, labelPos }) => pct >= 8 && (
+              <text
+                key={cat + '_label'}
+                x={labelPos.x}
+                y={labelPos.y}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fill="white"
+                fontSize="11"
+                fontWeight="700"
+                style={{ pointerEvents: 'none' }}
+              >
+                {pct}%
+              </text>
+            ))}
+          </>
+        )}
+      </svg>
+      <Box sx={{ width: '100%' }}>
+        {data.map(([cat], i) => (
+          <Box key={cat} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
+            <Box sx={{ width: 10, height: 10, borderRadius: '2px', bgcolor: PIE_COLORS[i % PIE_COLORS.length], flexShrink: 0 }} />
+            <Typography sx={{ fontSize: '0.75rem', color: 'text.secondary', lineHeight: 1.3 }}>
+              {cat}
+            </Typography>
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
+}
+
 export default function SummaryTab({ records, currentUserOid }: SummaryTabProps) {
   const valid = records.filter(d => d.players?.some(p => p.userId === currentUserOid));
   const wins = valid.filter(d => d.players.some(p => p.isWinner && p.userId === currentUserOid));
+  const losses = valid.filter(d => !d.players.some(p => p.isWinner && p.userId === currentUserOid));
   const total = valid.length;
   const points = wins.reduce((acc, d) => {
     const myWin = d.players.find(p => p.isWinner && p.userId === currentUserOid);
@@ -108,10 +186,38 @@ export default function SummaryTab({ records, currentUserOid }: SummaryTabProps)
     if (mine?.category) winCounts[mine.category] = (winCounts[mine.category] ?? 0) + 1;
   });
 
+  const lossCounts: Record<string, number> = {};
+  losses.forEach(d => {
+    const mine = d.players.find(p => p.userId === currentUserOid);
+    if (mine?.category) lossCounts[mine.category] = (lossCounts[mine.category] ?? 0) + 1;
+  });
+
+  const winHandCounts: Record<string, number> = {};
+  wins.forEach(d => {
+    const mine = d.players.find(p => p.isWinner && p.userId === currentUserOid);
+    if (mine?.hand) winHandCounts[mine.hand] = (winHandCounts[mine.hand] ?? 0) + 1;
+  });
+
+  const lossHandCounts: Record<string, number> = {};
+  losses.forEach(d => {
+    const mine = d.players.find(p => p.userId === currentUserOid);
+    if (mine?.hand) lossHandCounts[mine.hand] = (lossHandCounts[mine.hand] ?? 0) + 1;
+  });
+
   const sortedCounts = Object.entries(counts).sort((a, b) => b[1] - a[1]);
   const sortedWinCounts = Object.entries(winCounts).sort((a, b) => b[1] - a[1]);
+  const sortedLossCounts = Object.entries(lossCounts).sort((a, b) => b[1] - a[1]);
+  const topWinHands = Object.entries(winHandCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  const topLossHands = Object.entries(lossHandCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
 
   const values = { total, winRate, points, avgPoints, avgWinJokers, avgAllJokers };
+
+  const pieCardSx = {
+    p: '2rem',
+    borderRadius: '1.5rem',
+    border: '1px solid rgba(232,135,122,0.12)',
+    height: '100%',
+  };
 
   return (
     <>
@@ -148,74 +254,106 @@ export default function SummaryTab({ records, currentUserOid }: SummaryTabProps)
       </Grid>
 
       <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Paper sx={{ p: '2rem', borderRadius: '1.5rem', border: '1px solid rgba(232,135,122,0.12)', height: '100%', position: 'relative', overflow: 'hidden' }}>
-            <Box sx={{ position: 'absolute', top: 0, right: 0, p: '1rem', opacity: 0.05 }}>
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: '4rem', height: '4rem' }}>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </Box>
-            <Typography
-              variant="h6"
-              sx={{ fontWeight: 700, color: 'text.primary', mb: 3, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-            >
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Paper sx={pieCardSx}>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', mb: 3 }}>
               Category Distribution Overall
-            </ Typography>
+            </Typography>
             {sortedCounts.length === 0 ? (
               <Typography sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>No games played yet.</Typography>
             ) : (
-              <Grid container spacing={2}>
-                {sortedCounts.map(([cat, count]) => (
-                  <Grid key={cat} size={12}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 700, color: 'text.secondary', mb: '0.375rem' }}>
-                      <span>{cat}</span>
-                      <span>{count} game{count !== 1 ? 's' : ''}</span>
-                    </Box>
-                    <LinearProgress
-                      variant="determinate"
-                      value={total > 0 ? (count / total) * 100 : 0}
-                      sx={{ '& .MuiLinearProgress-bar': { background: 'rgba(46,94,66,0.6)' } }}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
+              <PieChart data={sortedCounts} />
             )}
           </Paper>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Paper sx={{ p: '2rem', borderRadius: '1.5rem', border: '1px solid rgba(232,135,122,0.12)', height: '100%', position: 'relative', overflow: 'hidden' }}>
-            <Box sx={{ position: 'absolute', top: 0, right: 0, p: '1rem', opacity: 0.05 }}>
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: '4rem', height: '4rem' }}>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15c-3.314 0-6-2.686-6-6V3h12v6c0 3.314-2.686 6-6 6zm0 0v4m-4 2h8M6 3H4a2 2 0 00-2 2v1c0 2.761 1.79 5.1 4.268 5.817M18 3h2a2 2 0 012 2v1c0 2.761-1.79 5.1-4.268 5.817" />
-              </svg>
-            </Box>
-            <Typography
-              variant="h6"
-              sx={{ fontWeight: 700, color: 'text.primary', mb: 3, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-            >
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Paper sx={pieCardSx}>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', mb: 3 }}>
               Category Distribution on Wins
             </Typography>
             {sortedWinCounts.length === 0 ? (
               <Typography sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>No wins recorded yet.</Typography>
             ) : (
-              <Grid container spacing={2}>
-                {sortedWinCounts.map(([cat, count]) => (
-                  <Grid key={cat} size={12}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 700, color: 'text.secondary', mb: '0.375rem' }}>
-                      <span>{cat}</span>
-                      <span>{count} win{count !== 1 ? 's' : ''}</span>
-                    </Box>
-                    <LinearProgress
-                      variant="determinate"
-                      value={wins.length > 0 ? (count / wins.length) * 100 : 0}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
+              <PieChart data={sortedWinCounts} />
             )}
           </Paper>
         </Grid>
+
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Paper sx={pieCardSx}>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', mb: 3 }}>
+              Category Distribution on Losses
+            </Typography>
+            {sortedLossCounts.length === 0 ? (
+              <Typography sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>No losses recorded yet.</Typography>
+            ) : (
+              <PieChart data={sortedLossCounts} />
+            )}
+          </Paper>
+        </Grid>
+      </Grid>
+
+      <Grid container spacing={3} sx={{ mt: 3 }}>
+        {([
+          { title: 'Top 3 Hands (Wins)', hands: topWinHands, empty: 'No wins with hand data yet.' },
+          { title: 'Bottem 3 Hands (Losses)', hands: topLossHands, empty: 'No losses with hand data yet.' },
+        ] as const).map(({ title, hands, empty }) => (
+          <Grid key={title} size={{ xs: 12, md: 6 }}>
+            <Paper sx={pieCardSx}>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', mb: 3 }}>
+                {title}
+              </Typography>
+              {hands.length === 0 ? (
+                <Typography sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>{empty}</Typography>
+              ) : (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                  {hands.map(([hand, count], i) => {
+                    const medals = ['#b07d2e', '#9e9e9e', '#a0522d'] as const;
+                    const ranks = ['1st', '2nd', '3rd'] as const;
+                    return (
+                      <Box
+                        key={hand}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 2,
+                          p: '0.875rem 1rem',
+                          borderRadius: '0.875rem',
+                          background: `rgba(${i === 0 ? '176,125,46' : i === 1 ? '158,158,158' : '160,82,45'}, 0.08)`,
+                          border: `1px solid rgba(${i === 0 ? '176,125,46' : i === 1 ? '158,158,158' : '160,82,45'}, 0.2)`,
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: '50%',
+                            background: medals[i],
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Typography sx={{ fontSize: '0.65rem', fontWeight: 900, color: '#fff', letterSpacing: '0.03em' }}>
+                            {ranks[i]}
+                          </Typography>
+                        </Box>
+                        <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'text.primary', flex: 1, lineHeight: 1.3 }}>
+                          {hand}
+                        </Typography>
+                        <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: medals[i], whiteSpace: 'nowrap' }}>
+                          {count}×
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Box>
+              )}
+            </Paper>
+          </Grid>
+        ))}
       </Grid>
     </>
   );
