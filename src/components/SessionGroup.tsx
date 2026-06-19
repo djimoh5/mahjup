@@ -80,6 +80,8 @@ export default function SessionGroup({
   const [editDateTime, setEditDateTime] = useState(session.dateTime);
   const [editPlayers, setEditPlayers] = useState<string[]>([...session.players]);
 
+  const isNewSession = useRef(initialEditing ?? false);
+
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteLoading, setInviteLoading] = useState(false);
@@ -101,6 +103,10 @@ export default function SessionGroup({
       players: editPlayers as authid[],
     });
     setIsEditing(false);
+    if (isNewSession.current && games.length > 0) {
+      setExpandedGameId(games[0].oid);
+      isNewSession.current = false;
+    }
   }
 
   function handleCancel() {

@@ -90,7 +90,7 @@ export default function LandingPage({ onLogin, onSignUp }: Props) {
       >
         <img src={darkLogoUrl} alt="MahjUp" style={{ width: 150 }} />
 
-        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', gap: { xs: 0.5, sm: 1.5 }, alignItems: 'center' }}>
           <Button
             onClick={onLogin}
             variant="outlined"
@@ -100,7 +100,7 @@ export default function LandingPage({ onLogin, onSignUp }: Props) {
               borderRadius: '2rem',
               fontWeight: 600,
               textTransform: 'none',
-              px: 3,
+              px: { xs: 1.5, sm: 3 },
               '&:hover': {
                 borderColor: 'rgba(0,0,0,0.45)',
                 background: 'rgba(0,0,0,0.04)',
@@ -117,7 +117,7 @@ export default function LandingPage({ onLogin, onSignUp }: Props) {
               borderRadius: '2rem',
               fontWeight: 700,
               textTransform: 'none',
-              px: 3.5,
+              px: { xs: 2, sm: 3.5 },
               boxShadow: '0 4px 18px rgba(232,135,122,0.4)',
               '&:hover': { background: '#cf6e62' },
             }}

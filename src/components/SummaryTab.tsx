@@ -2,7 +2,12 @@ import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import { Pie } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip } from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import type { GameRecord } from '../../model/game.model';
+
+ChartJS.register(ArcElement, Tooltip, ChartDataLabels);
 
 interface SummaryTabProps {
   records: GameRecord[];
@@ -41,16 +46,6 @@ const statCards = [
     valueKey: 'points' as const,
   },
   {
-    labelColor: '#5b3fa0',
-    label: 'Avg Points Per Win',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: '4rem', height: '4rem' }}>
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      </svg>
-    ),
-    valueKey: 'avgPoints' as const,
-  },
-  {
     labelColor: '#b07d2e',
     label: 'Avg Jokers (Wins)',
     icon: (
@@ -70,78 +65,68 @@ const statCards = [
     ),
     valueKey: 'avgAllJokers' as const,
   },
+  {
+    labelColor: '#5b3fa0',
+    label: 'Avg Points Per Win',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: '4rem', height: '4rem' }}>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+    ),
+    valueKey: 'avgPoints' as const,
+  },
 ];
 
 const PIE_COLORS = ['#e8877a', '#5b3fa0', '#b07d2e', '#2e5e42', '#4a90d9', '#c45c9e', '#3d8b6f', '#d4732e'];
 
-function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
-  const rad = ((angleDeg - 90) * Math.PI) / 180;
-  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
-}
-
-function slicePath(cx: number, cy: number, r: number, startAngle: number, endAngle: number) {
-  const start = polarToCartesian(cx, cy, r, startAngle);
-  const end = polarToCartesian(cx, cy, r, endAngle);
-  const largeArc = endAngle - startAngle > 180 ? 1 : 0;
-  return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 1 ${end.x} ${end.y} Z`;
-}
-
 function PieChart({ data }: { data: [string, number][] }) {
   const total = data.reduce((acc, [, n]) => acc + n, 0);
-  const cx = 75, cy = 75, r = 65;
-  const innerR = r * 0.42;
-  const labelR = (r + innerR) / 2;
-  let cumAngle = 0;
 
-  const slices = data.map(([cat, count], i) => {
-    const angle = (count / total) * 360;
-    const startAngle = cumAngle;
-    const midAngle = cumAngle + angle / 2;
-    cumAngle += angle;
-    const pct = Math.round((count / total) * 100);
-    const labelPos = polarToCartesian(cx, cy, labelR, midAngle);
-    return { cat, count, i, startAngle, endAngle: cumAngle, pct, labelPos };
-  });
+  const chartData = {
+    labels: data.map(([cat]) => cat),
+    datasets: [
+      {
+        data: data.map(([, n]) => n),
+        backgroundColor: data.map((_, i) => PIE_COLORS[i % PIE_COLORS.length]),
+        borderWidth: 0,
+      },
+    ],
+  };
+
+  const options = {
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        displayColors: false,
+        callbacks: {
+          label: (ctx: { raw: unknown }) => `${ctx.raw} Games`,
+        },
+      },
+      datalabels: {
+        color: '#fff' as const,
+        font: { weight: 'bold' as const, size: 11 },
+        formatter: (value: number) => {
+          const pct = Math.round((value / total) * 100);
+          return pct >= 8 ? `${value} (${pct}%)` : '';
+        },
+      },
+    },
+  };
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-      <svg width={150} height={150} viewBox="0 0 150 150">
-        {data.length === 1 ? (
-          <>
-            <circle cx={cx} cy={cy} r={r} fill={PIE_COLORS[0]} />
-            <circle cx={cx} cy={cy} r={innerR} fill="var(--mui-palette-background-paper, #1e1e2e)" />
-            <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="13" fontWeight="700">100%</text>
-          </>
-        ) : (
-          <>
-            {slices.map(({ cat, startAngle, endAngle, i }) => (
-              <path key={cat} d={slicePath(cx, cy, r, startAngle, endAngle)} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-            ))}
-            <circle cx={cx} cy={cy} r={innerR} fill="var(--mui-palette-background-paper, #1e1e2e)" />
-            {slices.map(({ cat, pct, labelPos }) => pct >= 8 && (
-              <text
-                key={cat + '_label'}
-                x={labelPos.x}
-                y={labelPos.y}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill="white"
-                fontSize="11"
-                fontWeight="700"
-                style={{ pointerEvents: 'none' }}
-              >
-                {pct}%
-              </text>
-            ))}
-          </>
-        )}
-      </svg>
+      <Box sx={{ width: 160, height: 160 }}>
+        <Pie data={chartData} options={options} />
+      </Box>
       <Box sx={{ width: '100%' }}>
-        {data.map(([cat], i) => (
+        {data.map(([cat, count], i) => (
           <Box key={cat} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
             <Box sx={{ width: 10, height: 10, borderRadius: '2px', bgcolor: PIE_COLORS[i % PIE_COLORS.length], flexShrink: 0 }} />
-            <Typography sx={{ fontSize: '0.75rem', color: 'text.secondary', lineHeight: 1.3 }}>
+            <Typography sx={{ fontSize: '0.75rem', color: 'text.secondary', lineHeight: 1.3, flex: 1 }}>
               {cat}
+            </Typography>
+            <Typography sx={{ fontSize: '0.75rem', color: 'text.secondary', whiteSpace: 'nowrap' }}>
+              {count} ({Math.round((count / total) * 100)}%)
             </Typography>
           </Box>
         ))}
@@ -296,8 +281,8 @@ export default function SummaryTab({ records, currentUserOid }: SummaryTabProps)
 
       <Grid container spacing={3} sx={{ mt: 3 }}>
         {([
-          { title: 'Top 3 Hands (Wins)', hands: topWinHands, empty: 'No wins with hand data yet.' },
-          { title: 'Bottem 3 Hands (Losses)', hands: topLossHands, empty: 'No losses with hand data yet.' },
+          { title: 'Top Hands (Wins)', hands: topWinHands, empty: 'No wins with hand data yet.' },
+          { title: 'Top Hands (Losses)', hands: topLossHands, empty: 'No losses with hand data yet.' },
         ] as const).map(({ title, hands, empty }) => (
           <Grid key={title} size={{ xs: 12, md: 6 }}>
             <Paper sx={pieCardSx}>
@@ -307,7 +292,7 @@ export default function SummaryTab({ records, currentUserOid }: SummaryTabProps)
               {hands.length === 0 ? (
                 <Typography sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>{empty}</Typography>
               ) : (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
                   {hands.map(([hand, count], i) => {
                     const medals = ['#b07d2e', '#9e9e9e', '#a0522d'] as const;
                     const ranks = ['1st', '2nd', '3rd'] as const;
@@ -318,10 +303,8 @@ export default function SummaryTab({ records, currentUserOid }: SummaryTabProps)
                           display: 'flex',
                           alignItems: 'center',
                           gap: 2,
-                          p: '0.875rem 1rem',
+                          p: '0.4rem 1rem',
                           borderRadius: '0.875rem',
-                          background: `rgba(${i === 0 ? '176,125,46' : i === 1 ? '158,158,158' : '160,82,45'}, 0.08)`,
-                          border: `1px solid rgba(${i === 0 ? '176,125,46' : i === 1 ? '158,158,158' : '160,82,45'}, 0.2)`,
                         }}
                       >
                         <Box
