@@ -121,12 +121,12 @@ export class APIController extends BaseController {
 	@Get('user/affiliated')
 	async getAffiliatedUsers(req: Request, res: Response) {
 		const userId = req.session.user.oid;
-		const [{ data: records }, invitedOids] = await Promise.all([
+		const [{ data: records }, inviteOids] = await Promise.all([
 			this.gameService.getByUser(userId),
-			this.authService.getInvitedUserOids(userId),
+			this.authService.getInviteAffiliatedOids(userId, req.session.user.username),
 		]);
 		const playerIds = [...new Set(
-			[userId, ...(records ?? []).flatMap(r => (r.players ?? []).map(p => p.userId)).filter(id => !!id), ...invitedOids]
+			[userId, ...(records ?? []).flatMap(r => (r.players ?? []).map(p => p.userId)).filter(id => !!id), ...inviteOids]
 		)];
 		const data = await this.authService.getUsersByOids(playerIds);
 		res.send(data);

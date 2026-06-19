@@ -17,6 +17,10 @@ export class InviteRepository extends BaseRepository {
         return this.context.findOne({ username: username });
     }
 
+    getAllByUsername(username: string): Promise<Invite[]> {
+        return this.context.find({ username: username });
+    }
+
     getByInvitedBy(invitedBy: string): Promise<Invite[]> {
         return this.context.find({ invitedBy: invitedBy });
     }

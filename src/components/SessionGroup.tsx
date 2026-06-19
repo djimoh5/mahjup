@@ -76,6 +76,12 @@ export default function SessionGroup({
     prevGamesRef.current = games;
   }, [games]);
 
+  useEffect(() => {
+    if (isExpanded && games.length === 1) {
+      setExpandedGameId(games[0].oid);
+    }
+  }, [isExpanded]);
+
   const [editTitle, setEditTitle] = useState(session.title ?? '');
   const [editDateTime, setEditDateTime] = useState(session.dateTime);
   const [editPlayers, setEditPlayers] = useState<string[]>([...session.players]);

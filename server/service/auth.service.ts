@@ -274,12 +274,20 @@ export class AuthService extends BaseService {
         return new ApiResponse(true, { oid: userAuth.oid as string });
     }
 
-    async getInvitedUserOids(invitedBy: string): Promise<string[]> {
-        const invites = await this.inviteRepository.getByInvitedBy(invitedBy);
-        if (!invites?.length) return [];
-        const usernames = [...new Set(invites.map(i => i.username))];
-        const users = await this.authRepository.getByUsernames(usernames);
-        return users.map(u => u.oid as string);
+    async getInviteAffiliatedOids(userId: string, username: string): Promise<string[]> {
+        const [sentInvites, receivedInvites] = await Promise.all([
+            this.inviteRepository.getByInvitedBy(userId),
+            this.inviteRepository.getAllByUsername(username),
+        ]);
+
+        const invitedUsernames = [...new Set((sentInvites ?? []).map(i => i.username))];
+        const invitersOids = [...new Set((receivedInvites ?? []).map(i => i.invitedBy))];
+
+        const invitedUsers = invitedUsernames.length
+            ? await this.authRepository.getByUsernames(invitedUsernames)
+            : [];
+
+        return [...new Set([...invitedUsers.map(u => u.oid as string), ...invitersOids])];
     }
 
     async getUsersByOids(oids: string[]): Promise<ApiResponse<UserSummary[]>> {
