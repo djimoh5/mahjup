@@ -3,7 +3,6 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import darkLogoUrl from '../../Assets/mahjup-logo-dark.png';
-import tilesUrl from '../../Assets/mahjup_tiles.svg';
 import bgUrl from '../../Assets/mahjong-table-backround.png';
 
 interface Props {

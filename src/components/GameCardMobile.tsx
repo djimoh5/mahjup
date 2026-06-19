@@ -215,7 +215,7 @@ export default function GameCardMobile({ record, isExpanded, onToggle, sessionPl
 
   return (
     <>
-    <Paper elevation={0} variant="outlined" sx={{ borderRadius: '0.75rem', overflow: 'hidden' }}>
+    <Paper elevation={0} variant="outlined" sx={{ borderRadius: '0.75rem', overflow: 'hidden', background: '#fffafa' }}>
       {/* Summary row — tap to expand */}
       <Box
         onClick={onToggle}

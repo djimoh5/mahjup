@@ -232,7 +232,7 @@ export default function SessionGroup({
             pt: '1rem',
             pb: '1.25rem',
             borderBottom: '1px solid rgba(242,171,164,0.55)',
-            background: 'rgba(255,255,255,0.5)',
+            background: 'rgba(255, 255, 255, 0.5)',
           }}
         >
           <Stack spacing={1.5}>
