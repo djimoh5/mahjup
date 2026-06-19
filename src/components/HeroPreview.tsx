@@ -3,6 +3,7 @@ import Typography from '@mui/material/Typography';
 
 const PINK = '#e8877a';
 const GREEN = '#4caf82';
+const BLUE = '#0e2c6e';
 const DARK = '#1a1a1a';
 const MUTED = 'rgba(0,0,0,0.42)';
 
@@ -83,7 +84,7 @@ function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: 2,
-      minWidth: 148,
+      minWidth: 0,
     }}>
       <Box>
         <Typography sx={{ fontSize: '0.6rem', fontWeight: 600, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 0.25 }}>
@@ -165,9 +166,10 @@ function DonutChart() {
   const cx = 28; const cy = 28; const r = 20; const sw = 9;
   const circ = 2 * Math.PI * r;
   const segments = [
-    { pct: 0.50, color: '#4caf82' },
-    { pct: 0.33, color: PINK },
-    { pct: 0.17, color: '#f0b429' },
+    { pct: 0.40, color: '#4caf82' },
+    { pct: 0.20, color: PINK },
+    { pct: 0.30, color: '#f0b429' },
+    { pct: 0.10, color: '#f02929' },
   ];
   let offset = 0;
   return (
@@ -200,73 +202,43 @@ export default function HeroPreview() {
     <Box sx={{
       position: 'relative',
       width: '100%',
-      maxWidth: 560,
-      height: 420,
+      maxWidth: 720,
+      height: 440,
       flexShrink: 0,
     }}>
 
-      {/* ── Stat cards (left column, stacked) ── */}
+      {/* ── Stat cards (2x2 below tracker) ── */}
       <Box sx={{
         position: 'absolute',
-        left: 0,
-        top: 24,
-        display: 'flex',
-        flexDirection: 'column',
+        left: 70,
+        top: 308,
+        width: 330,
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
         gap: 1,
         zIndex: 3,
       }}>
-        <StatCard icon={<BoltIcon />} label="Total Games" value="12" />
+        <StatCard icon={<BoltIcon />} label="Total Games" value="29" />
         <StatCard icon={<CheckIcon />} label="Win Rate" value="42%" />
-        <StatCard icon={<DollarIcon />} label="Total Points Earned" value="18,450" />
-        <StatCard icon={<ChartIcon />} label="Avg Jokers (Overall)" value="1.2" />
-      </Box>
-
-      {/* ── Category Distribution card ── */}
-      <Box sx={{
-        position: 'absolute',
-        left: 0,
-        bottom: 0,
-        background: '#fff',
-        borderRadius: cardRadius,
-        boxShadow: shadow,
-        px: 1.75,
-        py: 1.5,
-        minWidth: 148,
-        zIndex: 3,
-      }}>
-        <Typography sx={{ fontSize: '0.6rem', fontWeight: 700, color: DARK, mb: 1 }}>
-          Category Distribution (Overall)
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <DonutChart />
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.4 }}>
-            {[
-              { color: '#4caf82', label: '2 Games', pct: '50%' },
-              { color: PINK, label: '1 Game', pct: '33%' },
-              { color: '#f0b429', label: '1 Win', pct: '17%' },
-            ].map(({ color, label, pct }) => (
-              <Box key={label} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Box sx={{ width: 6, height: 6, borderRadius: '50%', background: color, flexShrink: 0 }} />
-                <Typography sx={{ fontSize: '0.55rem', color: MUTED }}>{label}</Typography>
-                <Typography sx={{ fontSize: '0.55rem', color: DARK, fontWeight: 700, ml: 'auto', pl: 1 }}>{pct}</Typography>
-              </Box>
-            ))}
-            <Typography sx={{ fontSize: '0.5rem', color: 'rgba(0,0,0,0.28)', mt: 0.25 }}>Based on 12 games</Typography>
-          </Box>
-        </Box>
+        <StatCard icon={<DollarIcon />} label="Total Points" value="235" />
+        <StatCard icon={<ChartIcon />} label="Avg Jokers" value="1.2" />
       </Box>
 
       {/* ── Main app window ── */}
       <Box sx={{
         position: 'absolute',
-        right: 0,
+        left: 70,
         top: 0,
-        width: '66%',
+        right: 226,
+        height: 300,
+        width: 330,
         background: '#fff',
         borderRadius: '1.25rem',
         boxShadow: '0 8px 40px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.06)',
         overflow: 'hidden',
         zIndex: 2,
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {/* Window chrome */}
         <Box sx={{ px: 1.5, py: 1, borderBottom: '1px solid rgba(0,0,0,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -278,7 +250,7 @@ export default function HeroPreview() {
             background: PINK,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <Typography sx={{ fontSize: '0.45rem', fontWeight: 800, color: '#fff' }}>MU</Typography>
+            <Typography sx={{ fontSize: '0.45rem', fontWeight: 800, color: '#fff' }}>FP</Typography>
           </Box>
         </Box>
 
@@ -299,8 +271,8 @@ export default function HeroPreview() {
 
         {/* Session header */}
         <Box sx={{ px: 1.5, py: 0.75, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fafafa', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-          <Typography sx={{ fontSize: '0.6rem', fontWeight: 700, color: DARK }}>⌄ Session A ⌄</Typography>
-          <Typography sx={{ fontSize: '0.55rem', color: MUTED }}>Tue, May 20 · East Round</Typography>
+          <Typography sx={{ fontSize: '0.6rem', fontWeight: 700, color: DARK }}>Tuesday Night Mahj</Typography>
+          <Typography sx={{ fontSize: '0.55rem', color: MUTED }}>Tue, May 20</Typography>
         </Box>
 
         {/* Table header */}
@@ -318,96 +290,105 @@ export default function HeroPreview() {
 
         {/* Game rows */}
         <Box sx={{ px: 1.5, pb: 0.5 }}>
-          <MockGameRow player="Player One" jokers={2}
+          <MockGameRow player="Francis P." jokers={2}
             tiles={[
-              { text: '111', color: GREEN }, { text: '333', color: GREEN },
-              { text: '5555', color: PINK }, { text: '666', color: PINK },
+              { text: '222', color: GREEN }, { text: '444', color: GREEN },
+              { text: '6666', color: PINK }, { text: '8888', color: PINK },
             ]} />
-          <MockGameRow player="Player Two" jokers={3} winner
+          <MockGameRow player="Catherine C." jokers={3} winner
             tiles={[
-              { text: '222', color: GREEN }, { text: '4444', color: PINK },
-              { text: '777', color: '#1976d2' },
-            ]} />
-          <MockGameRow player="Guest 1" jokers={1}
-            tiles={[
-              { text: '11', color: GREEN }, { text: '22', color: GREEN },
+              { text: '111', color: GREEN }, { text: '222', color: GREEN },
               { text: '3333', color: PINK }, { text: '4444', color: PINK },
             ]} />
-          <MockGameRow player="Guest 2" jokers={1}
+          <MockGameRow player="Lane T." jokers={1}
             tiles={[
-              { text: '555', color: '#1976d2' }, { text: '6666', color: PINK },
-              { text: '7777', color: '#1976d2' },
+              { text: '11', color: BLUE }, { text: '333', color: BLUE },
+              { text: '55', color: BLUE }, { text: '777', color: BLUE }, { text: '9999', color: BLUE },
+            ]} />
+          <MockGameRow player="Ruth R." jokers={1}
+            tiles={[
+              { text: '1111', color: GREEN }, { text: 'FFFFFF', color: BLUE },
+              { text: '1111', color: PINK },
             ]} />
         </Box>
 
         {/* Add links */}
         <Box sx={{ px: 1.5, pb: 1, display: 'flex', gap: 2 }}>
           <Typography sx={{ fontSize: '0.55rem', color: PINK, fontWeight: 600 }}>+ Add Player</Typography>
-          <Typography sx={{ fontSize: '0.55rem', color: PINK, fontWeight: 600 }}>+ Add Game</Typography>
         </Box>
 
-        {/* Bottom stats bar */}
-        <Box sx={{
-          borderTop: '1px solid rgba(0,0,0,0.07)',
-          px: 1.5,
-          py: 1,
-          display: 'flex',
-          justifyContent: 'space-around',
-          background: '#fff',
-        }}>
-          {[
-            { icon: <PersonsIcon />, value: '4', label: 'Players' },
-            { icon: <TrophyIcon color="#f0b429" />, value: '1', label: 'Winner' },
-            { icon: <StarIcon />, value: '18,450', label: 'Top Score' },
-            { icon: <BarIcon />, value: '12', label: 'Games' },
-          ].map(({ icon, value, label }) => (
-            <Box key={label} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.25 }}>
-              {icon}
-              <Typography sx={{ fontSize: '0.6rem', fontWeight: 800, color: DARK }}>{value}</Typography>
-              <Typography sx={{ fontSize: '0.5rem', color: MUTED }}>{label}</Typography>
-            </Box>
-          ))}
-        </Box>
       </Box>
 
-      {/* ── Card Reference floating panel ── */}
+      {/* ── Right column: Donut + Card Reference ── */}
       <Box sx={{
         position: 'absolute',
-        right: -16,
-        bottom: 20,
-        width: '50%',
-        background: '#fff',
-        borderRadius: cardRadius,
-        boxShadow: shadow,
-        px: 1.5,
-        py: 1.25,
-        zIndex: 4,
+        right: 0,
+        top: 0,
+        width: 224,
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1.5,
+        zIndex: 3,
       }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.75 }}>
-          <Typography sx={{ fontSize: '0.62rem', fontWeight: 700, color: DARK }}>Card Reference</Typography>
-          <Box sx={{ border: '1px solid rgba(0,0,0,0.12)', borderRadius: '0.35rem', px: 0.75, py: 0.2 }}>
-            <Typography sx={{ fontSize: '0.5rem', color: MUTED }}>All Categories ▾</Typography>
+        {/* Category Distribution */}
+        <Box sx={{ background: '#fff', borderRadius: cardRadius, boxShadow: shadow, px: 1.75, py: 1.5 }}>
+          <Typography sx={{ fontSize: '0.6rem', fontWeight: 700, color: DARK, mb: 1 }}>
+            Category Distribution
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <DonutChart />
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.4 }}>
+              {[
+                { color: GREEN, label: '2468', pct: '40%' },
+                { color: PINK, label: 'Consec. Run', pct: '20%' },
+                { color: '#f0b429', label: 'Winds - Dragons', pct: '30%' },
+                { color: '#f02929', label: '369', pct: '10%' },
+              ].map(({ color, label, pct }) => (
+                <Box key={label} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Box sx={{ width: 6, height: 6, borderRadius: '50%', background: color, flexShrink: 0 }} />
+                  <Typography sx={{ fontSize: '0.55rem', color: MUTED }}>{label}</Typography>
+                  <Typography sx={{ fontSize: '0.55rem', color: DARK, fontWeight: 700, ml: 'auto', pl: 1 }}>{pct}</Typography>
+                </Box>
+              ))}
+              <Typography sx={{ fontSize: '0.5rem', color: 'rgba(0,0,0,0.28)', mt: 0.25 }}>Based on 29 games</Typography>
+            </Box>
           </Box>
         </Box>
 
-        {[
-          { category: 'CONSECUTIVE RUN', count: '8 Hands', hand: '11 22 33 44 5555', score: '25' },
-          { category: 'ANY LIKE NUMBERS', count: '3 Hands', hand: '1111 FFFFFF 1111', score: '30' },
-          { category: 'WINDS - DRAGONS', count: '8 Hands', hand: 'NNNN EEE WWW SSSS', score: '25' },
-        ].map(({ category, count, hand, score }) => (
-          <Box key={category} sx={{ mb: 0.75, pb: 0.75, borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.2 }}>
-              <Typography sx={{ fontSize: '0.52rem', fontWeight: 700, color: DARK, letterSpacing: '0.03em' }}>{category}</Typography>
-              <Typography sx={{ fontSize: '0.5rem', color: MUTED }}>{count}</Typography>
-            </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography sx={{ fontSize: '0.55rem', color: PINK, fontWeight: 600 }}>{hand}</Typography>
-              <Typography sx={{ fontSize: '0.55rem', color: DARK, fontWeight: 700 }}>X {score}</Typography>
+        {/* Card Reference */}
+        <Box sx={{ background: '#fff', borderRadius: cardRadius, boxShadow: shadow, px: 1.5, py: 1.25, flex: 1, overflow: 'hidden' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.75 }}>
+            <Typography sx={{ fontSize: '0.8rem', fontWeight: 800, color: DARK }}>2026</Typography>
+            <Box sx={{ background: '#f5f5f5', borderRadius: '99px', px: 0.9, py: 0.25 }}>
+              <Typography sx={{ fontSize: '0.5rem', color: MUTED, fontWeight: 600 }}>4 Hands</Typography>
             </Box>
           </Box>
-        ))}
-
-        <Typography sx={{ fontSize: '0.55rem', color: PINK, fontWeight: 600 }}>View all categories</Typography>
+          {([
+            { score: 25, d: 'Any 2 Suits', s: [{ t: '222', c: 'green' }, { t: '000', c: 'blue' }, { t: '2222', c: 'red' }, { t: '6666', c: 'red' }] },
+            { score: 25, d: 'Any 2 Suits w Matching Dragons', s: [{ t: '2026', c: 'green' }, { t: 'DDD', c: 'green' }, { t: '2222', c: 'red' }, { t: 'DDD', c: 'red' }] },
+            { score: 25, d: 'Any 3 Suits', s: [{ t: 'FFF', c: 'blue' }, { t: '2026', c: 'green' }, { t: '222', c: 'red' }, { t: '6666', c: 'blue' }] },
+            { score: 30, d: 'Any 2 Suits', s: [{ t: '22', c: 'green' }, { t: '00', c: 'blue' }, { t: '222', c: 'red' }, { t: '666', c: 'red' }, { t: 'NEWS', c: 'blue' }] },
+          ] as { score: number; d: string; s: { t: string; c: string }[] }[]).map(({ score, d, s }, i, arr) => (
+            <Box key={i} sx={{ mb: 0.6, pb: 0.6, borderBottom: i < arr.length - 1 ? '1px solid rgba(0,0,0,0.06)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <Box>
+                <Box sx={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                  {s.map((seg, j) => (
+                    <Typography key={j} sx={{ fontSize: '0.6rem', fontWeight: 700, color: seg.c === 'green' ? GREEN : seg.c === 'red' ? PINK : BLUE }}>
+                      {seg.t}
+                    </Typography>
+                  ))}
+                </Box>
+                <Typography sx={{ fontSize: '0.5rem', color: MUTED, fontStyle: 'italic', mt: 0.2 }}>({d})</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0, ml: 1 }}>
+                <Typography sx={{ fontSize: '0.55rem', color: PINK, fontWeight: 700 }}>X</Typography>
+                <Typography sx={{ fontSize: '0.55rem', color: DARK, fontWeight: 800 }}>{score}</Typography>
+              </Box>
+            </Box>
+          ))}
+          <Typography sx={{ fontSize: '0.55rem', color: PINK, fontWeight: 600 }}>View all categories</Typography>
+        </Box>
       </Box>
     </Box>
   );
