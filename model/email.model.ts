@@ -22,14 +22,11 @@ export interface Email extends BaseEmail {
 
 export interface EmailTemplate extends BaseEmail {
     template?: EmailTemplateTypes;
-    toName?: string,
     title?: string;
-    subTitle?: string;
     content?: string;
     buttonText?: string;
     buttonLink?: string;
     footer?: string;
-    platformId?: number;
 }
 
 export enum AdminEmailListType {
@@ -40,7 +37,8 @@ export enum AdminEmailListType {
 
 export enum EmailTemplateTypes {
     None = '',
-    Main = 'main-template'
+    Main = 'mahjup-main-template',
+    MainCTA = 'mahjup-main-cta-template',
 }
 
 export interface EmailAttachment {

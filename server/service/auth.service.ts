@@ -13,7 +13,7 @@ import { UserAuth } from '../../model/auth.model';
 import { UserSummary } from '../../model/user.model';
 import { Invite } from '../../model/invite.model';
 import { LoginCode, LoginCodePurpose } from '../../model/auth.model';
-import { Email } from '../../model/email.model';
+import { EmailTemplate, EmailTemplateTypes } from '../../model/email.model';
 import { PasswordUtility } from '../../utility/password.utility';
 import { Config } from '../config/config';
 import { Common } from '../../utility/common';
@@ -114,17 +114,17 @@ export class AuthService extends BaseService {
 
         await this.loginCodeRepository.save(new LoginCode(username, secret.base32, LoginCodePurpose.Login));
 
-        const email: Email = {
+        const email: EmailTemplate = {
             to: [username],
             subject: 'Your MahjUp login code',
-            html: `<div style="font-size: 16px;">
-                <img src="https://s3.us-east-1.amazonaws.com/mahjup.release/assets/mahjup-logo-dark.png" style="width: 200px" /><br><br>
+            title: 'Your MahjUp login code',
+            content: `<div style="font-size: 16px;">
                 Your one-time login code is: <strong>${code}</strong><br><br>
                 This code expires in 5 minutes.
             </div>`
         };
 
-        await this.emailService.sendEmail(email, auth.oid as string);
+        await this.emailService.sendTemplate(email, auth.oid as string);
 
         return new ApiResponse(true, null, 'If an account exists, a code has been sent.');
     }
@@ -174,17 +174,17 @@ export class AuthService extends BaseService {
 
         console.log(code, secret.base32);
         
-        const email: Email = {
+        const email: EmailTemplate = {
             to: [username],
             subject: 'Reset your MahjUp password',
-            html: `<div style="font-size: 16px;">
-                <img src="https://s3.us-east-1.amazonaws.com/mahjup.release/assets/mahjup-logo-dark.png" style="width: 200px" /><br><br>
+            title: 'Reset your MahjUp password',
+            content: `<div style="font-size: 16px;">
                 Your password reset code is: <strong>${code}</strong><br><br>
                 This code expires in 5 minutes. If you did not request a password reset, you can ignore this email.
             </div>`
         };
 
-        await this.emailService.sendEmail(email, auth.oid as string);
+        await this.emailService.sendTemplate(email, auth.oid as string);
 
         return new ApiResponse(true, null, 'If an account exists, a reset code has been sent.');
     }
@@ -248,18 +248,20 @@ export class AuthService extends BaseService {
             invitedByName = `${inviter.firstName || ''} ${inviter.lastName || ''} (${invitedByName})`;
         }
 
-        const email: Email = {
+        const email: EmailTemplate = {
+            template: EmailTemplateTypes.MainCTA,
             to: [username],
             subject: "You've been invited to a game on MahjUp!",
-            html: `<div style="text-align: center; font-size: 16px;">
-                <img src="https://s3.us-east-1.amazonaws.com/mahjup.release/assets/mahjup-logo-green-black.png" style="width: 200px" /><br><br>
+            title: "You've been invited to a game on MahjUp!",
+            content: `<div style="text-align: center; font-size: 16px;">
                 ${invitedByName} has invited you to join a session on MahjUp!<br><br>
-                Click the link below to get started.<br>
-                <a href="${Config.APP_URL}/invite?code=${inviteCode}">Accept Invite</a>
-            </div>`
+                Click the button below to get started.<br>
+            </div>`, 
+            buttonText: 'Accept Invite',
+            buttonLink: `${Config.APP_URL}/invite?code=${inviteCode}`
         };
         
-        await this.emailService.sendEmail(email, invitedBy);
+        await this.emailService.sendTemplate(email, invitedBy);
 
         return new ApiResponse(true, { oid: userAuth.oid as string });
     }

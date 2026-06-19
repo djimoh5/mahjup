@@ -38,13 +38,9 @@ export class EmailService extends BaseService {
     }
  
     async sendTemplate(template: EmailTemplate, userId: string, tags?: string[], metadata?: { [key: string]: any }): Promise<ApiResponse<any>> {
-        /*if(Config.ENVIRONMENT !== 'release') {
-            template.subject += this.getTestInfo(template.to, template.cc, template.bcc, platform, Config.ENVIRONMENT, template.doNotArchive);
+        if(Config.ENVIRONMENT !== 'release') {
+            template.subject += this.getTestInfo(template.to, template.cc, template.bcc, Config.ENVIRONMENT);
             template.to = Config.EMAIL.admin;
-
-            if (platform.email && platform.email.testing){
-                template.to.push(...platform.email.testing);
-            }
 
             if(template.cc && template.cc.length > 0) {
                 template.cc = [Config.EMAIL.admin[0]];
@@ -53,20 +49,25 @@ export class EmailService extends BaseService {
             if(template.bcc && template.bcc.length > 0) {
                 template.bcc = [Config.EMAIL.admin[0]];
             }
-        }*/
+        }
+        else {
+            if(!template.bcc) {
+                template.bcc = [];
+            }
+
+            template.bcc.push(Config.EMAIL.admin[0]);
+        }
 
         if (template.signature) {
             template.content += template.signature;
         }
         
         const globalMergeVars = [
-            { name: "name", content: template.toName },
             { name: "title", content: template.title || '' },
-            { name: "sub_title", content: template.subTitle || '' },
             { name: "main_content", content: this.sanitize(template.content || '') },
-            { name: "footer_content", content: this.sanitize(template.footer || '') },
             { name: "button_link", content: template.buttonLink },
-            { name: "button_text", content: this.sanitize(template.buttonText) }
+            { name: "button_text", content: this.sanitize(template.buttonText) },
+            { name: "footer_text", content: this.sanitize(template.footer) }
         ];
 
         const body = {
@@ -117,6 +118,13 @@ export class EmailService extends BaseService {
             if(email.cc && email.cc.length > 0) {
                 email.cc = [Config.EMAIL.admin[0]];
             }
+        }
+        else {
+            if(!email.bcc) {
+                email.bcc = [];
+            }
+
+            email.bcc.push(Config.EMAIL.admin[0]);
         }
 
         if (email.signature) {
