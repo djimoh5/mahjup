@@ -4,6 +4,7 @@ import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import darkLogoUrl from '../../Assets/mahjup-logo-dark.png';
 import bgUrl from '../../Assets/mahjong-table-backround.png';
+import HeroPreview from './HeroPreview';
 
 interface Props {
   onLogin: () => void;
@@ -211,49 +212,17 @@ export default function LandingPage({ onLogin, onSignUp }: Props) {
           </Box>
         </Box>
 
-        {/* Right: preview card */}
+        {/* Right: floating UI preview */}
         <Box
           sx={{
             flex: 1,
             display: { xs: 'none', md: 'flex' },
             justifyContent: 'flex-end',
             alignItems: 'center',
+            pr: 2,
           }}
         >
-          <Box
-            sx={{
-              width: '100%',
-              maxWidth: 520,
-              aspectRatio: '4 / 3',
-              background: '#fff',
-              border: '1px solid rgba(232,135,122,0.15)',
-              borderRadius: '1.5rem',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 1.5,
-              boxShadow: '0 8px 48px rgba(232,135,122,0.12), 0 2px 12px rgba(0,0,0,0.06)',
-            }}
-          >
-            <Box
-              sx={{
-                width: 52,
-                height: 52,
-                borderRadius: '0.875rem',
-                background: `rgba(232,135,122,0.1)`,
-                border: `1px solid rgba(232,135,122,0.25)`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Typography sx={{ fontSize: '1.6rem' }}>🀄</Typography>
-            </Box>
-            <Typography sx={{ color: 'rgba(0,0,0,0.3)', fontSize: '0.875rem', textAlign: 'center', px: 4 }}>
-              App screenshots coming soon
-            </Typography>
-          </Box>
+          <HeroPreview />
         </Box>
       </Box>
 
