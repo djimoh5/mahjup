@@ -70,7 +70,7 @@ export default function GameRow({ record, isExpanded, onToggle, sessionPlayers, 
   const usedUserIds = record.players.map(p => p.userId).filter(Boolean);
 
   return (
-    <Paper elevation={0} variant="outlined" sx={{ borderRadius: '0.75rem', overflow: 'hidden' }}>
+    <Paper elevation={0} variant="outlined" sx={{ borderRadius: '0.75rem', overflow: 'hidden', background: '#ffffff' }}>
       {/* Summary header */}
       <Box
         onClick={onToggle}

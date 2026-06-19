@@ -222,7 +222,7 @@ export default function App() {
     <Box
       sx={{
         minHeight: '100vh',
-        backgroundImage: `linear-gradient(rgba(255,240,238,0.6), rgba(255,240,238,0.6)), url(${bgUrl})`,
+        backgroundImage: `linear-gradient(rgba(255, 240, 238, 0.38), rgba(255,240,238,0.6)), url(${bgUrl})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed',

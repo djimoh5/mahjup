@@ -102,7 +102,7 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
       component="header"
       sx={{
         background: '#fff',
-        border: '1px solid rgba(232,135,122,0.18)',
+        border: '1px solid rgba(242, 171, 164, 0.55)',
         borderRadius: '1rem',
         boxShadow: '0 4px 20px rgba(232,135,122,0.1), 0 1px 4px rgba(0,0,0,0.06)',
         overflow: 'hidden',
@@ -119,6 +119,7 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
           justifyContent: 'space-between',
           alignItems: 'center',
           gap: 2,
+          background: '#efefef',
         }}
       >
         <Box>
@@ -210,7 +211,7 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
       </Box>
 
       {/* Nav tabs */}
-      <Box sx={{ background: 'rgba(232,135,122,0.06)', borderTop: '1px solid rgba(232,135,122,0.12)' }}>
+      <Box sx={{ background: '#f6f1f1', borderTop: '1px solid rgba(242, 171, 164, 0.55)' }}>
         <Tabs
           value={activeTab}
           onChange={(_, v) => onTabChange(v as AppTab)}
