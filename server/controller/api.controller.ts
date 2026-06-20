@@ -6,6 +6,7 @@ import { AuthService } from '../service/auth.service';
 import { GameService } from '../service/game.service';
 import { MahjSessionService } from '../service/mahj-session.service';
 import { UserProfileService } from '../service/user-profile.service';
+import { AIService } from '../service/ai/ai.service';
 
 import { ApiResponse } from '../../model/shared.model';
 import { UserAuth } from '../../model/auth.model';
@@ -15,7 +16,7 @@ import { authid, AuthId } from '../../model/id.model';
 @Bootstrap()
 @AllowAnonymous()
 export class APIController extends BaseController {
-	constructor(private authService: AuthService, private gameService: GameService, private mahjSessionService: MahjSessionService, private userProfileService: UserProfileService) {
+	constructor(private authService: AuthService, private gameService: GameService, private mahjSessionService: MahjSessionService, private userProfileService: UserProfileService, private aiService: AIService) {
 		super();
 	}
 
@@ -140,6 +141,11 @@ export class APIController extends BaseController {
 
 	@Post('user/profile')
 	async updateProfile(req: Request, res: Response) {
+		/*this.aiService.getTextCompletions([{
+			content: 'What is Mahjong?',
+			role: 'user'
+		}], { model: 'claude-opus-4-7' }, <authid>req.session.user.oid);*/
+
 		const { firstName, lastName } = req.body;
 		if (!firstName || !lastName) {
 			return this.sendError(res, 'First name and last name are required');

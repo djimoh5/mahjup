@@ -42,7 +42,9 @@ export class AuthService extends BaseService {
 
     private async attachProfile(auth: UserAuth): Promise<void> {
         const profile = await this.userProfileRepository.getByAuthOid(auth.oid);
-        if (profile) auth.profile = profile;
+        if (profile) {
+            auth.profile = profile;
+        }
     }
 
     async updateAuth(username: string, password: string, newPassword: string): Promise<ApiResponse<UserAuth>> {

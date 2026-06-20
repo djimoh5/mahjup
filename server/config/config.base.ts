@@ -35,6 +35,10 @@ export class BaseConfig {
     static APP_INDEX_PAGE = '/dist/index.html';
 
     /*** ACCESS KEYS ***/
+    static OPEN_AI_KEY = '';
+    static GEMINI_API_KEY = '';
+    static CLAUDE_API_KEY = '';
+    
     static MANDRILL_API_KEY = '';
     static MANDRILL = {
         API_URL: 'https://mandrillapp.com/api/1.0'
