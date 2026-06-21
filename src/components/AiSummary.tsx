@@ -13,11 +13,6 @@ const wave = keyframes`
   100% { background-position: -200% center; }
 `;
 
-const pulse = keyframes`
-  0%, 100% { opacity: 0.4; transform: scaleY(0.6); }
-  50% { opacity: 1; transform: scaleY(1); }
-`;
-
 const cardSx = {
   mb: 3,
   p: '1.25rem 1.5rem',
@@ -42,11 +37,6 @@ export default function AiSummary() {
     return (
       <Box sx={{ ...cardSx, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            {['#e8877a', '#cf6e62', '#f0a89f'].map(color => (
-              <Box key={color} sx={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: color }} />
-            ))}
-          </Box>
           <Typography sx={{ fontSize: '0.9rem', color: 'text.secondary' }}>
             Get an AI-powered analysis of your game performance
           </Typography>
@@ -73,21 +63,6 @@ export default function AiSummary() {
     return (
       <Box sx={cardSx}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            {(['#e8877a', '#cf6e62', '#f0a89f'] as const).map((color, i) => (
-              <Box
-                key={color}
-                sx={{
-                  width: '8px',
-                  height: '16px',
-                  borderRadius: '4px',
-                  backgroundColor: color,
-                  animation: `${pulse} 1.2s ease-in-out infinite`,
-                  animationDelay: `${i * 0.2}s`,
-                }}
-              />
-            ))}
-          </Box>
           <Typography sx={{ color: 'text.secondary', fontSize: '0.875rem', fontStyle: 'italic' }}>
             Analyzing your games with AI…
           </Typography>
@@ -127,11 +102,6 @@ export default function AiSummary() {
         sx={{ px: '1.5rem', minHeight: '3rem', '& .MuiAccordionSummary-content': { my: '0.75rem' } }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            {['#e8877a', '#cf6e62', '#f0a89f'].map(color => (
-              <Box key={color} sx={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: color }} />
-            ))}
-          </Box>
           <Typography sx={{ fontSize: '0.9rem', fontWeight: 600 }}>AI Game Analysis</Typography>
         </Box>
       </AccordionSummary>

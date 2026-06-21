@@ -340,7 +340,7 @@ export default function SummaryTab({ records, currentUserOid, users }: SummaryTa
         <Grid size={{ xs: 12, md: 6 }}>
           <Paper sx={pieCardSx}>
             <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', mb: 3 }}>
-              Category Distribution Overall
+              Section Distribution Overall
             </Typography>
             {sortedCounts.length === 0 ? (
               <Typography sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>No games played yet.</Typography>
@@ -353,7 +353,7 @@ export default function SummaryTab({ records, currentUserOid, users }: SummaryTa
         <Grid size={{ xs: 12, md: 6 }}>
           <Paper sx={pieCardSx}>
             <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', mb: 3 }}>
-              Category Distribution on Wins
+              Section Distribution on Wins
             </Typography>
             {sortedWinCounts.length === 0 ? (
               <Typography sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>No wins recorded yet.</Typography>
@@ -366,7 +366,7 @@ export default function SummaryTab({ records, currentUserOid, users }: SummaryTa
         {/* <Grid size={{ xs: 12, md: 4 }}>
           <Paper sx={pieCardSx}>
             <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', mb: 3 }}>
-              Category Distribution on Losses
+              Section Distribution on Losses
             </Typography>
             {sortedLossCounts.length === 0 ? (
               <Typography sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>No losses recorded yet.</Typography>

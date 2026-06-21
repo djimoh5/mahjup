@@ -212,7 +212,9 @@ export class APIController extends BaseController {
 			nameMap[u.oid as string] = (u.firstName && u.lastName) ? `${u.firstName} ${u.lastName}` : u.username;
 		}
 
-		const text = records.map(r => {
+		const currentUserName = nameMap[userId] ?? req.session.user.username;
+
+		const text = `The player being analyzed is: ${currentUserName}\n\n` + records.map(r => {
 			const players = (r.players ?? []).map(p => {
 				const name = nameMap[p.userId] ?? 'Unknown';
 				const status = p.isWinner ? 'WINNER' : 'lost';
