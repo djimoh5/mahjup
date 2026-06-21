@@ -99,6 +99,7 @@ export default function App() {
     }).catch(() => {}).finally(() => {
       setIsLoadingRecords(false);
     });
+
   }, [user]);
 
   const usersMap = useMemo(

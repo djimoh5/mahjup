@@ -31,7 +31,7 @@ export class GeminiService extends BaseAIService implements IAIService {
     };
 
     constructor(appService: AppService, sharedRepository: SharedRepository, private http: HttpService) {
-        super(['gemini-3-pro-preview', 'gemini-3-pro-image-preview', 'gemini-2.5-flash', 'gemini-3-flash-preview', 'gemini-3.1-pro-preview'], appService, sharedRepository);
+        super(['gemini-3-pro-preview', 'gemini-3-pro-image-preview', 'gemini-2.5-flash', 'gemini-3.5-flash', 'gemini-3.1-pro-preview'], appService, sharedRepository);
     }
  
     async getTextCompletions(messages: AIMessage<any>[], options: AICompletionOptions, authId: authid): Promise<ApiResponse<ChatGPTCompletionChoice[]>> {
@@ -80,7 +80,7 @@ export class GeminiService extends BaseAIService implements IAIService {
 
     async groundedSearch(query: string, authId: authid): Promise<{ text: string; sources: Array<{ url: string; title: string }> }> {
         const config: GeminiAPICallConfig = {
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-3.5-flash',
             contents: <any>[{ role: 'user', parts: [{ text: query }] }],
             generationConfig: {},
             tools: [{ google_search: {} }]

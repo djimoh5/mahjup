@@ -7,6 +7,7 @@ import type { GameRecord } from '../../model/game.model';
 import type { UserSummary } from '../../model/user.model';
 import SessionGroup from './SessionGroup';
 import { PlusIcon } from './icons/Icons';
+import AiSummary from './AiSummary';
 
 interface TrackerTabProps {
   sessions: MahjSession[];
@@ -58,6 +59,8 @@ export default function TrackerTab({
           New Session
         </Button>
       </Box>
+
+      <AiSummary />
 
       <Stack spacing={2}>
         {sessions.length === 0 && (

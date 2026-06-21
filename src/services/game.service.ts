@@ -37,6 +37,16 @@ export class GameService extends BaseService {
       return { error: 'Unable to connect to the server' };
     }
   }
+
+  async getSummary(): Promise<{ summary: string; error?: string }> {
+    try {
+      const res = await this.get<ApiResponse<string>>('/game/summary');
+      if (res.success && res.data) return { summary: res.data };
+      return { summary: '', error: res.msg ?? 'Failed to load summary' };
+    } catch {
+      return { summary: '', error: 'Unable to connect to the server' };
+    }
+  }
 }
 
 export const gameService = new GameService();
