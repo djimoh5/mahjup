@@ -1,6 +1,6 @@
 import { Common } from "../utility/common";
 import { uniqueid } from "./id.model";
-import { GenericMap, Virtual } from "./shared.model";
+import { GenericMap/*, Virtual*/ } from "./shared.model";
 
 export interface ChatGPTAPICallConfig {
     model: AIModel;
@@ -285,7 +285,7 @@ export class AIAgent {
     tags?: string[];
     metadata?: GenericMap<any>;
 
-    @Virtual()
+    //@Virtual()
     public systemContext: AIContext[];
 
     private _conversation: AIConversation<any>;
