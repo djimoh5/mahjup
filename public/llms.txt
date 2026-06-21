@@ -1,0 +1,21 @@
+# MahjUp
+
+> AI-powered Mahjong game tracker that helps you improve your game over time.
+
+MahjUp tracks the outcomes of every Mahjong game you play. An AI analyzer learns which strategies have been working for you and provides personalized tips for improvement. Players can also create Mahj Sessions — scheduled play events where a group tracks shared results and benefits from collective learnings.
+
+## Features
+
+- Game tracking: Log wins, losses, hands played, and scores for every game
+- AI game summaries: Get AI-generated analysis and insights after each session
+- Mahj Sessions: Create scheduled play events and invite friends to share results
+- Hand reference: Built-in 2026 NMJL Official Rules hand reference (~170 hands across 8 categories)
+- Stats & summaries: View personal performance trends over time
+
+## Usage
+
+MahjUp is a web app. Users sign up, log games, and optionally create or join Sessions with friends. The app is designed for American Mahjong players following NMJL rules.
+
+## Contact
+
+For questions or feedback: https://mahjup.com

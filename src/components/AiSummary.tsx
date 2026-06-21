@@ -43,7 +43,7 @@ export default function AiSummary() {
       <Box sx={{ ...cardSx, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            {['#4285F4', '#9B72CB', '#D96570'].map(color => (
+            {['#e8877a', '#cf6e62', '#f0a89f'].map(color => (
               <Box key={color} sx={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: color }} />
             ))}
           </Box>
@@ -56,11 +56,11 @@ export default function AiSummary() {
           size="small"
           onClick={handleAnalyze}
           sx={{
-            borderColor: 'rgba(155,114,203,0.5)',
-            color: '#9B72CB',
+            borderColor: 'rgba(232,135,122,0.5)',
+            color: '#cf6e62',
             fontSize: '0.8125rem',
             whiteSpace: 'nowrap',
-            '&:hover': { borderColor: '#9B72CB', background: 'rgba(155,114,203,0.06)' },
+            '&:hover': { borderColor: '#e8877a', background: 'rgba(232,135,122,0.06)' },
           }}
         >
           Analyze My Games
@@ -74,7 +74,7 @@ export default function AiSummary() {
       <Box sx={cardSx}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            {['#4285F4', '#9B72CB', '#D96570'].map((color, i) => (
+            {(['#e8877a', '#cf6e62', '#f0a89f'] as const).map((color, i) => (
               <Box
                 key={color}
                 sx={{
@@ -96,7 +96,7 @@ export default function AiSummary() {
           sx={{
             height: '6px',
             borderRadius: '3px',
-            background: 'linear-gradient(90deg, #4285F4, #9B72CB, #D96570, #9B72CB, #4285F4)',
+            background: 'linear-gradient(90deg, #f0a89f, #e8877a, #cf6e62, #e8877a, #f0a89f)',
             backgroundSize: '200% auto',
             animation: `${wave} 2s linear infinite`,
           }}
@@ -128,7 +128,7 @@ export default function AiSummary() {
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            {['#4285F4', '#9B72CB', '#D96570'].map(color => (
+            {['#e8877a', '#cf6e62', '#f0a89f'].map(color => (
               <Box key={color} sx={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: color }} />
             ))}
           </Box>

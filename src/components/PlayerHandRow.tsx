@@ -46,7 +46,7 @@ export default function PlayerHandRow({
     .sort((a, b) => resolveDisplayName(a.oid, usersMap).localeCompare(resolveDisplayName(b.oid, usersMap)));
 
   function handleHandSelect(cat: string, hand: string, score: number) {
-    onUpdate({ category: cat, hand, score });
+    onUpdate({ category: cat, hand, score, ...(cat === 'SINGLES AND PAIRS' ? { jokers: 0 } : {}) });
   }
 
   function handlePlayerSelect(val: string) {
@@ -83,7 +83,8 @@ export default function PlayerHandRow({
           />
         </td>
         <td className="center">
-          <Select value={playerHand.jokers ?? 0} size="small"
+          <Select value={playerHand.category === 'SINGLES AND PAIRS' ? 0 : (playerHand.jokers ?? 0)} size="small"
+            disabled={playerHand.category === 'SINGLES AND PAIRS'}
             onChange={e => onUpdate({ jokers: Number(e.target.value) })}
             sx={{ width: '4rem' }}>
             {[0,1,2,3,4,5,6,7,8].map(n => <MenuItem key={n} value={n}>{n}</MenuItem>)}

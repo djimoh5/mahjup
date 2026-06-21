@@ -6,12 +6,14 @@ import { Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import type { GameRecord } from '../../model/game.model';
+import type { UserSummary } from '../../model/user.model';
 
 ChartJS.register(ArcElement, Tooltip, ChartDataLabels);
 
 interface SummaryTabProps {
   records: GameRecord[];
   currentUserOid: string;
+  users: UserSummary[];
 }
 
 const statCards = [
@@ -35,26 +37,26 @@ const statCards = [
     ),
     valueKey: 'winRate' as const,
   },
-  {
-    labelColor: '#5b3fa0',
-    label: 'Total Points Earned',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: '4rem', height: '4rem' }}>
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-    valueKey: 'points' as const,
-  },
-  {
-    labelColor: '#5b3fa0',
-    label: 'Avg Points Per Win',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: '4rem', height: '4rem' }}>
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      </svg>
-    ),
-    valueKey: 'avgPoints' as const,
-  },
+  // {
+  //   labelColor: '#5b3fa0',
+  //   label: 'Total Points Earned',
+  //   icon: (
+  //     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: '4rem', height: '4rem' }}>
+  //       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  //     </svg>
+  //   ),
+  //   valueKey: 'points' as const,
+  // },
+  // {
+  //   labelColor: '#5b3fa0',
+  //   label: 'Avg Points Per Win',
+  //   icon: (
+  //     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ width: '4rem', height: '4rem' }}>
+  //       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+  //     </svg>
+  //   ),
+  //   valueKey: 'avgPoints' as const,
+  // },
   {
     labelColor: '#b07d2e',
     label: 'Avg Jokers (Wins)',
@@ -135,7 +137,13 @@ function PieChart({ data }: { data: [string, number][] }) {
   );
 }
 
-export default function SummaryTab({ records, currentUserOid }: SummaryTabProps) {
+function displayName(userId: string, users: UserSummary[]): string {
+  const u = users.find(u => u.oid === userId);
+  if (!u) return 'Unknown';
+  return u.firstName ? `${u.firstName}${u.lastName ? ' ' + u.lastName : ''}` : u.username;
+}
+
+export default function SummaryTab({ records, currentUserOid, users }: SummaryTabProps) {
   const valid = records.filter(d => d.players?.some(p => p.userId === currentUserOid));
   const wins = valid.filter(d => d.players.some(p => p.isWinner && p.userId === currentUserOid));
   const losses = valid.filter(d => !d.players.some(p => p.isWinner && p.userId === currentUserOid));
@@ -191,9 +199,30 @@ export default function SummaryTab({ records, currentUserOid }: SummaryTabProps)
 
   const sortedCounts = Object.entries(counts).sort((a, b) => b[1] - a[1]);
   const sortedWinCounts = Object.entries(winCounts).sort((a, b) => b[1] - a[1]);
-  const sortedLossCounts = Object.entries(lossCounts).sort((a, b) => b[1] - a[1]);
+  // const sortedLossCounts = Object.entries(lossCounts).sort((a, b) => b[1] - a[1]);
   const topWinHands = Object.entries(winHandCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
   const topLossHands = Object.entries(lossHandCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+
+  const opponentGames: Record<string, number> = {};
+  const opponentWins: Record<string, number> = {};
+  valid.forEach(game => {
+    game.players.forEach(p => {
+      if (p.userId !== currentUserOid) {
+        opponentGames[p.userId] = (opponentGames[p.userId] ?? 0) + 1;
+        if (p.isWinner) opponentWins[p.userId] = (opponentWins[p.userId] ?? 0) + 1;
+      }
+    });
+  });
+
+  const topPlayedWith = Object.entries(opponentGames)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
+
+  const topOpponentWinPct = Object.entries(opponentGames)
+    .filter(([, count]) => count >= 2)
+    .map(([userId, count]) => ({ userId, count, wins: opponentWins[userId] ?? 0, pct: Math.round(((opponentWins[userId] ?? 0) / count) * 100) }))
+    .sort((a, b) => b.pct - a.pct)
+    .slice(0, 3);
 
   const values = { total, winRate, points, avgPoints, avgWinJokers, avgAllJokers };
 
@@ -208,7 +237,7 @@ export default function SummaryTab({ records, currentUserOid }: SummaryTabProps)
     <>
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {statCards.map(stat => (
-          <Grid key={stat.label} size={{ xs: 12, sm: 6, md: 4 }}>
+          <Grid key={stat.label} size={{ xs: 12, sm: 6, md: 3 }}>
             <Paper
               sx={{
                 p: '2rem',
@@ -238,8 +267,77 @@ export default function SummaryTab({ records, currentUserOid }: SummaryTabProps)
         ))}
       </Grid>
 
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Paper sx={pieCardSx}>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', mb: 3 }}>
+              Most Played With
+            </Typography>
+            {topPlayedWith.length === 0 ? (
+              <Typography sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>No opponents recorded yet.</Typography>
+            ) : (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                {topPlayedWith.map(([userId, count], i) => {
+                  const medals = ['#b07d2e', '#9e9e9e', '#a0522d'] as const;
+                  const ranks = ['1st', '2nd', '3rd'] as const;
+                  return (
+                    <Box key={userId} sx={{ display: 'flex', alignItems: 'center', gap: 2, p: '0.4rem 1rem', borderRadius: '0.875rem' }}>
+                      <Box sx={{ width: 36, height: 36, borderRadius: '50%', background: medals[i], display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Typography sx={{ fontSize: '0.65rem', fontWeight: 900, color: '#fff', letterSpacing: '0.03em' }}>{ranks[i]}</Typography>
+                      </Box>
+                      <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'text.primary', flex: 1, lineHeight: 1.3 }}>
+                        {displayName(userId, users)}
+                      </Typography>
+                      <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: medals[i], whiteSpace: 'nowrap' }}>
+                        {count} games
+                      </Typography>
+                    </Box>
+                  );
+                })}
+              </Box>
+            )}
+          </Paper>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Paper sx={pieCardSx}>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', mb: 3 }}>
+              Toughest Opponents
+            </Typography>
+            {topOpponentWinPct.length === 0 ? (
+              <Typography sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>Need at least 2 games with an opponent to rank.</Typography>
+            ) : (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                {topOpponentWinPct.map(({ userId, count, pct }, i) => {
+                  const medals = ['#e8877a', '#c45c9e', '#4a90d9'] as const;
+                  const ranks = ['1st', '2nd', '3rd'] as const;
+                  return (
+                    <Box key={userId} sx={{ display: 'flex', alignItems: 'center', gap: 2, p: '0.4rem 1rem', borderRadius: '0.875rem' }}>
+                      <Box sx={{ width: 36, height: 36, borderRadius: '50%', background: medals[i], display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Typography sx={{ fontSize: '0.65rem', fontWeight: 900, color: '#fff', letterSpacing: '0.03em' }}>{ranks[i]}</Typography>
+                      </Box>
+                      <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'text.primary', flex: 1, lineHeight: 1.3 }}>
+                        {displayName(userId, users)}
+                      </Typography>
+                      <Box sx={{ textAlign: 'right' }}>
+                        <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: medals[i], whiteSpace: 'nowrap' }}>
+                          {pct}% win rate
+                        </Typography>
+                        <Typography sx={{ fontSize: '0.7rem', color: 'text.secondary' }}>
+                          over {count} games
+                        </Typography>
+                      </Box>
+                    </Box>
+                  );
+                })}
+              </Box>
+            )}
+          </Paper>
+        </Grid>
+      </Grid>
+
       <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Paper sx={pieCardSx}>
             <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', mb: 3 }}>
               Category Distribution Overall
@@ -252,7 +350,7 @@ export default function SummaryTab({ records, currentUserOid }: SummaryTabProps)
           </Paper>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Paper sx={pieCardSx}>
             <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', mb: 3 }}>
               Category Distribution on Wins
@@ -265,7 +363,7 @@ export default function SummaryTab({ records, currentUserOid }: SummaryTabProps)
           </Paper>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 4 }}>
+        {/* <Grid size={{ xs: 12, md: 4 }}>
           <Paper sx={pieCardSx}>
             <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', mb: 3 }}>
               Category Distribution on Losses
@@ -276,7 +374,7 @@ export default function SummaryTab({ records, currentUserOid }: SummaryTabProps)
               <PieChart data={sortedLossCounts} />
             )}
           </Paper>
-        </Grid>
+        </Grid> */}
       </Grid>
 
       <Grid container spacing={3} sx={{ mt: 3 }}>
@@ -338,6 +436,7 @@ export default function SummaryTab({ records, currentUserOid }: SummaryTabProps)
           </Grid>
         ))}
       </Grid>
+
     </>
   );
 }

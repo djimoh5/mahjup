@@ -244,7 +244,7 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
             </Box>
             <Divider />
             <MenuItem onClick={handleOpenAccount}>My Account</MenuItem>
-            <MenuItem onClick={handleOpenInvite}>Invite</MenuItem>
+            <MenuItem onClick={handleOpenInvite}>Invite a Friend</MenuItem>
             <MenuItem onClick={() => { handleCloseMenu(); onLogout(); }} sx={{ color: 'error.main' }}>
               Log Out
             </MenuItem>
@@ -280,7 +280,7 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
 
       {/* Invite dialog */}
       <Dialog open={inviteOpen} onClose={handleCloseInvite} maxWidth="xs" fullWidth>
-        <DialogTitle>Invite someone</DialogTitle>
+        <DialogTitle>Invite a Friend</DialogTitle>
         <DialogContent>
           {inviteSuccess && <Alert severity="success" sx={{ mb: 1 }}>Invite sent!</Alert>}
           <TextField

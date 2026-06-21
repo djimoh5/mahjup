@@ -261,7 +261,7 @@ export default function App() {
           <ReferenceTab />
         </Box>
         <Box sx={{ display: activeTab !== 'summary' ? 'none' : 'block' }}>
-          <SummaryTab records={records} currentUserOid={user!.oid} />
+          <SummaryTab records={records} currentUserOid={user!.oid} users={users} />
         </Box>
       </Box>
     </Box>

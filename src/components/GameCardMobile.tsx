@@ -73,7 +73,7 @@ function MobilePlayerRow({
   }
 
   function handleHandSelect(cat: string, hand: string, score: number) {
-    onUpdate({ category: cat, hand, score });
+    onUpdate({ category: cat, hand, score, ...(cat === 'SINGLES AND PAIRS' ? { jokers: 0 } : {}) });
   }
 
   return (
@@ -109,7 +109,8 @@ function MobilePlayerRow({
             onChange={handleHandSelect}
             fullWidth
           />
-          <Select value={playerHand.jokers ?? 0} size="small" displayEmpty
+          <Select value={playerHand.category === 'SINGLES AND PAIRS' ? 0 : (playerHand.jokers ?? 0)} size="small" displayEmpty
+            disabled={playerHand.category === 'SINGLES AND PAIRS'}
             onChange={e => onUpdate({ jokers: Number(e.target.value) })}
             sx={{ flexShrink: 0, width: '7rem' }}>
             {[0,1,2,3,4,5,6,7,8].map(n => <MenuItem key={n} value={n}>{n} Joker{n !== 1 ? 's' : ''}</MenuItem>)}
