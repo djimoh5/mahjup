@@ -41,7 +41,7 @@ async getSummary(): Promise<{ summary: string; error?: string }> {
     if (res.success && res.data) return { summary: res.data };
     return { summary: '', error: res.msg ?? 'Failed to load summary' };
   } catch {
-    return { summary: '', error: 'Unable to connect to the server' };
+    return { summary: '', error: 'Unable to connect, please try again' };
   }
 }
 ```

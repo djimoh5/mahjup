@@ -75,6 +75,7 @@ export default function App() {
   const [users, setUsers] = useState<UserSummary[]>([]);
   const [isLoadingRecords, setIsLoadingRecords] = useState(false);
   const [newestSessionId, setNewestSessionId] = useState<string | null>(null);
+  const [pendingSessionOids, setPendingSessionOids] = useState<Set<string>>(new Set());
 
   const activeTab: Tab = PATH_TO_TAB[location.pathname] ?? 'tracker';
 
@@ -152,21 +153,54 @@ export default function App() {
     setUsers(prev => [...prev, newUser]);
   }
 
-  async function addSession() {
+  function addSession() {
     const newSession = makeSession({ userId: user?.oid });
-    const firstGame = makeRecord({ userId: user?.oid, sessionId: newSession.oid, date: newSession.dateTime.split('T')[0], players: user ? [{ userId: user.oid, category: '', hand: '', jokers: 0, isWinner: false, score: 0 }] : [] });
     setSessions(prev => [newSession, ...prev]);
-    setRecords(prev => [firstGame, ...prev]);
+    setPendingSessionOids(prev => new Set([...prev, newSession.oid]));
     setNewestSessionId(newSession.oid);
-    await Promise.all([mahjSessionService.save(newSession), gameService.save(firstGame)]);
   }
 
-  async function updateSession(oid: string, patch: Partial<MahjSession>) {
-    setSessions(prev => prev.map(s => (s.oid === oid ? { ...s, ...patch } : s)));
+  async function saveNewSession(oid: string, patch: Partial<MahjSession>): Promise<{ error?: string }> {
     const target = sessions.find(s => s.oid === oid);
-    if (target) {
-      await mahjSessionService.save({ ...target, ...patch });
+    if (!target) return { error: 'Session not found' };
+
+    const sessionToSave = { ...target, ...patch };
+    const { error: sessionError } = await mahjSessionService.save(sessionToSave);
+    if (sessionError) return { error: sessionError };
+
+    const firstGame = makeRecord({
+      userId: user?.oid,
+      sessionId: oid,
+      date: sessionToSave.dateTime.split('T')[0],
+      players: user ? [{ userId: user.oid, category: '', hand: '', jokers: 0, isWinner: false, score: 0 }] : [],
+    });
+    const { error: gameError } = await gameService.save(firstGame);
+
+    setSessions(prev => prev.map(s => s.oid === oid ? sessionToSave : s));
+    setPendingSessionOids(prev => { const next = new Set(prev); next.delete(oid); return next; });
+    setRecords(prev => [firstGame, ...prev]);
+
+    if (gameError) {
+      return { error: `Session saved, but the first game could not be created: ${gameError}` };
     }
+    return {};
+  }
+
+  function cancelNewSession(oid: string) {
+    setSessions(prev => prev.filter(s => s.oid !== oid));
+    setRecords(prev => prev.filter(r => r.sessionId !== oid));
+    setPendingSessionOids(prev => { const next = new Set(prev); next.delete(oid); return next; });
+    if (newestSessionId === oid) setNewestSessionId(null);
+  }
+
+  async function updateSession(oid: string, patch: Partial<MahjSession>): Promise<{ error?: string }> {
+    const target = sessions.find(s => s.oid === oid);
+    if (!target) return { error: 'Session not found' };
+    const updated = { ...target, ...patch };
+    const { error } = await mahjSessionService.save(updated);
+    if (error) return { error };
+    setSessions(prev => prev.map(s => s.oid === oid ? updated : s));
+    return {};
   }
 
   async function deleteSession(oid: string) {
@@ -175,25 +209,27 @@ export default function App() {
     await mahjSessionService.remove(oid);
   }
 
-  async function addRecord(sessionId: string, _sessionPlayers: string[], sessionDate: string) {
+  async function addRecord(sessionId: string, _sessionPlayers: string[], sessionDate: string): Promise<{ error?: string }> {
     const prevGame = records.filter(r => r.sessionId === sessionId).find(r => r.players.length > 0);
     const blankPlayer = (userId: string): PlayerHand => ({ userId, category: '', hand: '', jokers: 0, isWinner: false, score: 0 });
     const copiedPlayers: PlayerHand[] = prevGame
       ? prevGame.players.filter(p => p.userId).map(p => blankPlayer(p.userId))
       : user ? [blankPlayer(user.oid)] : [];
     const newRecord = makeRecord({ userId: user?.oid, sessionId, date: sessionDate, players: copiedPlayers });
+    const { error } = await gameService.save(newRecord);
+    if (error) return { error };
     setRecords(prev => [newRecord, ...prev]);
-    await gameService.save(newRecord);
+    return {};
   }
 
-  async function updateRecord(oid: string, patch: Partial<GameRecord>, skipSave?: boolean) {
+  async function updateRecord(oid: string, patch: Partial<GameRecord>, skipSave?: boolean): Promise<{ error?: string }> {
     setRecords(prev => prev.map(r => (r.oid === oid ? { ...r, ...patch } : r)));
 
     if (!skipSave) {
       const localRecord = records.find(r => r.oid === oid);
       const { record: fresh } = await gameService.getRecord(oid);
       const base = fresh ?? localRecord;
-      if (!base) return;
+      if (!base) return { error: 'Record not found' };
 
       const { players: patchPlayers, ...nonPlayerPatch } = patch;
       const merged: GameRecord = { ...base, ...nonPlayerPatch };
@@ -225,8 +261,11 @@ export default function App() {
       }
 
       setRecords(prev => prev.map(r => r.oid === oid ? merged : r));
-      await gameService.save(merged);
+      const { error } = await gameService.save(merged);
+      if (error) return { error };
     }
+
+    return {};
   }
 
   async function deleteRecord(oid: string) {
@@ -234,8 +273,9 @@ export default function App() {
     await gameService.remove(oid);
   }
 
-  async function savePlayerHand(gameOid: string, player: PlayerHand) {
-    await gameService.savePlayer(gameOid, player);
+  async function savePlayerHand(gameOid: string, player: PlayerHand): Promise<{ error?: string }> {
+    const { error } = await gameService.savePlayer(gameOid, player);
+    return error ? { error } : {};
   }
 
   if (inviteCode) {
@@ -301,10 +341,13 @@ export default function App() {
             sessions={sortedSessions}
             records={records}
             newestSessionId={newestSessionId}
+            pendingSessionOids={pendingSessionOids}
             users={users}
             usersMap={usersMap}
             currentUserOid={user!.oid}
             onAddSession={addSession}
+            onSaveNewSession={saveNewSession}
+            onCancelNewSession={cancelNewSession}
             onUpdateSession={updateSession}
             onDeleteSession={deleteSession}
             onAddGame={addRecord}

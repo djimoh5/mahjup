@@ -14,7 +14,7 @@ export class GameService extends BaseService {
       if (res.success && res.data) return { record: res.data };
       return { record: null, error: res.msg ?? 'Failed to load record' };
     } catch {
-      return { record: null, error: 'Unable to connect to the server' };
+      return { record: null, error: 'Unable to connect, please try again' };
     }
   }
 
@@ -24,7 +24,7 @@ export class GameService extends BaseService {
       if (res.success && res.data) return { records: res.data };
       return { records: [], error: res.msg ?? 'Failed to load records' };
     } catch {
-      return { records: [], error: 'Unable to connect to the server' };
+      return { records: [], error: 'Unable to connect, please try again' };
     }
   }
 
@@ -34,7 +34,7 @@ export class GameService extends BaseService {
       if (res.success && res.data) return { record: res.data };
       return { record: null, error: res.msg ?? 'Failed to save record' };
     } catch {
-      return { record: null, error: 'Unable to connect to the server' };
+      return { record: null, error: 'Unable to connect, please try again' };
     }
   }
 
@@ -44,7 +44,7 @@ export class GameService extends BaseService {
       if (res.success) return {};
       return { error: res.msg ?? 'Failed to save player hand' };
     } catch {
-      return { error: 'Unable to connect to the server' };
+      return { error: 'Unable to connect, please try again' };
     }
   }
 
@@ -54,7 +54,7 @@ export class GameService extends BaseService {
       if (res.success) return {};
       return { error: res.msg ?? 'Failed to delete record' };
     } catch {
-      return { error: 'Unable to connect to the server' };
+      return { error: 'Unable to connect, please try again' };
     }
   }
 
@@ -64,7 +64,7 @@ export class GameService extends BaseService {
       if (res.success && res.data) return { summary: res.data };
       return { summary: '', error: res.msg ?? 'Failed to load summary' };
     } catch {
-      return { summary: '', error: 'Unable to connect to the server' };
+      return { summary: '', error: 'Unable to connect, please try again' };
     }
   }
 }

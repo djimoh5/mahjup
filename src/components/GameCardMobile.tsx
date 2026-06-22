@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
@@ -13,6 +13,7 @@ import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
 import Tooltip from '@mui/material/Tooltip';
 import Collapse from '@mui/material/Collapse';
+import Alert from '@mui/material/Alert';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
@@ -31,10 +32,10 @@ interface GameCardMobileProps {
   users: UserSummary[];
   usersMap: Record<string, UserSummary>;
   canDeleteGame: boolean;
-  onUpdate: (patch: Partial<GameRecord>, skipSave?: boolean) => void;
+  onUpdate: (patch: Partial<GameRecord>, skipSave?: boolean) => Promise<{ error?: string }>;
   onDelete: () => void;
   onInvitePlayer: (cb: (userId: string) => void) => void;
-  onSavePlayerHand: (player: PlayerHand) => void;
+  onSavePlayerHand: (player: PlayerHand) => Promise<{ error?: string }>;
 }
 
 interface PlayerRowProps {
@@ -174,13 +175,31 @@ function MobilePlayerRow({
   );
 }
 
+type SaveStatus = 'idle' | 'saving' | 'error' | 'success';
+
 export default function GameCardMobile({ record, isExpanded, onToggle, sessionPlayers, users, usersMap, canDeleteGame, onUpdate, onDelete, onInvitePlayer, onSavePlayerHand }: GameCardMobileProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => { if (successTimerRef.current) clearTimeout(successTimerRef.current); }, []);
 
   const winner = record.players.find(p => p.isWinner);
   const winnerName = winner?.userId ? resolveDisplayName(winner.userId, usersMap) : null;
 
-  function handlePlayerUpdate(idx: number, patch: Partial<PlayerHand>, skipSave?: boolean) {
+  function handleSaveResult(result: { error?: string }) {
+    if (result.error) {
+      setSaveStatus('error');
+      setSaveError(result.error);
+    } else {
+      setSaveStatus('success');
+      if (successTimerRef.current) clearTimeout(successTimerRef.current);
+      successTimerRef.current = setTimeout(() => setSaveStatus('idle'), 2000);
+    }
+  }
+
+  async function handlePlayerUpdate(idx: number, patch: Partial<PlayerHand>, skipSave?: boolean) {
     const updated = record.players.map((p, i) => {
       if (i !== idx) return p;
       const merged = { ...p, ...patch };
@@ -193,24 +212,31 @@ export default function GameCardMobile({ record, isExpanded, onToggle, sessionPl
     });
 
     if (skipSave || 'userId' in patch) {
-      // State-only update (debounced typing) or identity change — use full record save
-      onUpdate({ players: updated }, skipSave);
+      if (!skipSave) {
+        setSaveStatus('saving');
+        handleSaveResult(await onUpdate({ players: updated }, false));
+      } else {
+        onUpdate({ players: updated }, true);
+      }
     } else {
-      // Hand data change — update state without a full-record save, then atomically update only this player's entry
       onUpdate({ players: updated }, true);
       const player = updated[idx];
-      if (player.userId) onSavePlayerHand(player);
+      if (player.userId) {
+        setSaveStatus('saving');
+        handleSaveResult(await onSavePlayerHand(player));
+      }
     }
   }
 
-  function handleWinnerSelect(idx: number) {
+  async function handleWinnerSelect(idx: number) {
     const updated = record.players.map((p, i) => {
       if (i !== idx) return { ...p, isWinner: false };
       const match = p.category && p.hand ? handData[p.category]?.find(item => item.h === p.hand) : null;
       const baseScore = match?.v ?? p.score;
       return { ...p, isWinner: true, score: p.jokers === 0 ? baseScore * 2 : baseScore };
     });
-    onUpdate({ players: updated });
+    setSaveStatus('saving');
+    handleSaveResult(await onUpdate({ players: updated }));
   }
 
   function handleDeletePlayer(idx: number) {
@@ -273,6 +299,32 @@ export default function GameCardMobile({ record, isExpanded, onToggle, sessionPl
 
       {/* Accordion body */}
       <Collapse in={isExpanded}>
+        {saveStatus !== 'idle' && (
+          <Box sx={{ px: 2, py: 0.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+            {saveStatus === 'saving' && (
+              <>
+                <Box sx={{
+                  width: 8, height: 8, borderRadius: '50%', bgcolor: 'success.main',
+                  animation: 'pulse 1.2s ease-in-out infinite',
+                  '@keyframes pulse': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.35 } },
+                }} />
+                <Typography variant="caption" color="text.secondary">Saving…</Typography>
+              </>
+            )}
+            {saveStatus === 'success' && (
+              <Typography variant="caption" sx={{ color: 'success.dark' }}>✓ Saved</Typography>
+            )}
+            {saveStatus === 'error' && (
+              <Alert
+                severity="error"
+                onClose={() => { setSaveStatus('idle'); setSaveError(null); }}
+                sx={{ py: 0, fontSize: '0.8125rem', width: '100%' }}
+              >
+                Changes not saved: {saveError}
+              </Alert>
+            )}
+          </Box>
+        )}
         <Divider />
         <Stack spacing={1.5} sx={{ p: 1.5 }}>
           {record.players.map((playerHand, idx) => (

@@ -7,6 +7,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
+import Alert from '@mui/material/Alert';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -26,6 +27,7 @@ import { resolveDisplayName } from '../utils/user';
 interface SessionGroupProps {
   session: MahjSession;
   games: GameRecord[];
+  isPending: boolean;
   isExpanded: boolean;
   onToggle: () => void;
   onExpand: () => void;
@@ -33,13 +35,15 @@ interface SessionGroupProps {
   users: UserSummary[];
   usersMap: Record<string, UserSummary>;
   currentUserOid: string;
-  onAddGame: () => void;
-  onUpdate: (id: string, patch: Partial<GameRecord>, skipSave?: boolean) => void;
+  onAddGame: () => Promise<{ error?: string }>;
+  onUpdate: (id: string, patch: Partial<GameRecord>, skipSave?: boolean) => Promise<{ error?: string }>;
   onDelete: (id: string) => void;
-  onUpdateSession: (patch: Partial<MahjSession>) => void;
+  onUpdateSession: (patch: Partial<MahjSession>) => Promise<{ error?: string }>;
+  onSaveNewSession: (patch: Partial<MahjSession>) => Promise<{ error?: string }>;
+  onCancelNewSession: () => void;
   onDeleteSession: () => void;
   onUserAdded: (newUser: UserSummary) => void;
-  onSavePlayerHand: (gameOid: string, player: PlayerHand) => void;
+  onSavePlayerHand: (gameOid: string, player: PlayerHand) => Promise<{ error?: string }>;
   onRefresh: () => void;
   isRefreshing: boolean;
 }
@@ -57,14 +61,18 @@ function formatDateTime(dt: string): string {
 }
 
 export default function SessionGroup({
-  session, games, isExpanded, onToggle, onExpand, initialEditing, users, usersMap, currentUserOid,
-  onAddGame, onUpdate, onDelete, onUpdateSession, onDeleteSession, onUserAdded,
+  session, games, isPending, isExpanded, onToggle, onExpand, initialEditing, users, usersMap, currentUserOid,
+  onAddGame, onUpdate, onDelete, onUpdateSession, onSaveNewSession, onCancelNewSession, onDeleteSession, onUserAdded,
   onSavePlayerHand, onRefresh, isRefreshing,
 }: SessionGroupProps) {
   const isSessionCreator = session.userId === currentUserOid;
   const isMobile = useIsMobile();
   const [isEditing, setIsEditing] = useState(initialEditing ?? false);
   const [confirmDeleteSession, setConfirmDeleteSession] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [isAddingGame, setIsAddingGame] = useState(false);
+  const [addGameError, setAddGameError] = useState<string | null>(null);
 
   const [expandedGameId, setExpandedGameId] = useState<string | null>(
     () => games.find(g => g.players.length === 0)?.oid ?? null
@@ -90,7 +98,6 @@ export default function SessionGroup({
   const [editDateTime, setEditDateTime] = useState(session.dateTime);
   const [editPlayers, setEditPlayers] = useState<string[]>([...session.players]);
 
-  const isNewSession = useRef(initialEditing ?? false);
 
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
@@ -106,24 +113,44 @@ export default function SessionGroup({
     setIsEditing(true);
   }
 
-  function handleSave() {
-    onUpdateSession({
+  async function handleSave() {
+    setIsSaving(true);
+    setSaveError(null);
+    const patch = {
       title: editTitle.trim() || undefined,
       dateTime: editDateTime,
       players: editPlayers as authid[],
-    });
-    setIsEditing(false);
-    if (isNewSession.current && games.length > 0) {
-      setExpandedGameId(games[0].oid);
-      isNewSession.current = false;
+    };
+    const { error } = isPending
+      ? await onSaveNewSession(patch)
+      : await onUpdateSession(patch);
+    setIsSaving(false);
+    if (error) {
+      setSaveError(error);
+      return;
     }
+    setIsEditing(false);
+    if (isPending && games.length > 0) setExpandedGameId(games[0].oid);
   }
 
   function handleCancel() {
+    if (isPending) {
+      onCancelNewSession();
+      return;
+    }
     setEditTitle(session.title ?? '');
     setEditDateTime(session.dateTime);
     setEditPlayers([...session.players]);
     setIsEditing(false);
+    setSaveError(null);
+  }
+
+  async function handleAddGame() {
+    setIsAddingGame(true);
+    setAddGameError(null);
+    const { error } = await onAddGame();
+    setIsAddingGame(false);
+    if (error) setAddGameError(error);
   }
 
   function handleInviteOpen(cb: (userId: string) => void) {
@@ -302,13 +329,25 @@ export default function SessionGroup({
               />
             </Box>
 
+            {saveError && (
+              <Alert severity="error" onClose={() => setSaveError(null)} sx={{ mb: 0.5 }}>
+                {saveError}
+              </Alert>
+            )}
             <Stack direction="row" spacing={1} sx={{ pt: 0.5 }}>
-              <Button variant="contained" color="primary" onClick={handleSave}>
-                Save Session
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleSave}
+                disabled={isSaving}
+                startIcon={isSaving ? <CircularProgress size={16} color="inherit" /> : undefined}
+              >
+                {isSaving ? 'Saving…' : 'Save Session'}
               </Button>
               <Button
                 variant="outlined"
                 onClick={handleCancel}
+                disabled={isSaving}
                 sx={{
                   borderColor: 'rgba(242,171,164,0.55)',
                   color: 'text.secondary',
@@ -369,15 +408,27 @@ export default function SessionGroup({
               ))}
             </Stack>
           )}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-            <Button
-              size="small"
-              onClick={onAddGame}
-              startIcon={<PlusIcon style={{ width: '0.875rem', height: '0.875rem' }} />}
-              sx={{ fontSize: '0.75rem', fontWeight: 600 }}
-            >
-              Add Game
-            </Button>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 1 }}>
+            {addGameError && (
+              <Alert severity="error" onClose={() => setAddGameError(null)} sx={{ fontSize: '0.8125rem', py: 0 }}>
+                {addGameError}
+              </Alert>
+            )}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Button
+                size="small"
+                onClick={handleAddGame}
+                disabled={isAddingGame}
+                startIcon={
+                  isAddingGame
+                    ? <CircularProgress size={14} color="inherit" />
+                    : <PlusIcon style={{ width: '0.875rem', height: '0.875rem' }} />
+                }
+                sx={{ fontSize: '0.75rem', fontWeight: 600 }}
+              >
+                {isAddingGame ? 'Adding…' : 'Add Game'}
+              </Button>
+            </Box>
           </Box>
         </Box>
       )}

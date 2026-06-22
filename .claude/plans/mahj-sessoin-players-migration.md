@@ -108,7 +108,7 @@ async invite(email: string): Promise<{ oid: string | null; error?: string }> {
         if (res.success && res.data) return { oid: res.data.oid };
         return { oid: null, error: res.msg ?? 'Invite failed' };
     } catch {
-        return { oid: null, error: 'Unable to connect to the server' };
+        return { oid: null, error: 'Unable to connect, please try again' };
     }
 }
 ```

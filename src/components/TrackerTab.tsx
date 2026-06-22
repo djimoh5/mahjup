@@ -13,24 +13,27 @@ interface TrackerTabProps {
   sessions: MahjSession[];
   records: GameRecord[];
   newestSessionId: string | null;
+  pendingSessionOids: Set<string>;
   users: UserSummary[];
   usersMap: Record<string, UserSummary>;
   currentUserOid: string;
   onAddSession: () => void;
-  onUpdateSession: (oid: string, patch: Partial<MahjSession>) => void;
+  onSaveNewSession: (oid: string, patch: Partial<MahjSession>) => Promise<{ error?: string }>;
+  onCancelNewSession: (oid: string) => void;
+  onUpdateSession: (oid: string, patch: Partial<MahjSession>) => Promise<{ error?: string }>;
   onDeleteSession: (oid: string) => void;
-  onAddGame: (sessionId: string, sessionPlayers: string[], sessionDate: string) => void;
-  onUpdate: (id: string, patch: Partial<GameRecord>, skipSave?: boolean) => void;
+  onAddGame: (sessionId: string, sessionPlayers: string[], sessionDate: string) => Promise<{ error?: string }>;
+  onUpdate: (id: string, patch: Partial<GameRecord>, skipSave?: boolean) => Promise<{ error?: string }>;
   onDelete: (id: string) => void;
   onUserAdded: (newUser: UserSummary) => void;
-  onSavePlayerHand: (gameOid: string, player: PlayerHand) => void;
+  onSavePlayerHand: (gameOid: string, player: PlayerHand) => Promise<{ error?: string }>;
   onRefresh: () => void;
   isRefreshing: boolean;
 }
 
 export default function TrackerTab({
-  sessions, records, newestSessionId, users, usersMap, currentUserOid,
-  onAddSession, onUpdateSession, onDeleteSession,
+  sessions, records, newestSessionId, pendingSessionOids, users, usersMap, currentUserOid,
+  onAddSession, onSaveNewSession, onCancelNewSession, onUpdateSession, onDeleteSession,
   onAddGame, onUpdate, onDelete, onUserAdded,
   onSavePlayerHand, onRefresh, isRefreshing,
 }: TrackerTabProps) {
@@ -91,6 +94,7 @@ export default function TrackerTab({
               key={session.oid}
               session={session}
               games={sessionGames}
+              isPending={pendingSessionOids.has(session.oid)}
               isExpanded={expandedSessionId === session.oid}
               onToggle={() => setExpandedSessionId(id => id === session.oid ? null : session.oid)}
               onExpand={() => setExpandedSessionId(session.oid)}
@@ -102,6 +106,8 @@ export default function TrackerTab({
               onUpdate={onUpdate}
               onDelete={onDelete}
               onUpdateSession={patch => onUpdateSession(session.oid, patch)}
+              onSaveNewSession={patch => onSaveNewSession(session.oid, patch)}
+              onCancelNewSession={() => onCancelNewSession(session.oid)}
               onDeleteSession={() => onDeleteSession(session.oid)}
               onUserAdded={onUserAdded}
               onSavePlayerHand={onSavePlayerHand}

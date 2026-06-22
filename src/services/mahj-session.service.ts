@@ -14,7 +14,7 @@ export class MahjSessionService extends BaseService {
       if (res.success && res.data) return { sessions: res.data };
       return { sessions: [], error: res.msg ?? 'Failed to load sessions' };
     } catch {
-      return { sessions: [], error: 'Unable to connect to the server' };
+      return { sessions: [], error: 'Unable to connect, please try again' };
     }
   }
 
@@ -24,7 +24,7 @@ export class MahjSessionService extends BaseService {
       if (res.success && res.data) return { session: res.data };
       return { session: null, error: res.msg ?? 'Failed to save session' };
     } catch {
-      return { session: null, error: 'Unable to connect to the server' };
+      return { session: null, error: 'Unable to connect, please try again' };
     }
   }
 
@@ -34,7 +34,7 @@ export class MahjSessionService extends BaseService {
       if (res.success) return {};
       return { error: res.msg ?? 'Failed to delete session' };
     } catch {
-      return { error: 'Unable to connect to the server' };
+      return { error: 'Unable to connect, please try again' };
     }
   }
 }
