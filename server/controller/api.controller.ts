@@ -59,7 +59,7 @@ export class APIController extends BaseController {
 		}
 		else if (req.body) {
 			console.log('check body', req.body);
-			
+
 			if(!req.body.username || !req.body.password) {
 				return this.sendError(res, 'username and password are required');
 			}
@@ -264,7 +264,7 @@ export class APIController extends BaseController {
 					The 3-Step Action Plan: Three precise, prioritized rules of thumb to apply in their very next game.
 					Tone: Elite, objective, highly strategic, and direct. Avoid generic gaming advice; everything must be specific to American Mahjong rules, tile distributions, and NMJL card dynamics.
 
-					Return the analysis as an HTML content fragment using appropriate headings, paragraphs, and bullet points. Use only inline styles for any styling. Do not include DOCTYPE, html, head, or body tags.
+					Return the analysis as an HTML content fragment using appropriate headings, paragraphs, and bullet points. Use h2 tags for section headings, and p tags for body content. Do not apply any inline styling or style sheet as that will be handled separately by the consuming app. Do not include DOCTYPE, html, head, or body tags.
 				`,
 				role: 'system'
 			},

@@ -111,7 +111,7 @@ export default function AiSummary() {
             fontSize: '0.9375rem',
             lineHeight: 1.7,
             color: 'text.primary',
-            '& h1, & h2, & h3, & h4': { mt: 0, mb: 0.75, fontSize: '1rem', fontWeight: 600 },
+            '& h1, & h2, & h3, & h4': { mt: 2.0, mb: 0.75, fontSize: '1rem', fontWeight: 600, borderBottom: '2px solid rgba(235, 120, 152, 0.35)' },
             '& p': { mt: 0, mb: 1 },
             '& p:last-child': { mb: 0 },
             '& ul, & ol': { pl: '1.5rem', mt: 0, mb: 1 },
