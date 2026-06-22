@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import type { MahjSession } from '../../model/mahj-session.model';
-import type { GameRecord } from '../../model/game.model';
+import type { GameRecord, PlayerHand } from '../../model/game.model';
 import type { UserSummary } from '../../model/user.model';
 import SessionGroup from './SessionGroup';
 import { PlusIcon } from './icons/Icons';
@@ -23,12 +23,16 @@ interface TrackerTabProps {
   onUpdate: (id: string, patch: Partial<GameRecord>, skipSave?: boolean) => void;
   onDelete: (id: string) => void;
   onUserAdded: (newUser: UserSummary) => void;
+  onSavePlayerHand: (gameOid: string, player: PlayerHand) => void;
+  onRefresh: () => void;
+  isRefreshing: boolean;
 }
 
 export default function TrackerTab({
   sessions, records, newestSessionId, users, usersMap, currentUserOid,
   onAddSession, onUpdateSession, onDeleteSession,
   onAddGame, onUpdate, onDelete, onUserAdded,
+  onSavePlayerHand, onRefresh, isRefreshing,
 }: TrackerTabProps) {
   const [expandedSessionId, setExpandedSessionId] = useState<string | null>(
     () => sessions[0]?.oid ?? null
@@ -100,6 +104,9 @@ export default function TrackerTab({
               onUpdateSession={patch => onUpdateSession(session.oid, patch)}
               onDeleteSession={() => onDeleteSession(session.oid)}
               onUserAdded={onUserAdded}
+              onSavePlayerHand={onSavePlayerHand}
+              onRefresh={onRefresh}
+              isRefreshing={isRefreshing}
             />
           );
         })}

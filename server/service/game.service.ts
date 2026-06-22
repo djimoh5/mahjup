@@ -4,7 +4,7 @@ import { AppService } from './app.service';
 
 import { MahjSessionRepository } from '../repository/mahj-session.repository';
 import { GameRepository } from '../repository/game.repository';
-import { GameRecord } from '../../model/game.model';
+import { GameRecord, PlayerHand } from '../../model/game.model';
 
 @Injectable()
 @Bootstrap()
@@ -25,10 +25,20 @@ export class GameService extends BaseService {
         return new ApiResponse(true, merged);
     }
 
+    async getRecord(oid: string): Promise<ApiResponse<GameRecord>> {
+        const record = await this.gameRepository.getByOid(oid);
+        return new ApiResponse(!!record, record ?? null);
+    }
+
     async save(record: GameRecord, userId: string): Promise<ApiResponse<GameRecord>> {
         record.userId = userId;
         const saved = await this.gameRepository.save(record);
         return new ApiResponse(true, saved);
+    }
+
+    async savePlayer(oid: string, player: PlayerHand): Promise<ApiResponse<null>> {
+        await this.gameRepository.updatePlayerHand(oid, player);
+        return new ApiResponse(true, null);
     }
 
     async remove(oid: string, userId: string): Promise<ApiResponse<null>> {

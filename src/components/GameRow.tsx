@@ -26,9 +26,10 @@ interface GameRowProps {
   onUpdate: (patch: Partial<GameRecord>, skipSave?: boolean) => void;
   onDelete: () => void;
   onInvitePlayer: (cb: (userId: string) => void) => void;
+  onSavePlayerHand: (player: PlayerHand) => void;
 }
 
-export default function GameRow({ record, isExpanded, onToggle, sessionPlayers, users, usersMap, canDeleteGame, onUpdate, onDelete, onInvitePlayer }: GameRowProps) {
+export default function GameRow({ record, isExpanded, onToggle, sessionPlayers, users, usersMap, canDeleteGame, onUpdate, onDelete, onInvitePlayer, onSavePlayerHand }: GameRowProps) {
 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const winner = record.players.find(p => p.isWinner);
@@ -45,7 +46,16 @@ export default function GameRow({ record, isExpanded, onToggle, sessionPlayers, 
       }
       return merged;
     });
-    onUpdate({ players: updated }, skipSave);
+
+    if (skipSave || 'userId' in patch) {
+      // State-only update (debounced typing) or identity change — use full record save
+      onUpdate({ players: updated }, skipSave);
+    } else {
+      // Hand data change — update state without a full-record save, then atomically update only this player's entry
+      onUpdate({ players: updated }, true);
+      const player = updated[idx];
+      if (player.userId) onSavePlayerHand(player);
+    }
   }
 
   function handleWinnerSelect(idx: number) {

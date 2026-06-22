@@ -58,7 +58,12 @@ export class APIController extends BaseController {
 			data = await this.authService.authenticate(req.session.user.username, null, false, true);
 		}
 		else if (req.body) {
-			console.log(req.body);
+			console.log('check body', req.body);
+			
+			if(!req.body.username || !req.body.password) {
+				return this.sendError(res, 'username and password are required');
+			}
+
 			data = await this.authService.authenticate(req.body.username, req.body.password);
 		}
 
@@ -184,9 +189,23 @@ export class APIController extends BaseController {
 		res.send(data);
 	}
 
+	@Get('game/record/:oid')
+	async getRecord(req: Request, res: Response) {
+		const data = await this.gameService.getRecord(req.params.oid);
+		res.send(data);
+	}
+
 	@Post('game/record')
 	async saveRecord(req: Request, res: Response) {
 		const data = await this.gameService.save(req.body, req.session.user.oid);
+		res.send(data);
+	}
+
+	@Post('game/record/player')
+	async savePlayerHand(req: Request, res: Response) {
+		const { oid, player } = req.body;
+		if (!oid || !player) return this.sendError(res, 'oid and player are required');
+		const data = await this.gameService.savePlayer(oid, player);
 		res.send(data);
 	}
 

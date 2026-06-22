@@ -85,6 +85,8 @@ export default function App() {
     });
   }, []);
 
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   useEffect(() => {
     if (!user) return;
     setIsLoadingRecords(true);
@@ -99,8 +101,26 @@ export default function App() {
     }).catch(() => {}).finally(() => {
       setIsLoadingRecords(false);
     });
-
   }, [user]);
+
+  async function refreshData() {
+    if (!user || isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      const [{ sessions: fetchedSessions }, { records: fetchedRecords }, { users: fetchedUsers }] = await Promise.all([
+        mahjSessionService.getAll(),
+        gameService.getAll(),
+        userService.getAffiliated().catch(() => ({ users: [] as UserSummary[] })),
+      ]);
+      setSessions(fetchedSessions);
+      setRecords(fetchedRecords.map(r => ({ ...r, players: r.players ?? [] })));
+      setUsers(fetchedUsers);
+    } catch {
+      // silently ignore
+    } finally {
+      setIsRefreshing(false);
+    }
+  }
 
   const usersMap = useMemo(
     () => Object.fromEntries(users.map(u => [u.oid, u])),
@@ -170,16 +190,52 @@ export default function App() {
     setRecords(prev => prev.map(r => (r.oid === oid ? { ...r, ...patch } : r)));
 
     if (!skipSave) {
-      const target = records.find(r => r.oid === oid);
-      if (target) {
-        await gameService.save({ ...target, ...patch });
+      const localRecord = records.find(r => r.oid === oid);
+      const { record: fresh } = await gameService.getRecord(oid);
+      const base = fresh ?? localRecord;
+      if (!base) return;
+
+      const { players: patchPlayers, ...nonPlayerPatch } = patch;
+      const merged: GameRecord = { ...base, ...nonPlayerPatch };
+
+      if (patchPlayers) {
+        if (fresh?.players) {
+          const freshByUserId = Object.fromEntries(
+            fresh.players.filter(p => p.userId).map(p => [p.userId, p])
+          );
+          const localByUserId = Object.fromEntries(
+            (localRecord?.players ?? []).filter(p => p.userId).map(p => [p.userId, p])
+          );
+          merged.players = patchPlayers.map(patchPlayer => {
+            const freshPlayer = freshByUserId[patchPlayer.userId];
+            const localPlayer = localByUserId[patchPlayer.userId];
+            if (!freshPlayer || !localPlayer) return patchPlayer;
+            // Apply only the fields that actually changed from local to patch
+            const diff: Partial<PlayerHand> = {};
+            for (const key of Object.keys(patchPlayer) as (keyof PlayerHand)[]) {
+              if (patchPlayer[key] !== localPlayer[key]) {
+                (diff as any)[key] = patchPlayer[key];
+              }
+            }
+            return { ...freshPlayer, ...diff };
+          });
+        } else {
+          merged.players = patchPlayers;
+        }
       }
+
+      setRecords(prev => prev.map(r => r.oid === oid ? merged : r));
+      await gameService.save(merged);
     }
   }
 
   async function deleteRecord(oid: string) {
     setRecords(prev => prev.filter(r => r.oid !== oid));
     await gameService.remove(oid);
+  }
+
+  async function savePlayerHand(gameOid: string, player: PlayerHand) {
+    await gameService.savePlayer(gameOid, player);
   }
 
   if (inviteCode) {
@@ -255,6 +311,9 @@ export default function App() {
             onUpdate={updateRecord}
             onDelete={deleteRecord}
             onUserAdded={handleUserAdded}
+            onSavePlayerHand={savePlayerHand}
+            onRefresh={refreshData}
+            isRefreshing={isRefreshing}
           />
         </Box>
         <Box sx={{ display: activeTab !== 'hands' ? 'none' : 'block' }}>

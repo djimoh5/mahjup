@@ -13,14 +13,14 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import CircularProgress from '@mui/material/CircularProgress';
 import type { MahjSession } from '../../model/mahj-session.model';
-import type { GameRecord } from '../../model/game.model';
+import type { GameRecord, PlayerHand } from '../../model/game.model';
 import type { UserSummary } from '../../model/user.model';
 import type { authid } from '../../model/id.model';
 import { authService } from '../services/auth.service';
 import GameRow from './GameRow';
 import GameCardMobile from './GameCardMobile';
 import { useIsMobile } from '../hooks/useIsMobile';
-import { PlusIcon, PencilIcon, TrashIcon, ChevronDownIcon } from './icons/Icons';
+import { PlusIcon, PencilIcon, TrashIcon, ChevronDownIcon, RefreshIcon } from './icons/Icons';
 import { resolveDisplayName } from '../utils/user';
 
 interface SessionGroupProps {
@@ -39,6 +39,9 @@ interface SessionGroupProps {
   onUpdateSession: (patch: Partial<MahjSession>) => void;
   onDeleteSession: () => void;
   onUserAdded: (newUser: UserSummary) => void;
+  onSavePlayerHand: (gameOid: string, player: PlayerHand) => void;
+  onRefresh: () => void;
+  isRefreshing: boolean;
 }
 
 function formatDateTime(dt: string): string {
@@ -56,6 +59,7 @@ function formatDateTime(dt: string): string {
 export default function SessionGroup({
   session, games, isExpanded, onToggle, onExpand, initialEditing, users, usersMap, currentUserOid,
   onAddGame, onUpdate, onDelete, onUpdateSession, onDeleteSession, onUserAdded,
+  onSavePlayerHand, onRefresh, isRefreshing,
 }: SessionGroupProps) {
   const isSessionCreator = session.userId === currentUserOid;
   const isMobile = useIsMobile();
@@ -203,6 +207,31 @@ export default function SessionGroup({
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+          {!isEditing && (
+            <IconButton
+              size="small"
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              aria-label="Refresh session"
+              sx={{
+                border: '1px solid rgba(242,171,164,0.55)',
+                borderRadius: '0.5rem',
+                color: 'text.secondary',
+                '&:hover': { background: 'rgba(46,94,66,0.08)', color: 'text.primary' },
+              }}
+            >
+              <Box
+                component="span"
+                sx={{
+                  display: 'inline-flex',
+                  animation: isRefreshing ? 'spin 1s linear infinite' : 'none',
+                  '@keyframes spin': { from: { transform: 'rotate(0deg)' }, to: { transform: 'rotate(360deg)' } },
+                }}
+              >
+                <RefreshIcon style={{ width: '1rem', height: '1rem' }} />
+              </Box>
+            </IconButton>
+          )}
           {!isEditing && isSessionCreator && (
             <>
               <IconButton
@@ -316,6 +345,7 @@ export default function SessionGroup({
                   onUpdate={(patch, skipSave) => onUpdate(game.oid, patch, skipSave)}
                   onDelete={() => onDelete(game.oid)}
                   onInvitePlayer={handleInviteOpen}
+                  onSavePlayerHand={(player) => onSavePlayerHand(game.oid, player)}
                 />
               ))}
             </Stack>
@@ -334,18 +364,21 @@ export default function SessionGroup({
                   onUpdate={(patch, skipSave) => onUpdate(game.oid, patch, skipSave)}
                   onDelete={() => onDelete(game.oid)}
                   onInvitePlayer={handleInviteOpen}
+                  onSavePlayerHand={(player) => onSavePlayerHand(game.oid, player)}
                 />
               ))}
             </Stack>
           )}
-          <Button
-            size="small"
-            onClick={onAddGame}
-            startIcon={<PlusIcon style={{ width: '0.875rem', height: '0.875rem' }} />}
-            sx={{ mt: 1, fontSize: '0.75rem', fontWeight: 600 }}
-          >
-            Add Game
-          </Button>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+            <Button
+              size="small"
+              onClick={onAddGame}
+              startIcon={<PlusIcon style={{ width: '0.875rem', height: '0.875rem' }} />}
+              sx={{ fontSize: '0.75rem', fontWeight: 600 }}
+            >
+              Add Game
+            </Button>
+          </Box>
         </Box>
       )}
 

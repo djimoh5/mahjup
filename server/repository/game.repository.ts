@@ -1,6 +1,6 @@
 import { Bootstrap, Injectable } from '../config/bootstrap';
 import { BaseRepository } from './base.repository';
-import { GameRecord } from '../../model/game.model';
+import { GameRecord, PlayerHand } from '../../model/game.model';
 
 @Injectable()
 @Bootstrap()
@@ -27,6 +27,10 @@ export class GameRepository extends BaseRepository {
 
     save(record: GameRecord): Promise<GameRecord> {
         return super.updateObject(record);
+    }
+
+    updatePlayerHand(oid: string, player: PlayerHand): Promise<any> {
+        return this.context.update({ oid, 'players.userId': player.userId }, { 'players.$': player }, null);
     }
 
     remove(oid: string): Promise<boolean> {
