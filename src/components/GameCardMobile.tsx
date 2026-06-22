@@ -74,8 +74,8 @@ function MobilePlayerRow({
     }
   }
 
-  function handleHandSelect(cat: string, hand: string, score: number) {
-    onUpdate({ category: cat, hand, score, ...(cat === 'SINGLES AND PAIRS' ? { jokers: 0 } : {}) });
+  function handleHandSelect(cat: string, hand: string, score: number, variant?: 's2') {
+    onUpdate({ category: cat, hand, variant, score, ...(cat === 'SINGLES AND PAIRS' ? { jokers: 0 } : {}) });
   }
 
   return (
@@ -108,6 +108,7 @@ function MobilePlayerRow({
           <HandSelect
             category={playerHand.category}
             hand={playerHand.hand}
+            variant={playerHand.variant}
             onChange={handleHandSelect}
             fullWidth
           />

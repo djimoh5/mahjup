@@ -45,8 +45,8 @@ export default function PlayerHandRow({
     .filter(u => !sessionSet.has(u.oid) && !excludeIds.has(u.oid))
     .sort((a, b) => resolveDisplayName(a.oid, usersMap).localeCompare(resolveDisplayName(b.oid, usersMap)));
 
-  function handleHandSelect(cat: string, hand: string, score: number) {
-    onUpdate({ category: cat, hand, score, ...(cat === 'SINGLES AND PAIRS' ? { jokers: 0 } : {}) });
+  function handleHandSelect(cat: string, hand: string, score: number, variant?: 's2') {
+    onUpdate({ category: cat, hand, variant, score, ...(cat === 'SINGLES AND PAIRS' ? { jokers: 0 } : {}) });
   }
 
   function handlePlayerSelect(val: string) {
@@ -78,6 +78,7 @@ export default function PlayerHandRow({
           <HandSelect
             category={playerHand.category}
             hand={playerHand.hand}
+            variant={playerHand.variant}
             onChange={handleHandSelect}
             fullWidth
           />

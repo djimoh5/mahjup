@@ -6,7 +6,7 @@ import type { MahjSession } from '../../model/mahj-session.model';
 import type { GameRecord, PlayerHand } from '../../model/game.model';
 import type { UserSummary } from '../../model/user.model';
 import SessionGroup from './SessionGroup';
-import { PlusIcon } from './icons/Icons';
+import { PlusIcon, RefreshIcon } from './icons/Icons';
 import AiSummary from './AiSummary';
 
 interface TrackerTabProps {
@@ -64,6 +64,32 @@ export default function TrackerTab({
           startIcon={<PlusIcon style={{ width: '1.25rem', height: '1.25rem' }} />}
         >
           New Session
+        </Button>
+        <Button
+          size="small"
+          onClick={onRefresh}
+          disabled={isRefreshing}
+          startIcon={
+            <Box
+              component="span"
+              sx={{
+                display: 'inline-flex',
+                animation: isRefreshing ? 'spin 1s linear infinite' : 'none',
+                '@keyframes spin': { from: { transform: 'rotate(0deg)' }, to: { transform: 'rotate(360deg)' } },
+              }}
+            >
+              <RefreshIcon style={{ width: '1rem', height: '1rem' }} />
+            </Box>
+          }
+          sx={{
+            border: '1px solid rgba(242,171,164,0.55)',
+            borderRadius: '0.5rem',
+            background: '#fff',
+            color: 'text.primary',
+            '&:hover': { background: '#f9f9f9' },
+          }}
+        >
+          Refresh
         </Button>
       </Box>
 
