@@ -55,8 +55,8 @@ export default function TrackerTab({
       <Box
         sx={{
           display: 'flex',
-          flexDirection: { xs: 'column', sm: 'row' },
-          alignItems: { xs: 'flex-end', sm: 'center' },
+          flexDirection: 'row',
+          alignItems: 'center',
           justifyContent: 'space-between',
           mb: 3,
           gap: 2,
