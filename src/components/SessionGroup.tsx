@@ -3,6 +3,7 @@ import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
+import ButtonBase from '@mui/material/ButtonBase';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
@@ -202,37 +203,37 @@ export default function SessionGroup({
           flexWrap: 'wrap',
         }}
       >
-        <IconButton
-          size="small"
+        <ButtonBase
           onClick={onToggle}
           aria-label={isExpanded ? 'Collapse' : 'Expand'}
-          sx={{ color: 'text.secondary', flexShrink: 0 }}
+          sx={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flex: 1, minWidth: 0, textAlign: 'left', borderRadius: '0.5rem', py: 0.25 }}
         >
           <ChevronDownIcon
             style={{
               width: '1.125rem',
               height: '1.125rem',
+              flexShrink: 0,
               transition: 'transform 0.2s',
               transform: isExpanded ? 'none' : 'rotate(-90deg)',
+              color: 'rgba(0,0,0,0.54)',
             }}
           />
-        </IconButton>
-
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
-          {session.title && (
-            <Typography sx={{ fontWeight: 600, fontSize: '0.9375rem', color: 'text.primary', whiteSpace: 'nowrap' }}>
-              {session.title}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
+            {session.title && (
+              <Typography sx={{ fontWeight: 600, fontSize: '0.9375rem', color: 'text.primary', whiteSpace: 'nowrap' }}>
+                {session.title}
+              </Typography>
+            )}
+            <Typography sx={{ fontSize: '0.875rem', color: 'text.secondary', fontStyle: 'italic', whiteSpace: 'nowrap' }}>
+              {formatDateTime(session.dateTime)}
             </Typography>
-          )}
-          <Typography sx={{ fontSize: '0.875rem', color: 'text.secondary', fontStyle: 'italic', whiteSpace: 'nowrap' }}>
-            {formatDateTime(session.dateTime)}
-          </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem' }}>
-            {session.players.map(p => (
-              <Chip key={p} label={resolveDisplayName(p, usersMap)} size="small" />
-            ))}
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem' }}>
+              {session.players.map(p => (
+                <Chip key={p} label={resolveDisplayName(p, usersMap)} size="small" />
+              ))}
+            </Box>
           </Box>
-        </Box>
+        </ButtonBase>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
           {/*{!isEditing && (

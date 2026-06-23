@@ -139,7 +139,7 @@ export default function HandSelect({ category, hand, variant, onChange, size = '
     </MenuList>
   );
 
-  const variantPanel = pendingItem && (
+  const variantPanel = (
     <Box
       sx={{
         width: 200,
@@ -149,20 +149,23 @@ export default function HandSelect({ category, hand, variant, onChange, size = '
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
+        visibility: pendingItem ? 'visible' : 'hidden',
       }}
     >
       <Typography sx={{ px: 1.5, pt: 1, pb: 0.5, fontSize: '0.6875rem', fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
         Choose version
       </Typography>
       <MenuList sx={{ overflowY: 'auto', py: 0 }}>
-        <MenuItem
-          selected={activeCategory === category && hand === pendingItem.h && variant !== 's2'}
-          onClick={() => handleSelectHand(activeCategory, pendingItem.h, pendingItem.v)}
-          sx={{ fontSize: '0.8125rem', whiteSpace: 'normal', lineHeight: 1.6, fontFamily: 'monospace' }}
-        >
-          {pendingItem.s && <Segments segs={pendingItem.s} />}
-        </MenuItem>
-        {pendingItem.s2 && (
+        {pendingItem && (
+          <MenuItem
+            selected={activeCategory === category && hand === pendingItem.h && variant !== 's2'}
+            onClick={() => handleSelectHand(activeCategory, pendingItem.h, pendingItem.v)}
+            sx={{ fontSize: '0.8125rem', whiteSpace: 'normal', lineHeight: 1.6, fontFamily: 'monospace' }}
+          >
+            {pendingItem.s && <Segments segs={pendingItem.s} />}
+          </MenuItem>
+        )}
+        {pendingItem?.s2 && (
           <MenuItem
             selected={activeCategory === category && hand === pendingItem.h && variant === 's2'}
             onClick={() => handleSelectHand(activeCategory, pendingItem.h, pendingItem.v, 's2')}
@@ -177,16 +180,18 @@ export default function HandSelect({ category, hand, variant, onChange, size = '
 
   const mobileVariantPanel = (
     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, px: 1, pt: 0.75, pb: 0.25, borderBottom: '1px solid', borderColor: 'divider' }}>
-        <IconButton size="small" onClick={() => setPendingItem(null)} sx={{ p: '2px' }} aria-label="Back to hand list">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
-          </svg>
-        </IconButton>
+      <ButtonBase
+        onClick={() => setPendingItem(null)}
+        aria-label="Back to hand list"
+        sx={{ display: 'flex', alignItems: 'center', gap: 0.5, px: 1, pt: 0.75, pb: 0.25, borderBottom: '1px solid', borderColor: 'divider', width: '100%', justifyContent: 'flex-start' }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+        </svg>
         <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: 'text.secondary' }}>
           Choose version
         </Typography>
-      </Box>
+      </ButtonBase>
       <MenuList sx={{ overflowY: 'auto', py: 0.5 }}>
         {pendingItem?.s && (
           <MenuItem
@@ -260,7 +265,7 @@ export default function HandSelect({ category, hand, variant, onChange, size = '
         slotProps={{ paper: { sx: { overflow: 'hidden' } } }}
       >
         {isDesktop ? (
-          <Box sx={{ display: 'flex', flexDirection: 'row', width: pendingItem ? 600 : 460, maxWidth: 'calc(100vw - 32px)', height: 380, overflow: 'hidden', transition: 'width 0.15s ease' }}>
+          <Box sx={{ display: 'flex', flexDirection: 'row', width: 600, maxWidth: 'calc(100vw - 32px)', height: 380, overflow: 'hidden' }}>
             {categoryColumn}
             {handList}
             {variantPanel}
