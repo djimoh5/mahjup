@@ -5,6 +5,7 @@ import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import type { GameRecord, PlayerHand } from '../model/game.model';
 import type { MahjSession } from '../model/mahj-session.model';
+import type { GameAnalysis } from '../model/game-analysis.model';
 import type { UserSummary } from '../model/user.model';
 import { UniqueId } from '../model/id.model';
 import { authService, type AuthedUser } from './services/auth.service';
@@ -73,6 +74,8 @@ export default function App() {
   const [sessions, setSessions] = useState<MahjSession[]>([]);
   const [records, setRecords] = useState<GameRecord[]>([]);
   const [users, setUsers] = useState<UserSummary[]>([]);
+  const [analysis, setAnalysis] = useState<GameAnalysis | null>(null);
+  const [lastModifiedAt, setLastModifiedAt] = useState(0);
   const [isLoadingRecords, setIsLoadingRecords] = useState(false);
   const [newestSessionId, setNewestSessionId] = useState<string | null>(null);
   const [pendingSessionOids, setPendingSessionOids] = useState<Set<string>>(new Set());
@@ -95,10 +98,12 @@ export default function App() {
       mahjSessionService.getAll(),
       gameService.getAll(),
       userService.getAffiliated().catch(() => ({ users: [] as UserSummary[] })),
-    ]).then(([{ sessions: fetchedSessions }, { records: fetchedRecords }, { users: fetchedUsers }]) => {
+      gameService.getAnalysis().catch(() => ({ analysis: null })),
+    ]).then(([{ sessions: fetchedSessions }, { records: fetchedRecords }, { users: fetchedUsers }, { analysis: fetchedAnalysis }]) => {
       setSessions(fetchedSessions);
       setRecords(fetchedRecords.map(r => ({ ...r, players: r.players ?? [] })));
       setUsers(fetchedUsers);
+      setAnalysis(fetchedAnalysis);
     }).catch(() => {}).finally(() => {
       setIsLoadingRecords(false);
     });
@@ -108,14 +113,16 @@ export default function App() {
     if (!user || isRefreshing) return;
     setIsRefreshing(true);
     try {
-      const [{ sessions: fetchedSessions }, { records: fetchedRecords }, { users: fetchedUsers }] = await Promise.all([
+      const [{ sessions: fetchedSessions }, { records: fetchedRecords }, { users: fetchedUsers }, { analysis: fetchedAnalysis }] = await Promise.all([
         mahjSessionService.getAll(),
         gameService.getAll(),
         userService.getAffiliated().catch(() => ({ users: [] as UserSummary[] })),
+        gameService.getAnalysis().catch(() => ({ analysis: null })),
       ]);
       setSessions(fetchedSessions);
       setRecords(fetchedRecords.map(r => ({ ...r, players: r.players ?? [] })));
       setUsers(fetchedUsers);
+      setAnalysis(fetchedAnalysis);
     } catch {
       // silently ignore
     } finally {
@@ -149,6 +156,10 @@ export default function App() {
     navigate('/', { replace: true });
   }
 
+  function handleAnalysisUpdated(updated: GameAnalysis) {
+    setAnalysis(updated);
+  }
+
   function handleUserAdded(newUser: UserSummary) {
     setUsers(prev => [...prev, newUser]);
   }
@@ -179,6 +190,7 @@ export default function App() {
     setSessions(prev => prev.map(s => s.oid === oid ? sessionToSave : s));
     setPendingSessionOids(prev => { const next = new Set(prev); next.delete(oid); return next; });
     setRecords(prev => [firstGame, ...prev]);
+    setLastModifiedAt(Date.now());
 
     if (gameError) {
       return { error: `Session saved, but the first game could not be created: ${gameError}` };
@@ -200,13 +212,17 @@ export default function App() {
     const { error } = await mahjSessionService.save(updated);
     if (error) return { error };
     setSessions(prev => prev.map(s => s.oid === oid ? updated : s));
+    setLastModifiedAt(Date.now());
     return {};
   }
 
-  async function deleteSession(oid: string) {
+  async function deleteSession(oid: string): Promise<{ error?: string }> {
+    const { error } = await mahjSessionService.remove(oid);
+    if (error) return { error };
     setSessions(prev => prev.filter(s => s.oid !== oid));
     setRecords(prev => prev.filter(r => r.sessionId !== oid));
-    await mahjSessionService.remove(oid);
+    setLastModifiedAt(Date.now());
+    return {};
   }
 
   async function addRecord(sessionId: string, _sessionPlayers: string[], sessionDate: string): Promise<{ error?: string }> {
@@ -219,62 +235,67 @@ export default function App() {
     const { error } = await gameService.save(newRecord);
     if (error) return { error };
     setRecords(prev => [newRecord, ...prev]);
+    setLastModifiedAt(Date.now());
     return {};
   }
 
   async function updateRecord(oid: string, patch: Partial<GameRecord>, skipSave?: boolean): Promise<{ error?: string }> {
-    setRecords(prev => prev.map(r => (r.oid === oid ? { ...r, ...patch } : r)));
-
-    if (!skipSave) {
-      const localRecord = records.find(r => r.oid === oid);
-      const { record: fresh } = await gameService.getRecord(oid);
-      const base = fresh ?? localRecord;
-      if (!base) return { error: 'Record not found' };
-
-      const { players: patchPlayers, ...nonPlayerPatch } = patch;
-      const merged: GameRecord = { ...base, ...nonPlayerPatch };
-
-      if (patchPlayers) {
-        if (fresh?.players) {
-          const freshByUserId = Object.fromEntries(
-            fresh.players.filter(p => p.userId).map(p => [p.userId, p])
-          );
-          const localByUserId = Object.fromEntries(
-            (localRecord?.players ?? []).filter(p => p.userId).map(p => [p.userId, p])
-          );
-          merged.players = patchPlayers.map(patchPlayer => {
-            const freshPlayer = freshByUserId[patchPlayer.userId];
-            const localPlayer = localByUserId[patchPlayer.userId];
-            if (!freshPlayer || !localPlayer) return patchPlayer;
-            // Apply only the fields that actually changed from local to patch
-            const diff: Partial<PlayerHand> = {};
-            for (const key of Object.keys(patchPlayer) as (keyof PlayerHand)[]) {
-              if (patchPlayer[key] !== localPlayer[key]) {
-                (diff as any)[key] = patchPlayer[key];
-              }
-            }
-            return { ...freshPlayer, ...diff };
-          });
-        } else {
-          merged.players = patchPlayers;
-        }
-      }
-
-      setRecords(prev => prev.map(r => r.oid === oid ? merged : r));
-      const { error } = await gameService.save(merged);
-      if (error) return { error };
+    if (skipSave) {
+      setRecords(prev => prev.map(r => (r.oid === oid ? { ...r, ...patch } : r)));
+      return {};
     }
 
+    const localRecord = records.find(r => r.oid === oid);
+    const { record: fresh } = await gameService.getRecord(oid);
+    const base = fresh ?? localRecord;
+    if (!base) return { error: 'Record not found' };
+
+    const { players: patchPlayers, ...nonPlayerPatch } = patch;
+    const merged: GameRecord = { ...base, ...nonPlayerPatch };
+
+    if (patchPlayers) {
+      if (fresh?.players) {
+        const freshByUserId = Object.fromEntries(
+          fresh.players.filter(p => p.userId).map(p => [p.userId, p])
+        );
+        const localByUserId = Object.fromEntries(
+          (localRecord?.players ?? []).filter(p => p.userId).map(p => [p.userId, p])
+        );
+        merged.players = patchPlayers.map(patchPlayer => {
+          const freshPlayer = freshByUserId[patchPlayer.userId];
+          const localPlayer = localByUserId[patchPlayer.userId];
+          if (!freshPlayer || !localPlayer) return patchPlayer;
+          const diff: Partial<PlayerHand> = {};
+          for (const key of Object.keys(patchPlayer) as (keyof PlayerHand)[]) {
+            if (patchPlayer[key] !== localPlayer[key]) {
+              (diff as any)[key] = patchPlayer[key];
+            }
+          }
+          return { ...freshPlayer, ...diff };
+        });
+      } else {
+        merged.players = patchPlayers;
+      }
+    }
+
+    const { error } = await gameService.save(merged);
+    if (error) return { error };
+    setRecords(prev => prev.map(r => r.oid === oid ? merged : r));
+    setLastModifiedAt(Date.now());
     return {};
   }
 
-  async function deleteRecord(oid: string) {
+  async function deleteRecord(oid: string): Promise<{ error?: string }> {
+    const { error } = await gameService.remove(oid);
+    if (error) return { error };
     setRecords(prev => prev.filter(r => r.oid !== oid));
-    await gameService.remove(oid);
+    setLastModifiedAt(Date.now());
+    return {};
   }
 
   async function savePlayerHand(gameOid: string, player: PlayerHand): Promise<{ error?: string }> {
     const { error } = await gameService.savePlayer(gameOid, player);
+    if (!error) setLastModifiedAt(Date.now());
     return error ? { error } : {};
   }
 
@@ -345,6 +366,9 @@ export default function App() {
             users={users}
             usersMap={usersMap}
             currentUserOid={user!.oid}
+            analysis={analysis}
+            lastModifiedAt={lastModifiedAt}
+            onAnalysisUpdated={handleAnalysisUpdated}
             onAddSession={addSession}
             onSaveNewSession={saveNewSession}
             onCancelNewSession={cancelNewSession}

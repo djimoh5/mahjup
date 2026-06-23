@@ -37,11 +37,11 @@ interface SessionGroupProps {
   currentUserOid: string;
   onAddGame: () => Promise<{ error?: string }>;
   onUpdate: (id: string, patch: Partial<GameRecord>, skipSave?: boolean) => Promise<{ error?: string }>;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => Promise<{ error?: string }>;
   onUpdateSession: (patch: Partial<MahjSession>) => Promise<{ error?: string }>;
   onSaveNewSession: (patch: Partial<MahjSession>) => Promise<{ error?: string }>;
   onCancelNewSession: () => void;
-  onDeleteSession: () => void;
+  onDeleteSession: () => Promise<{ error?: string }>;
   onUserAdded: (newUser: UserSummary) => void;
   onSavePlayerHand: (gameOid: string, player: PlayerHand) => Promise<{ error?: string }>;
   onRefresh: () => void;
@@ -69,6 +69,7 @@ export default function SessionGroup({
   const isMobile = useIsMobile();
   const [isEditing, setIsEditing] = useState(initialEditing ?? false);
   const [confirmDeleteSession, setConfirmDeleteSession] = useState(false);
+  const [deleteSessionError, setDeleteSessionError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isAddingGame, setIsAddingGame] = useState(false);
@@ -465,9 +466,18 @@ export default function SessionGroup({
 
       <Dialog open={confirmDeleteSession} onClose={() => setConfirmDeleteSession(false)}>
         <DialogTitle>Delete this session?</DialogTitle>
+        {deleteSessionError && (
+          <Box sx={{ px: 3, pb: 1 }}>
+            <Alert severity="error" onClose={() => setDeleteSessionError(null)}>{deleteSessionError}</Alert>
+          </Box>
+        )}
         <DialogActions>
           <Button onClick={() => setConfirmDeleteSession(false)}>Cancel</Button>
-          <Button color="error" variant="contained" onClick={() => { setConfirmDeleteSession(false); onDeleteSession(); }}>
+          <Button color="error" variant="contained" onClick={async () => {
+            const { error } = await onDeleteSession();
+            if (error) { setDeleteSessionError(error); return; }
+            setConfirmDeleteSession(false);
+          }}>
             Delete
           </Button>
         </DialogActions>

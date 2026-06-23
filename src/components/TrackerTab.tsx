@@ -5,6 +5,7 @@ import Stack from '@mui/material/Stack';
 import type { MahjSession } from '../../model/mahj-session.model';
 import type { GameRecord, PlayerHand } from '../../model/game.model';
 import type { UserSummary } from '../../model/user.model';
+import type { GameAnalysis } from '../../model/game-analysis.model';
 import SessionGroup from './SessionGroup';
 import { PlusIcon, RefreshIcon } from './icons/Icons';
 import AiSummary from './AiSummary';
@@ -21,18 +22,22 @@ interface TrackerTabProps {
   onSaveNewSession: (oid: string, patch: Partial<MahjSession>) => Promise<{ error?: string }>;
   onCancelNewSession: (oid: string) => void;
   onUpdateSession: (oid: string, patch: Partial<MahjSession>) => Promise<{ error?: string }>;
-  onDeleteSession: (oid: string) => void;
+  onDeleteSession: (oid: string) => Promise<{ error?: string }>;
   onAddGame: (sessionId: string, sessionPlayers: string[], sessionDate: string) => Promise<{ error?: string }>;
   onUpdate: (id: string, patch: Partial<GameRecord>, skipSave?: boolean) => Promise<{ error?: string }>;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => Promise<{ error?: string }>;
   onUserAdded: (newUser: UserSummary) => void;
   onSavePlayerHand: (gameOid: string, player: PlayerHand) => Promise<{ error?: string }>;
+  analysis: GameAnalysis | null;
+  lastModifiedAt: number;
+  onAnalysisUpdated: (analysis: GameAnalysis) => void;
   onRefresh: () => void;
   isRefreshing: boolean;
 }
 
 export default function TrackerTab({
   sessions, records, newestSessionId, pendingSessionOids, users, usersMap, currentUserOid,
+  analysis, lastModifiedAt, onAnalysisUpdated,
   onAddSession, onSaveNewSession, onCancelNewSession, onUpdateSession, onDeleteSession,
   onAddGame, onUpdate, onDelete, onUserAdded,
   onSavePlayerHand, onRefresh, isRefreshing,
@@ -93,7 +98,7 @@ export default function TrackerTab({
         </Button>
       </Box>
 
-      <AiSummary />
+      <AiSummary analysis={analysis} lastModifiedAt={lastModifiedAt} records={records} sessions={sessions} onAnalysisUpdated={onAnalysisUpdated} />
 
       <Stack spacing={2}>
         {sessions.length === 0 && (

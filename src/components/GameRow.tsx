@@ -25,7 +25,7 @@ interface GameRowProps {
   usersMap: Record<string, UserSummary>;
   canDeleteGame: boolean;
   onUpdate: (patch: Partial<GameRecord>, skipSave?: boolean) => Promise<{ error?: string }>;
-  onDelete: () => void;
+  onDelete: () => Promise<{ error?: string }>;
   onInvitePlayer: (cb: (userId: string) => void) => void;
   onSavePlayerHand: (player: PlayerHand) => Promise<{ error?: string }>;
 }
@@ -75,11 +75,12 @@ export default function GameRow({ record, isExpanded, onToggle, sessionPlayers, 
         onUpdate({ players: updated }, true);
       }
     } else {
-      onUpdate({ players: updated }, true);
       const player = updated[idx];
       if (player.userId) {
         setSaveStatus('saving');
-        handleSaveResult(await onSavePlayerHand(player));
+        const result = await onSavePlayerHand(player);
+        handleSaveResult(result);
+        if (!result.error) onUpdate({ players: updated }, true);
       }
     }
   }
@@ -95,13 +96,15 @@ export default function GameRow({ record, isExpanded, onToggle, sessionPlayers, 
     handleSaveResult(await onUpdate({ players: updated }));
   }
 
-  function handleDeletePlayer(idx: number) {
-    onUpdate({ players: record.players.filter((_, i) => i !== idx) });
+  async function handleDeletePlayer(idx: number) {
+    setSaveStatus('saving');
+    handleSaveResult(await onUpdate({ players: record.players.filter((_, i) => i !== idx) }));
   }
 
-  function handleAddPlayer() {
+  async function handleAddPlayer() {
     const newPlayer: PlayerHand = { userId: '', category: '', hand: '', jokers: 0, isWinner: false, score: 0 };
-    onUpdate({ players: [...record.players, newPlayer] });
+    setSaveStatus('saving');
+    handleSaveResult(await onUpdate({ players: [...record.players, newPlayer] }));
   }
 
   const usedUserIds = record.players.map(p => p.userId).filter(Boolean);
@@ -249,7 +252,7 @@ export default function GameRow({ record, isExpanded, onToggle, sessionPlayers, 
         <DialogTitle>Delete this game?</DialogTitle>
         <DialogActions>
           <Button onClick={() => setConfirmDelete(false)}>Cancel</Button>
-          <Button color="error" variant="contained" onClick={() => { setConfirmDelete(false); onDelete(); }}>
+          <Button color="error" variant="contained" onClick={async () => { setConfirmDelete(false); setSaveStatus('saving'); handleSaveResult(await onDelete()); }}>
             Delete
           </Button>
         </DialogActions>

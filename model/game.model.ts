@@ -17,4 +17,5 @@ export interface GameRecord {
     sessionId: string;
     date: string;
     players: PlayerHand[];
+    _tsu?: number;
 }

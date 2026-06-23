@@ -7,4 +7,5 @@ export interface MahjSession {
     title?: string;
     players: authid[];
     notes?: string;
+    _tsu?: number;
 }

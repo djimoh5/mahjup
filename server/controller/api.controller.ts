@@ -6,18 +6,17 @@ import { AuthService } from '../service/auth.service';
 import { GameService } from '../service/game.service';
 import { MahjSessionService } from '../service/mahj-session.service';
 import { UserProfileService } from '../service/user-profile.service';
-import { AIService } from '../service/ai/ai.service';
+import { GameAnalysisService } from '../service/game-analysis.service';
 
 import { ApiResponse } from '../../model/shared.model';
 import { UserAuth } from '../../model/auth.model';
 import { authid, AuthId } from '../../model/id.model';
-import { AIMaxTokens } from '../../model/ai.model';
 
 @Injectable()
 @Bootstrap()
 @AllowAnonymous()
 export class APIController extends BaseController {
-	constructor(private authService: AuthService, private gameService: GameService, private mahjSessionService: MahjSessionService, private userProfileService: UserProfileService, private aiService: AIService) {
+	constructor(private authService: AuthService, private gameService: GameService, private mahjSessionService: MahjSessionService, private userProfileService: UserProfileService, private gameAnalysisService: GameAnalysisService) {
 		super();
 	}
 
@@ -217,65 +216,14 @@ export class APIController extends BaseController {
 
 	@Get('game/summary')
 	async summarizeGames(req: Request, res: Response) {
-		const userId = req.session.user.oid;
-		const { data: records } = await this.gameService.getByUser(userId);
+		const result = await this.gameAnalysisService.analyze(<authid>req.session.user.oid, req.session.user.username);
+		res.send(new ApiResponse(result.success, result.data?.content ?? ''));
+	}
 
-		if (!records || records.length === 0) {
-			return res.send(new ApiResponse(true, '<p>No games played yet — start tracking your Mahjong games to receive personalized AI insights!</p>'));
-		}
-
-		const playerIds = [...new Set(records.flatMap(r => (r.players ?? []).map(p => p.userId)).filter(Boolean))];
-		const usersResult = await this.authService.getUsersByOids(playerIds);
-		const nameMap: Record<string, string> = {};
-		for (const u of usersResult.data ?? []) {
-			nameMap[u.oid as string] = (u.firstName && u.lastName) ? `${u.firstName} ${u.lastName}` : u.username;
-		}
-
-		const currentUserName = nameMap[userId] ?? req.session.user.username;
-
-		const text = `The player being analyzed is: ${currentUserName}\n\n` + records.map(r => {
-			const players = (r.players ?? []).map(p => {
-				const name = nameMap[p.userId] ?? 'Unknown';
-				const status = p.isWinner ? 'WINNER' : 'lost';
-				return `  - ${name} (${status}): ${p.category} — "${p.hand}", ${p.jokers} jokers, score: ${p.score}${p.notes ? `, notes: ${p.notes}` : ''}`;
-			}).join('\n');
-			return `Game on ${r.date}:\n${players}`;
-		}).join('\n\n');
-
-		const result = await this.aiService.getTextCompletions([
-			{
-				content: `
-					Role & Perspective: Act as an elite American Mahjong Grandmaster, Strategy Consultant, and Data Scientist. 
-					You have analyzed thousands of games played under National Mah Jongg League (NMJL) rules. 
-					You specialize in interpreting game metrics to help players break bad habits, optimize tile retention, and increase their win percentage.
-					
-					Objective: Perform a rigorous, multi-dimensional analysis on the user's historical match logs, Charleston choices, final hand selections, and opponent behaviors. Provide concrete, actionable adjustments to improve their win rate.
-					
-					Methodology: When reviewing the user's data, evaluate the metrics through these critical strategic lenses: 
-					Flexibility vs. Commitment: Did the user lock into a hand too early on the card (e.g., during the Charleston), forcing them into a dead end, or did they pivot gracefully?
-					Efficiency & Value: Did the hand they pursued maximize their tile odds relative to its difficulty and score value?
-					Defensive Awareness: Did they actively track remaining tiles, monitor opponent exposures (Pungs/Kongs), and hold safe tiles late in the game, or did they carelessly feed winning tiles to opponents?
-					Opponent Profiling: What tendencies do their opponents exhibit (e.g., hoarding Jokers, passing poorly in the Charleston, calling tiles too early)?
-					Output Constraints: Structure your analysis into these mandatory sections:
-					Performance Baseline: A blunt assessment of their current win/loss trends, joker utilization efficiency, and defensive rating based on the data.
-					The Pivot Point Analysis: Breakdown of where their games are won or lost—specifically focusing on Charleston decision-making and early-to-mid-game transitions.
-					Tactical Blind Spots: Highlight exactly what bad habits are killing their game (e.g., over-relying on a specific section of the card like Consecutive Runs, failing to count dead tiles, or misinterpreting opponent exposures).
-					Opponent Exploits: Specific ways to outplay the people they are playing against based on their tracking data.
-					The 3-Step Action Plan: Three precise, prioritized rules of thumb to apply in their very next game.
-					Tone: Elite, objective, highly strategic, and direct. Avoid generic gaming advice; everything must be specific to American Mahjong rules, tile distributions, and NMJL card dynamics.
-
-					Return the analysis as an HTML content fragment using appropriate headings, paragraphs, and bullet points. Use h2 tags for section headings, and p tags for body content. Do not apply any inline styling or style sheet as that will be handled separately by the consuming app. Do not include DOCTYPE, html, head, or body tags.
-				`,
-				role: 'system'
-			},
-			{
-				content: text,
-				role: 'user'
-			}
-		], { model: 'gemini-3.5-flash', maxTokens: AIMaxTokens.Minimum }, <authid>userId);
-
-		const summary = result.data?.[0]?.message?.content ?? '';
-		res.send(new ApiResponse(result.success, summary));
+	@Get('game/analysis')
+	async getAnalysis(req: Request, res: Response) {
+		const data = await this.gameAnalysisService.getByUser(req.session.user.oid);
+		res.send(data);
 	}
 
 	@Get('mahj-session/list')

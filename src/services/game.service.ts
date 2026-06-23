@@ -1,5 +1,6 @@
 import { BaseService } from './base.service';
 import type { GameRecord, PlayerHand } from '../../model/game.model';
+import type { GameAnalysis } from '../../model/game-analysis.model';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -65,6 +66,16 @@ export class GameService extends BaseService {
       return { summary: '', error: res.msg ?? 'Failed to load summary' };
     } catch {
       return { summary: '', error: 'Unable to connect, please try again' };
+    }
+  }
+
+  async getAnalysis(): Promise<{ analysis: GameAnalysis | null; error?: string }> {
+    try {
+      const res = await this.get<ApiResponse<GameAnalysis>>('/game/analysis');
+      if (res.success) return { analysis: res.data ?? null };
+      return { analysis: null, error: res.msg ?? 'Failed to load analysis' };
+    } catch {
+      return { analysis: null, error: 'Unable to connect, please try again' };
     }
   }
 }
