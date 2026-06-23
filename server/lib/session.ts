@@ -26,7 +26,6 @@ export class Session implements ISession {
 
     private referralSource: string;
     private tokenExpiration: number = 60 * 60 * 24 * 3650; //60 min * 24 hours * 3,650 days = 10 years
-    private tokenExpirationBuffer: number = 900; //15 min
 
     //private sessionLogRepository: SessionLogRepository;
     protected errorService: ErrorService;
@@ -52,10 +51,7 @@ export class Session implements ISession {
     }
 
     start(user: User) {
-        this.setTokenExpiration(user);
-
-        //set new token with 5 min buffer so token isn't constantly refreshed
-        const token = Session.setUserToken(user, this.tokenExpiration + this.tokenExpirationBuffer, this.log);
+        const token = Session.setUserToken(user, this.tokenExpiration, this.log);
         this.tokenData = token.data;
         
         this.response.setHeader(UserHeaderKey.Authorization, `Bearer ${user.token}`);
@@ -92,7 +88,6 @@ export class Session implements ISession {
         if(token) {
             token = token.replace(/Bearer /i, '');
             const jwtToken: EncryptedSessionToken = Crypto.decryptJwtToken(token, API_SECRET_PUBLIC, 'RS256');
-            const now = Math.floor(Date.now() / 1000);
 
             if(jwtToken && jwtToken.data) {
                 let data = this.decryptSessionData(jwtToken);
@@ -101,16 +96,9 @@ export class Session implements ISession {
                 }
 
                 this.tokenData = data;
-                this.setTokenExpiration(data.user);
 
-                if(jwtToken.exp - now < this.tokenExpiration) {
-                    this.start(data.user);
-                    return;
-                }
-                else {
-                    this.user = data.user;
-                    this.user.token = token;
-                }
+                this.user = data.user;
+                this.user.token = token;
             }
         }
 
@@ -138,11 +126,6 @@ export class Session implements ISession {
 
     getCacheVersion(): string {
         return '1.0';//this.cacheService.get(UICacheKey, true) || '';
-    }
-
-    setTokenExpiration(_user: User) {
-        //this method can be implemented to override default expiration for a platform.
-        return;
     }
 
     getReferralCode() {
