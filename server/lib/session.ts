@@ -54,7 +54,7 @@ export class Session implements ISession {
     start(user: User) {
         this.setTokenExpiration(user);
 
-        //set new 90 min token with 5 min buffer so token isn't constantly refreshed
+        //set new token with 5 min buffer so token isn't constantly refreshed
         const token = Session.setUserToken(user, this.tokenExpiration + this.tokenExpirationBuffer, this.log);
         this.tokenData = token.data;
         

@@ -21,7 +21,7 @@ import { authService } from '../services/auth.service';
 import GameRow from './GameRow';
 import GameCardMobile from './GameCardMobile';
 import { useIsMobile } from '../hooks/useIsMobile';
-import { PlusIcon, PencilIcon, TrashIcon, ChevronDownIcon, RefreshIcon } from './icons/Icons';
+import { PlusIcon, PencilIcon, TrashIcon, ChevronDownIcon/*, RefreshIcon */} from './icons/Icons';
 import { resolveDisplayName } from '../utils/user';
 
 interface SessionGroupProps {
@@ -63,7 +63,7 @@ function formatDateTime(dt: string): string {
 export default function SessionGroup({
   session, games, isPending, isExpanded, onToggle, onExpand, initialEditing, users, usersMap, currentUserOid,
   onAddGame, onUpdate, onDelete, onUpdateSession, onSaveNewSession, onCancelNewSession, onDeleteSession, onUserAdded,
-  onSavePlayerHand, onRefresh, isRefreshing,
+  onSavePlayerHand, /*onRefresh, isRefreshing,*/
 }: SessionGroupProps) {
   const isSessionCreator = session.userId === currentUserOid;
   const isMobile = useIsMobile();
@@ -235,7 +235,7 @@ export default function SessionGroup({
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
-          {!isEditing && (
+          {/*{!isEditing && (
             <IconButton
               size="small"
               onClick={onRefresh}
@@ -259,7 +259,7 @@ export default function SessionGroup({
                 <RefreshIcon style={{ width: '1rem', height: '1rem' }} />
               </Box>
             </IconButton>
-          )}
+          )}*/}
           {!isEditing && isSessionCreator && (
             <>
               <IconButton
