@@ -16,8 +16,16 @@ cd ../
 
 sh ./npm-install.sh
 
+echo "Cleaning previous build..."
+rm -rf build
+
 echo "Transpiling started..."
 tsc -p server
+status=$?
+if [ $status -ne 0 ]; then
+    echo "Transpiling failed, aborting build"
+    exit 1
+fi
 echo "Transpiling complete"
 
 cp --parents server/package.json build
