@@ -214,15 +214,21 @@ export class APIController extends BaseController {
 		res.send(data);
 	}
 
-	@Get('game/summary')
+	@Post('game/summary')
 	async summarizeGames(req: Request, res: Response) {
-		const result = await this.gameAnalysisService.analyze(<authid>req.session.user.oid, req.session.user.username);
-		res.send(new ApiResponse(result.success, result.data?.content ?? ''));
+		const result = await this.gameAnalysisService.analyze(<authid>req.session.user.oid, req.session.user.username, req.body.filters);
+		res.send(new ApiResponse(result.success, result.data));
 	}
 
 	@Get('game/analysis')
 	async getAnalysis(req: Request, res: Response) {
-		const data = await this.gameAnalysisService.getByUser(req.session.user.oid);
+		const data = await this.gameAnalysisService.getAllByUser(req.session.user.oid);
+		res.send(data);
+	}
+
+	@Delete('game/analysis/:oid')
+	async deleteAnalysis(req: Request, res: Response) {
+		const data = await this.gameAnalysisService.remove(req.params.oid, req.session.user.oid);
 		res.send(data);
 	}
 

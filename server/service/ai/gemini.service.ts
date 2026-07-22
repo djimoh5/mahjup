@@ -31,7 +31,7 @@ export class GeminiService extends BaseAIService implements IAIService {
     };
 
     constructor(appService: AppService, sharedRepository: SharedRepository, private http: HttpService) {
-        super(['gemini-3-pro-preview', 'gemini-3-pro-image-preview', 'gemini-2.5-flash', 'gemini-3.5-flash', 'gemini-3.1-pro-preview'], appService, sharedRepository);
+        super(['gemini-3.1-pro-preview', 'gemini-3.1-flash-image', 'gemini-3.5-flash'], appService, sharedRepository);
     }
  
     async getTextCompletions(messages: AIMessage<any>[], options: AICompletionOptions, authId: authid): Promise<ApiResponse<ChatGPTCompletionChoice[]>> {
@@ -44,7 +44,7 @@ export class GeminiService extends BaseAIService implements IAIService {
             generationConfig: {}
         };
 
-        if(options.model !== 'gemini-2.5-flash') {
+        if(options.model !== 'gemini-3.5-flash') {
             config.generationConfig.thinkingConfig = { thinkingLevel: "low" };
         }
 
@@ -70,7 +70,7 @@ export class GeminiService extends BaseAIService implements IAIService {
             generationConfig: {}
         };
 
-        if(options.model !== 'gemini-2.5-flash') {
+        if(options.model !== 'gemini-3.5-flash') {
             config.generationConfig.thinkingConfig = { thinkingLevel: "low" };
         }
 
@@ -103,7 +103,7 @@ export class GeminiService extends BaseAIService implements IAIService {
 
     mapMessages(messages: AIMessage<any>[], options: AICompletionOptions): GeminiMessage[] {
         return messages.map(m => ({ 
-            role: m.role === 'assistant' ? 'model' : (options.model === 'gemini-2.5-flash' ? 'user' : m.role), 
+            role: m.role === 'assistant' ? 'model' : (options.model === 'gemini-3.5-flash' ? 'user' : m.role), 
             parts: typeof m.content === 'string' ? 
                 [{ text: m.content }] :
                 m.content.map(c => ({ text: c.text }))

@@ -5,10 +5,8 @@ import Stack from '@mui/material/Stack';
 import type { MahjSession } from '../../model/mahj-session.model';
 import type { GameRecord, PlayerHand } from '../../model/game.model';
 import type { UserSummary } from '../../model/user.model';
-import type { GameAnalysis } from '../../model/game-analysis.model';
 import SessionGroup from './SessionGroup';
 import { PlusIcon, RefreshIcon } from './icons/Icons';
-import AiSummary from './AiSummary';
 
 interface TrackerTabProps {
   sessions: MahjSession[];
@@ -28,16 +26,12 @@ interface TrackerTabProps {
   onDelete: (id: string) => Promise<{ error?: string }>;
   onUserAdded: (newUser: UserSummary) => void;
   onSavePlayerHand: (gameOid: string, player: PlayerHand) => Promise<{ error?: string }>;
-  analysis: GameAnalysis | null;
-  lastModifiedAt: number;
-  onAnalysisUpdated: (analysis: GameAnalysis) => void;
   onRefresh: () => void;
   isRefreshing: boolean;
 }
 
 export default function TrackerTab({
   sessions, records, newestSessionId, pendingSessionOids, users, usersMap, currentUserOid,
-  analysis, lastModifiedAt, onAnalysisUpdated,
   onAddSession, onSaveNewSession, onCancelNewSession, onUpdateSession, onDeleteSession,
   onAddGame, onUpdate, onDelete, onUserAdded,
   onSavePlayerHand, onRefresh, isRefreshing,
@@ -97,8 +91,6 @@ export default function TrackerTab({
           Refresh
         </Button>
       </Box>
-
-      <AiSummary analysis={analysis} lastModifiedAt={lastModifiedAt} records={records} sessions={sessions} onAnalysisUpdated={onAnalysisUpdated} />
 
       <Stack spacing={2}>
         {sessions.length === 0 && (

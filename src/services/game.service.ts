@@ -1,6 +1,6 @@
 import { BaseService } from './base.service';
 import type { GameRecord, PlayerHand } from '../../model/game.model';
-import type { GameAnalysis } from '../../model/game-analysis.model';
+import { type GameAnalysis, type GameAnalysisFilters, normalizeGameAnalysis } from '../../model/game-analysis.model';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -59,23 +59,35 @@ export class GameService extends BaseService {
     }
   }
 
-  async getSummary(): Promise<{ summary: string; error?: string }> {
+  async getSummary(filters: GameAnalysisFilters): Promise<{ analysis: GameAnalysis | null; error?: string }> {
     try {
-      const res = await this.get<ApiResponse<string>>('/game/summary');
-      if (res.success && res.data) return { summary: res.data };
-      return { summary: '', error: res.msg ?? 'Failed to load summary' };
+      const res = await this.post<ApiResponse<GameAnalysis>>('/game/summary', { filters });
+      if (res.success && res.data) return { analysis: normalizeGameAnalysis(res.data) };
+      return { analysis: null, error: res.msg ?? 'Failed to generate summary' };
     } catch {
-      return { summary: '', error: 'Unable to connect, please try again' };
+      return { analysis: null, error: 'Unable to connect, please try again' };
     }
   }
 
-  async getAnalysis(): Promise<{ analysis: GameAnalysis | null; error?: string }> {
+  async getAnalyses(): Promise<{ analyses: GameAnalysis[]; error?: string }> {
     try {
-      const res = await this.get<ApiResponse<GameAnalysis>>('/game/analysis');
-      if (res.success) return { analysis: res.data ?? null };
-      return { analysis: null, error: res.msg ?? 'Failed to load analysis' };
+      const res = await this.get<ApiResponse<GameAnalysis[]>>('/game/analysis');
+      // Backfills filters/filtersKey/gameIdsKey client-side for any legacy summary the
+      // backend hasn't normalized yet (older deploy, or the DB migration hasn't run).
+      if (res.success) return { analyses: (res.data ?? []).map(normalizeGameAnalysis) };
+      return { analyses: [], error: res.msg ?? 'Failed to load analyses' };
     } catch {
-      return { analysis: null, error: 'Unable to connect, please try again' };
+      return { analyses: [], error: 'Unable to connect, please try again' };
+    }
+  }
+
+  async deleteAnalysis(oid: string): Promise<{ error?: string }> {
+    try {
+      const res = await this.delete<ApiResponse<null>>(`/game/analysis/${oid}`);
+      if (res.success) return {};
+      return { error: res.msg ?? 'Failed to delete summary' };
+    } catch {
+      return { error: 'Unable to connect, please try again' };
     }
   }
 }

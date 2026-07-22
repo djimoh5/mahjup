@@ -9,7 +9,7 @@ import { GameService } from './game.service';
 import { MahjSessionService } from './mahj-session.service';
 import { GameAnalysisRepository } from '../repository/game-analysis.repository';
 
-import { GameAnalysis } from '../../model/game-analysis.model';
+import { GameAnalysis, GameAnalysisFilters, normalizeGameAnalysisFilters, normalizeGameAnalysis, gameAnalysisFiltersKey, gameIdsSetKey, filterRecordsForAnalysis } from '../../model/game-analysis.model';
 import { AIMaxTokens } from '../../model/ai.model';
 import { authid, UniqueId } from '../../model/id.model';
 
@@ -27,20 +27,32 @@ export class GameAnalysisService extends BaseService {
         super(appService);
     }
 
-    async analyze(userId: authid, username: string): Promise<ApiResponse<GameAnalysis>> {
+    async analyze(userId: authid, username: string, rawFilters?: Partial<GameAnalysisFilters>): Promise<ApiResponse<GameAnalysis>> {
+        const filters = normalizeGameAnalysisFilters(rawFilters);
+        const filtersKey = gameAnalysisFiltersKey(filters);
+
         const [{ data: records }, { data: sessions }] = await Promise.all([
             this.gameService.getByUser(userId),
             this.mahjSessionService.getByUser(userId),
         ]);
 
         if (!records || records.length === 0) {
-            const empty: GameAnalysis = await this._upsert(userId, [], '<p>No games played yet — start tracking your Mahjong games to receive personalized AI insights!</p>');
+            // Not persisted — an empty-result message isn't a real summary and shouldn't
+            // clutter a user's history or survive as a stale "Previous Summary."
+            const empty: GameAnalysis = { userId, filters, filtersKey, gameIds: [], gameIdsKey: gameIdsSetKey([]), content: '<p>No games played yet — start tracking your Mahjong games to receive personalized AI insights!</p>' };
+            return new ApiResponse(true, empty);
+        }
+
+        const filteredRecords = filterRecordsForAnalysis(records, sessions ?? [], userId, filters);
+
+        if (filteredRecords.length === 0) {
+            const empty: GameAnalysis = { userId, filters, filtersKey, gameIds: [], gameIdsKey: gameIdsSetKey([]), content: '<p>No games found matching these filters — try widening the time range or player selection.</p>' };
             return new ApiResponse(true, empty);
         }
 
         const sessionMap = Object.fromEntries((sessions ?? []).map(s => [s.oid, s]));
 
-        const playerIds = [...new Set(records.flatMap(r => (r.players ?? []).map(p => p.userId)).filter(Boolean))];
+        const playerIds = [...new Set(filteredRecords.flatMap(r => (r.players ?? []).map(p => p.userId)).filter(Boolean))];
         const usersResult = await this.authService.getUsersByOids(playerIds);
         const nameMap: Record<string, string> = {};
         for (const u of usersResult.data ?? []) {
@@ -49,7 +61,7 @@ export class GameAnalysisService extends BaseService {
 
         const currentUserName = nameMap[userId] ?? username;
 
-        const text = `The player being analyzed is: ${currentUserName}\n\n` + records.map(r => {
+        const text = `The player being analyzed is: ${currentUserName}\n\n` + filteredRecords.map(r => {
             const session = sessionMap[r.sessionId];
             const sessionNotes = session?.notes ? `\n  Session notes: ${session.notes}` : '';
             const players = (r.players ?? []).map(p => {
@@ -93,22 +105,48 @@ export class GameAnalysisService extends BaseService {
         ], { model: 'gemini-3.5-flash', maxTokens: AIMaxTokens.Minimum }, userId);
 
         const content = result.data?.[0]?.message?.content ?? '';
-        const gameIds = records.map(r => r.oid).filter(Boolean);
-        const saved = await this._upsert(userId, gameIds, content);
+        const gameIds = filteredRecords.map(r => r.oid).filter(Boolean);
+        const gameIdsKey = gameIdsSetKey(gameIds);
+        const saved = await this._upsert(userId, filters, filtersKey, gameIds, gameIdsKey, content);
         return new ApiResponse(result.success, saved);
     }
 
-    async getByUser(userId: string): Promise<ApiResponse<GameAnalysis | null>> {
-        const analysis = await this.gameAnalysisRepository.getByUser(userId) ?? null;
-        return new ApiResponse(true, analysis);
+    async getAllByUser(userId: string): Promise<ApiResponse<GameAnalysis[]>> {
+        const analyses = await this.gameAnalysisRepository.getAllByUser(userId) ?? [];
+        // Legacy documents predate per-filter/data-identity support and are missing these
+        // derived fields — backfill them on the fly rather than requiring a migration.
+        const normalized = analyses.map(normalizeGameAnalysis);
+        return new ApiResponse(true, normalized);
     }
 
-    private async _upsert(userId: authid, gameIds: any[], content: string): Promise<GameAnalysis> {
-        const existing = await this.gameAnalysisRepository.getByUser(userId);
+    async remove(oid: string, userId: string): Promise<ApiResponse<null>> {
+        const analysis = await this.gameAnalysisRepository.getByOid(oid);
+        if (!analysis) {
+            return new ApiResponse(false, null, 'summary not found');
+        }
+        if (analysis.userId !== userId) {
+            return new ApiResponse(false, null, 'forbidden');
+        }
+        await this.gameAnalysisRepository.remove(oid);
+        return new ApiResponse(true, null);
+    }
+
+    private async _upsert(userId: authid, filters: GameAnalysisFilters, filtersKey: string, gameIds: any[], gameIdsKey: string, content: string): Promise<GameAnalysis> {
+        // Match by underlying data first: if these filters select the exact same games as
+        // ANY existing summary, that's the same summary (relabeled to these filters) — this
+        // must take priority over a filtersKey match, or a stale summary squatting a label
+        // (e.g. "All Time") would block a fresher, data-equivalent summary from ever being
+        // recognized as the same one. Only fall back to the filtersKey match (regenerating
+        // under the same filters after the underlying data drifted) when no data match exists.
+        const existing = await this.gameAnalysisRepository.getByUserAndGameIds(userId, gameIdsKey)
+            ?? await this.gameAnalysisRepository.getByUserAndFilters(userId, filtersKey);
         const analysis: GameAnalysis = {
             oid: existing?.oid ?? UniqueId(crypto.randomUUID()),
             userId,
+            filters,
+            filtersKey,
             gameIds,
+            gameIdsKey,
             content,
         };
         return this.gameAnalysisRepository.save(analysis);

@@ -273,7 +273,8 @@ export default function Header({ activeTab, onTabChange, isSaving, user, onLogou
           }}
         >
           <Tab label="My Tracker" value="tracker" />
-          <Tab label="Summary" value="summary" />
+          <Tab label="AI Insights" value="aiSummary" />
+          <Tab label="Statistics" value="summary" />
           <Tab label="Card Reference" value="hands" />
         </Tabs>
       </Box>

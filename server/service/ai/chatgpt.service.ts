@@ -24,13 +24,13 @@ const util = require('util');
 export class ChatGPTService extends BaseAIService implements IAIService {
     protected defaultOptions: AICompletionOptions = { 
         maxTokens: AIMaxTokens.Maximum,
-        model: 'gpt-5.2',
+        model: 'gpt-5.4',
         temperature: 0,
         logResponse: true 
     };
     
     constructor(appService: AppService, sharedRepository: SharedRepository, private http: HttpService) {
-        super(['gpt-5.2', 'gpt-5-mini', 'gpt-5-nano'], appService, sharedRepository);
+        super(['gpt-5.4', 'gpt-5.4-mini', 'gpt-5.4-nano'], appService, sharedRepository);
     }
  
     async getTextCompletions(messages: ChatGPTMessage[], options: AICompletionOptions, authId: authid): Promise<ApiResponse<ChatGPTCompletionChoice[]>> {
@@ -41,7 +41,7 @@ export class ChatGPTService extends BaseAIService implements IAIService {
             messages: messages
         };
 
-        if(options.model === 'gpt-5.2') {
+        if(options.model === 'gpt-5.4') {
             config.reasoning_effort = 'medium';
         }
 
@@ -62,7 +62,7 @@ export class ChatGPTService extends BaseAIService implements IAIService {
             tool_choice: toolChoice
         };
 
-        if(options.model === 'gpt-5.2') {
+        if(options.model === 'gpt-5.4') {
             config.reasoning_effort = 'none';
         }
         
@@ -71,7 +71,7 @@ export class ChatGPTService extends BaseAIService implements IAIService {
 
     async groundedSearch(query: string, authId: authid): Promise<{ text: string; sources: Array<{ url: string; title: string }> }> {
         const request = {
-            model: 'gpt-5',
+            model: 'gpt-5.5',
             tools: [{ type: 'web_search' }],
             input: query
         };

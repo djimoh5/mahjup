@@ -19,19 +19,22 @@ import InviteRedeemScreen from './components/InviteRedeemScreen';
 import TrackerTab from './components/TrackerTab';
 import ReferenceTab from './components/ReferenceTab';
 import SummaryTab from './components/SummaryTab';
+import AiSummaryTab from './components/AiSummaryTab';
 
-export type Tab = 'tracker' | 'hands' | 'summary';
+export type Tab = 'tracker' | 'hands' | 'summary' | 'aiSummary';
 
 const TAB_PATHS: Record<Tab, string> = {
   tracker: '/tracker',
   hands: '/reference',
   summary: '/summary',
+  aiSummary: '/ai-summary',
 };
 
 const PATH_TO_TAB: Record<string, Tab> = {
   '/tracker': 'tracker',
   '/reference': 'hands',
   '/summary': 'summary',
+  '/ai-summary': 'aiSummary',
 };
 
 function makeSession(partial: Partial<MahjSession> = {}): MahjSession {
@@ -74,7 +77,7 @@ export default function App() {
   const [sessions, setSessions] = useState<MahjSession[]>([]);
   const [records, setRecords] = useState<GameRecord[]>([]);
   const [users, setUsers] = useState<UserSummary[]>([]);
-  const [analysis, setAnalysis] = useState<GameAnalysis | null>(null);
+  const [analyses, setAnalyses] = useState<GameAnalysis[]>([]);
   const [lastModifiedAt, setLastModifiedAt] = useState(0);
   const [isLoadingRecords, setIsLoadingRecords] = useState(false);
   const [newestSessionId, setNewestSessionId] = useState<string | null>(null);
@@ -98,12 +101,12 @@ export default function App() {
       mahjSessionService.getAll(),
       gameService.getAll(),
       userService.getAffiliated().catch(() => ({ users: [] as UserSummary[] })),
-      gameService.getAnalysis().catch(() => ({ analysis: null })),
-    ]).then(([{ sessions: fetchedSessions }, { records: fetchedRecords }, { users: fetchedUsers }, { analysis: fetchedAnalysis }]) => {
+      gameService.getAnalyses().catch(() => ({ analyses: [] as GameAnalysis[] })),
+    ]).then(([{ sessions: fetchedSessions }, { records: fetchedRecords }, { users: fetchedUsers }, { analyses: fetchedAnalyses }]) => {
       setSessions(fetchedSessions);
       setRecords(fetchedRecords.map(r => ({ ...r, players: r.players ?? [] })));
       setUsers(fetchedUsers);
-      setAnalysis(fetchedAnalysis);
+      setAnalyses(fetchedAnalyses);
     }).catch(() => {}).finally(() => {
       setIsLoadingRecords(false);
     });
@@ -113,16 +116,16 @@ export default function App() {
     if (!user || isRefreshing) return;
     setIsRefreshing(true);
     try {
-      const [{ sessions: fetchedSessions }, { records: fetchedRecords }, { users: fetchedUsers }, { analysis: fetchedAnalysis }] = await Promise.all([
+      const [{ sessions: fetchedSessions }, { records: fetchedRecords }, { users: fetchedUsers }, { analyses: fetchedAnalyses }] = await Promise.all([
         mahjSessionService.getAll(),
         gameService.getAll(),
         userService.getAffiliated().catch(() => ({ users: [] as UserSummary[] })),
-        gameService.getAnalysis().catch(() => ({ analysis: null })),
+        gameService.getAnalyses().catch(() => ({ analyses: [] as GameAnalysis[] })),
       ]);
       setSessions(fetchedSessions);
       setRecords(fetchedRecords.map(r => ({ ...r, players: r.players ?? [] })));
       setUsers(fetchedUsers);
-      setAnalysis(fetchedAnalysis);
+      setAnalyses(fetchedAnalyses);
     } catch {
       // silently ignore
     } finally {
@@ -157,7 +160,22 @@ export default function App() {
   }
 
   function handleAnalysisUpdated(updated: GameAnalysis) {
-    setAnalysis(updated);
+    setAnalyses(prev => {
+      const idx = prev.findIndex(a => a.oid === updated.oid);
+      if (idx >= 0) {
+        const next = [...prev];
+        next[idx] = updated;
+        return next;
+      }
+      return [...prev, updated];
+    });
+  }
+
+  async function deleteAnalysis(oid: string): Promise<{ error?: string }> {
+    const { error } = await gameService.deleteAnalysis(oid);
+    if (error) return { error };
+    setAnalyses(prev => prev.filter(a => a.oid !== oid));
+    return {};
   }
 
   function handleUserAdded(newUser: UserSummary) {
@@ -366,9 +384,6 @@ export default function App() {
             users={users}
             usersMap={usersMap}
             currentUserOid={user!.oid}
-            analysis={analysis}
-            lastModifiedAt={lastModifiedAt}
-            onAnalysisUpdated={handleAnalysisUpdated}
             onAddSession={addSession}
             onSaveNewSession={saveNewSession}
             onCancelNewSession={cancelNewSession}
@@ -388,6 +403,19 @@ export default function App() {
         </Box>
         <Box sx={{ display: activeTab !== 'summary' ? 'none' : 'block' }}>
           <SummaryTab records={records} currentUserOid={user!.oid} users={users} />
+        </Box>
+        <Box sx={{ display: activeTab !== 'aiSummary' ? 'none' : 'block' }}>
+          <AiSummaryTab
+            analyses={analyses}
+            records={records}
+            sessions={sessions}
+            users={users}
+            usersMap={usersMap}
+            currentUserOid={user!.oid}
+            lastModifiedAt={lastModifiedAt}
+            onAnalysisUpdated={handleAnalysisUpdated}
+            onAnalysisDeleted={deleteAnalysis}
+          />
         </Box>
       </Box>
     </Box>
