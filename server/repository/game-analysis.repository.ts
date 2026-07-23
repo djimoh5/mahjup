@@ -28,10 +28,6 @@ export class GameAnalysisRepository extends BaseRepository {
         return this.context.findOne({ userId, filtersKey });
     }
 
-    getByUserAndGameIds(userId: string, gameIdsKey: string): Promise<GameAnalysis> {
-        return this.context.findOne({ userId, gameIdsKey });
-    }
-
     getByOid(oid: string): Promise<GameAnalysis> {
         return this.context.findOne({ oid });
     }

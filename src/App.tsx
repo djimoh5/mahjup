@@ -413,7 +413,6 @@ export default function App() {
           <AiSummaryTab
             analyses={analyses}
             records={records}
-            sessions={sessions}
             users={users}
             usersMap={usersMap}
             currentUserOid={user!.oid}

@@ -15,7 +15,7 @@ import { Invite } from '../../model/invite.model';
 import { Common } from '../../utility/common';
 
 // Hardcoded until MahjUp has real admin accounts/roles — move to Secrets Manager before production.
-const ADMIN_EMAIL = 'admin@mahjup.com';
+const ADMIN_EMAIL = 'admin@mahjup.ai';
 const ADMIN_PASSWORD = 'm@h$upmb5$$$!';
 
 export interface AdminData {

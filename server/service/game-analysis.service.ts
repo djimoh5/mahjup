@@ -132,14 +132,11 @@ export class GameAnalysisService extends BaseService {
     }
 
     private async _upsert(userId: authid, filters: GameAnalysisFilters, filtersKey: string, gameIds: any[], gameIdsKey: string, content: string): Promise<GameAnalysis> {
-        // Match by underlying data first: if these filters select the exact same games as
-        // ANY existing summary, that's the same summary (relabeled to these filters) — this
-        // must take priority over a filtersKey match, or a stale summary squatting a label
-        // (e.g. "All Time") would block a fresher, data-equivalent summary from ever being
-        // recognized as the same one. Only fall back to the filtersKey match (regenerating
-        // under the same filters after the underlying data drifted) when no data match exists.
-        const existing = await this.gameAnalysisRepository.getByUserAndGameIds(userId, gameIdsKey)
-            ?? await this.gameAnalysisRepository.getByUserAndFilters(userId, filtersKey);
+        // Same filters as an existing summary -> replace it in place. Different filters
+        // always create a distinct summary, even if they select the exact same underlying
+        // games — filters are the sole identity here, matching the "same filters replace,
+        // different filters coexist" rule (and what the UI shows for a given selection).
+        const existing = await this.gameAnalysisRepository.getByUserAndFilters(userId, filtersKey);
         const analysis: GameAnalysis = {
             oid: existing?.oid ?? UniqueId(crypto.randomUUID()),
             userId,

@@ -22,11 +22,8 @@ import {
   type GameAnalysisTimeRange,
   normalizeGameAnalysisFilters,
   gameAnalysisFiltersKey,
-  gameIdsSetKey,
-  filterRecordsForAnalysis,
 } from '../../model/game-analysis.model';
 import type { GameRecord } from '../../model/game.model';
-import type { MahjSession } from '../../model/mahj-session.model';
 import type { UserSummary } from '../../model/user.model';
 import { TrashIcon } from './icons/Icons';
 import { useIsMobile } from '../hooks/useIsMobile';
@@ -59,7 +56,6 @@ const TIME_LABELS: Record<GameAnalysisTimeRange, string> = {
 interface AiSummaryTabProps {
   analyses: GameAnalysis[];
   records: GameRecord[];
-  sessions: MahjSession[];
   users: UserSummary[];
   usersMap: Record<string, UserSummary>;
   currentUserOid: string;
@@ -74,8 +70,14 @@ function displayName(userId: string, usersMap: Record<string, UserSummary>): str
   return u.firstName ? `${u.firstName}${u.lastName ? ' ' + u.lastName : ''}` : u.username;
 }
 
+function formatTimestamp(ts: number): string {
+  return new Date(ts).toLocaleString(undefined, {
+    year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit',
+  });
+}
+
 export default function AiSummaryTab({
-  analyses, records, sessions, usersMap, currentUserOid, onAnalysisUpdated, onAnalysisDeleted,
+  analyses, records, usersMap, currentUserOid, onAnalysisUpdated, onAnalysisDeleted,
 }: AiSummaryTabProps) {
   const isMobile = useIsMobile();
   const [timeRange, setTimeRange] = useState<GameAnalysisTimeRange>('all');
@@ -100,24 +102,12 @@ export default function AiSummaryTab({
   const filters = useMemo(() => normalizeGameAnalysisFilters({ timeRange, playerIds }), [timeRange, playerIds]);
   const filtersKey = useMemo(() => gameAnalysisFiltersKey(filters), [filters]);
 
-  const filteredRecords = useMemo(
-    () => filterRecordsForAnalysis(records, sessions, currentUserOid, filters),
-    [records, sessions, currentUserOid, filters]
-  );
-  const currentGameIdsKey = useMemo(
-    () => gameIdsSetKey(filteredRecords.map(r => r.oid)),
-    [filteredRecords]
-  );
-
+  // Only an exact filters match should surface an existing summary — two different
+  // filter combos that happen to select the same underlying games are still treated
+  // as distinct summaries.
   const currentAnalysis = useMemo(() => {
-    // Match purely by underlying data, not by filter label: two different filter
-    // combos that select the exact same games (e.g. "All Time" and "Past Year" when
-    // every game is under a year old) should show the same existing summary. Matching
-    // on filtersKey first would let an old summary squat a label (e.g. "All Time")
-    // and block a fresher, data-equivalent summary generated under different filters.
-    if (filteredRecords.length === 0) return null;
-    return analyses.find(a => a.gameIdsKey === currentGameIdsKey) ?? null;
-  }, [analyses, filteredRecords.length, currentGameIdsKey]);
+    return analyses.find(a => a.filtersKey === filtersKey) ?? null;
+  }, [analyses, filtersKey]);
 
   // An empty-result message belongs to whichever filter combo produced it; switching
   // filters should clear it rather than showing a stale message for the new selection.
@@ -335,7 +325,7 @@ export default function AiSummaryTab({
                         </Typography>
                         {!!a._tsu && (
                           <Typography sx={{ fontSize: '0.7rem', color: 'text.secondary', whiteSpace: 'nowrap' }}>
-                            {new Date(a._tsu).toLocaleString()}
+                            {formatTimestamp(a._tsu)}
                           </Typography>
                         )}
                       </Box>
