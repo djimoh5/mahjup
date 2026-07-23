@@ -14,6 +14,10 @@ export class GameAnalysisRepository extends BaseRepository {
         return this.context.find({ userId }, null, { sort: { _tsu: SortOrder.Descending } });
     }
 
+    getAll(): Promise<GameAnalysis[]> {
+        return this.context.find({}, null, { sort: { _tsu: SortOrder.Descending } });
+    }
+
     getByUserAndFilters(userId: string, filtersKey: string): Promise<GameAnalysis> {
         // Legacy documents saved before per-filter support have no filtersKey field.
         // They represent the "default" (all-time, no player filter) analysis, so they

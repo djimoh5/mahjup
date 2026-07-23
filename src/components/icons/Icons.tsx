@@ -73,6 +73,15 @@ export function RefreshIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+export function SearchIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+      stroke="currentColor" width="1em" height="1em" {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
+    </svg>
+  );
+}
+
 export function CheckCircleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"

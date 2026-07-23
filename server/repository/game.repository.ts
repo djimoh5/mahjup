@@ -13,6 +13,10 @@ export class GameRepository extends BaseRepository {
         return this.context.findOne({ oid });
     }
 
+    getAll(): Promise<GameRecord[]> {
+        return this.context.find({});
+    }
+
     getByUser(userId: string): Promise<GameRecord[]> {
         return this.context.find({ userId });
     }

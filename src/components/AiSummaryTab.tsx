@@ -161,7 +161,7 @@ export default function AiSummaryTab({
   return (
     <>
       <Paper sx={cardSx}>
-        <Typography sx={{ fontSize: '0.9rem', fontWeight: 600, mb: 1.5 }}>Summary Filters</Typography>
+        <Typography sx={{ fontSize: '1.2rem', fontWeight: 600, mb: 1.5 }}>Summary Filters</Typography>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
         <FormControl size="small" sx={{ minWidth: 160 }}>
           <InputLabel id="ai-summary-time-label">Time Range</InputLabel>

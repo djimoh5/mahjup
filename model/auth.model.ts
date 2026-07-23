@@ -7,6 +7,7 @@ export class UserAuth {
     token?: string;
     virtual?: boolean;
     profile?: UserProfile;
+    _ts?: number;
 
     constructor(public username: string, public password: string) {
         this.oid = AuthId(Common.uniqueId());

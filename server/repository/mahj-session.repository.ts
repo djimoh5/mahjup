@@ -13,6 +13,10 @@ export class MahjSessionRepository extends BaseRepository {
         return this.context.findOne({ oid });
     }
 
+    getAll(): Promise<MahjSession[]> {
+        return this.context.find({});
+    }
+
     getByUser(userId: string): Promise<MahjSession[]> {
         return this.context.find({ $or: [{ userId }, { players: userId }] });
     }

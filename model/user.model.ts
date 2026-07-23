@@ -7,12 +7,14 @@ export interface UserSummary {
     firstName?: string;
     lastName?: string;
     virtual?: boolean;
+    _ts?: number;
 }
 
 export interface User {
     oid: string;
     token?: string;
     username?: string;
+    isAdmin?: boolean;
     _ts?: number;
 }
 

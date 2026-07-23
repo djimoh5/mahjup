@@ -1,18 +1,22 @@
-const TOKEN_KEY = 'mahjongToken';
+const DEFAULT_TOKEN_KEY = 'mahjongToken';
 
 export abstract class BaseService {
   protected readonly baseUrl = import.meta.env.VITE_API_BASE_URL as string;
 
+  protected get tokenKey(): string {
+    return DEFAULT_TOKEN_KEY;
+  }
+
   protected getToken(): string | null {
-    return localStorage.getItem(TOKEN_KEY);
+    return localStorage.getItem(this.tokenKey);
   }
 
   protected setToken(token: string): void {
-    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(this.tokenKey, token);
   }
 
   protected clearToken(): void {
-    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(this.tokenKey);
   }
 
   protected getHeaders(): Record<string, string> {

@@ -20,6 +20,7 @@ import TrackerTab from './components/TrackerTab';
 import ReferenceTab from './components/ReferenceTab';
 import SummaryTab from './components/SummaryTab';
 import AiSummaryTab from './components/AiSummaryTab';
+import AdminApp from './components/AdminApp';
 
 export type Tab = 'tracker' | 'hands' | 'summary' | 'aiSummary';
 
@@ -315,6 +316,10 @@ export default function App() {
     const { error } = await gameService.savePlayer(gameOid, player);
     if (!error) setLastModifiedAt(Date.now());
     return error ? { error } : {};
+  }
+
+  if (location.pathname.startsWith('/admin')) {
+    return <AdminApp />;
   }
 
   if (inviteCode) {
