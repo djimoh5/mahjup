@@ -25,7 +25,7 @@ interface TrackerTabProps {
   onUpdate: (id: string, patch: Partial<GameRecord>, skipSave?: boolean) => Promise<{ error?: string }>;
   onDelete: (id: string) => Promise<{ error?: string }>;
   onUserAdded: (newUser: UserSummary) => void;
-  onSavePlayerHand: (gameOid: string, player: PlayerHand) => Promise<{ error?: string }>;
+  onSavePlayerHand: (gameOid: string, idx: number, player: PlayerHand) => Promise<{ error?: string }>;
   onRefresh: () => void;
   isRefreshing: boolean;
 }

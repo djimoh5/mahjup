@@ -20,7 +20,6 @@ interface PlayerHandRowProps {
   playerHand: PlayerHand;
   isOnlyRow: boolean;
   sessionPlayers: string[];
-  usedUserIds: string[];
   users: UserSummary[];
   usersMap: Record<string, UserSummary>;
   onUpdate: (patch: Partial<PlayerHand>, skipSave?: boolean) => void;
@@ -30,19 +29,17 @@ interface PlayerHandRowProps {
 }
 
 export default function PlayerHandRow({
-  playerHand, isOnlyRow, sessionPlayers, usedUserIds, users, usersMap,
+  playerHand, isOnlyRow, sessionPlayers, users, usersMap,
   onUpdate, onDelete, onWinnerSelect, onInvitePlayer,
 }: PlayerHandRowProps) {
   const [notesOpen, setNotesOpen] = useState(!!playerHand.notes);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const excludeIds = new Set(usedUserIds.filter(id => id !== playerHand.userId));
   const sessionSet = new Set(sessionPlayers);
   const sessionSorted = sessionPlayers
-    .filter(id => !excludeIds.has(id))
     .sort((a, b) => resolveDisplayName(a, usersMap).localeCompare(resolveDisplayName(b, usersMap)));
   const otherUsersSorted = users
-    .filter(u => !sessionSet.has(u.oid) && !excludeIds.has(u.oid))
+    .filter(u => !sessionSet.has(u.oid))
     .sort((a, b) => resolveDisplayName(a.oid, usersMap).localeCompare(resolveDisplayName(b.oid, usersMap)));
 
   function handleHandSelect(cat: string, hand: string, score: number, variant?: 's2') {

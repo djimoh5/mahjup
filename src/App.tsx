@@ -274,15 +274,10 @@ export default function App() {
 
     if (patchPlayers) {
       if (fresh?.players) {
-        const freshByUserId = Object.fromEntries(
-          fresh.players.filter(p => p.userId).map(p => [p.userId, p])
-        );
-        const localByUserId = Object.fromEntries(
-          (localRecord?.players ?? []).filter(p => p.userId).map(p => [p.userId, p])
-        );
-        merged.players = patchPlayers.map(patchPlayer => {
-          const freshPlayer = freshByUserId[patchPlayer.userId];
-          const localPlayer = localByUserId[patchPlayer.userId];
+        const localPlayers = localRecord?.players ?? [];
+        merged.players = patchPlayers.map((patchPlayer, i) => {
+          const freshPlayer = fresh.players[i];
+          const localPlayer = localPlayers[i];
           if (!freshPlayer || !localPlayer) return patchPlayer;
           const diff: Partial<PlayerHand> = {};
           for (const key of Object.keys(patchPlayer) as (keyof PlayerHand)[]) {
@@ -312,8 +307,8 @@ export default function App() {
     return {};
   }
 
-  async function savePlayerHand(gameOid: string, player: PlayerHand): Promise<{ error?: string }> {
-    const { error } = await gameService.savePlayer(gameOid, player);
+  async function savePlayerHand(gameOid: string, idx: number, player: PlayerHand): Promise<{ error?: string }> {
+    const { error } = await gameService.savePlayer(gameOid, idx, player);
     if (!error) setLastModifiedAt(Date.now());
     return error ? { error } : {};
   }

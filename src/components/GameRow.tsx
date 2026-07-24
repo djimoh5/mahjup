@@ -27,7 +27,7 @@ interface GameRowProps {
   onUpdate: (patch: Partial<GameRecord>, skipSave?: boolean) => Promise<{ error?: string }>;
   onDelete: () => Promise<{ error?: string }>;
   onInvitePlayer: (cb: (userId: string) => void) => void;
-  onSavePlayerHand: (player: PlayerHand) => Promise<{ error?: string }>;
+  onSavePlayerHand: (player: PlayerHand, idx: number) => Promise<{ error?: string }>;
 }
 
 type SaveStatus = 'idle' | 'saving' | 'error' | 'success';
@@ -78,7 +78,7 @@ export default function GameRow({ record, isExpanded, onToggle, sessionPlayers, 
       const player = updated[idx];
       if (player.userId) {
         setSaveStatus('saving');
-        const result = await onSavePlayerHand(player);
+        const result = await onSavePlayerHand(player, idx);
         handleSaveResult(result);
         if (!result.error) onUpdate({ players: updated }, true);
       }
@@ -86,8 +86,10 @@ export default function GameRow({ record, isExpanded, onToggle, sessionPlayers, 
   }
 
   async function handleWinnerSelect(idx: number) {
+    const wasWinner = record.players[idx].isWinner;
     const updated = record.players.map((p, i) => {
-      if (i !== idx) return { ...p, isWinner: false };
+      if (i !== idx) return p.isWinner ? { ...p, isWinner: false, score: 0 } : p;
+      if (wasWinner) return { ...p, isWinner: false, score: 0 };
       const match = p.category && p.hand ? handData[p.category]?.find(item => item.h === p.hand) : null;
       const baseScore = match?.v ?? p.score;
       return { ...p, isWinner: true, score: p.jokers === 0 ? baseScore * 2 : baseScore };
@@ -106,8 +108,6 @@ export default function GameRow({ record, isExpanded, onToggle, sessionPlayers, 
     setSaveStatus('saving');
     handleSaveResult(await onUpdate({ players: [...record.players, newPlayer] }));
   }
-
-  const usedUserIds = record.players.map(p => p.userId).filter(Boolean);
 
   return (
     <Paper elevation={0} variant="outlined" sx={{ borderRadius: '0.75rem', overflow: 'hidden', background: '#ffffff' }}>
@@ -165,30 +165,15 @@ export default function GameRow({ record, isExpanded, onToggle, sessionPlayers, 
 
       {isExpanded && (
         <>
-          {saveStatus !== 'idle' && (
+          {saveStatus === 'error' && (
             <Box sx={{ px: 2, py: 0.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-              {saveStatus === 'saving' && (
-                <>
-                  <Box sx={{
-                    width: 8, height: 8, borderRadius: '50%', bgcolor: 'success.main',
-                    animation: 'pulse 1.2s ease-in-out infinite',
-                    '@keyframes pulse': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.35 } },
-                  }} />
-                  <Typography variant="caption" color="text.secondary">Saving…</Typography>
-                </>
-              )}
-              {saveStatus === 'success' && (
-                <Typography variant="caption" sx={{ color: 'success.dark' }}>✓ Saved</Typography>
-              )}
-              {saveStatus === 'error' && (
-                <Alert
-                  severity="error"
-                  onClose={() => { setSaveStatus('idle'); setSaveError(null); }}
-                  sx={{ py: 0, fontSize: '0.8125rem', width: '100%' }}
-                >
-                  Changes not saved: {saveError}
-                </Alert>
-              )}
+              <Alert
+                severity="error"
+                onClose={() => { setSaveStatus('idle'); setSaveError(null); }}
+                sx={{ py: 0, fontSize: '0.8125rem', width: '100%' }}
+              >
+                Changes not saved: {saveError}
+              </Alert>
             </Box>
           )}
           <Divider />
@@ -211,7 +196,6 @@ export default function GameRow({ record, isExpanded, onToggle, sessionPlayers, 
                       playerHand={playerHand}
                       isOnlyRow={record.players.length === 1}
                       sessionPlayers={sessionPlayers}
-                      usedUserIds={usedUserIds}
                       users={users}
                       usersMap={usersMap}
                       onUpdate={(patch, skipSave) => handlePlayerUpdate(idx, patch, skipSave)}

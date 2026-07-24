@@ -44,7 +44,7 @@ interface SessionGroupProps {
   onCancelNewSession: () => void;
   onDeleteSession: () => Promise<{ error?: string }>;
   onUserAdded: (newUser: UserSummary) => void;
-  onSavePlayerHand: (gameOid: string, player: PlayerHand) => Promise<{ error?: string }>;
+  onSavePlayerHand: (gameOid: string, idx: number, player: PlayerHand) => Promise<{ error?: string }>;
   onRefresh: () => void;
   isRefreshing: boolean;
 }
@@ -386,7 +386,7 @@ export default function SessionGroup({
                   onUpdate={(patch, skipSave) => onUpdate(game.oid, patch, skipSave)}
                   onDelete={() => onDelete(game.oid)}
                   onInvitePlayer={handleInviteOpen}
-                  onSavePlayerHand={(player) => onSavePlayerHand(game.oid, player)}
+                  onSavePlayerHand={(player, idx) => onSavePlayerHand(game.oid, idx, player)}
                 />
               ))}
             </Stack>
@@ -405,7 +405,7 @@ export default function SessionGroup({
                   onUpdate={(patch, skipSave) => onUpdate(game.oid, patch, skipSave)}
                   onDelete={() => onDelete(game.oid)}
                   onInvitePlayer={handleInviteOpen}
-                  onSavePlayerHand={(player) => onSavePlayerHand(game.oid, player)}
+                  onSavePlayerHand={(player, idx) => onSavePlayerHand(game.oid, idx, player)}
                 />
               ))}
             </Stack>

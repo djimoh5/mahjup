@@ -33,8 +33,8 @@ export class GameRepository extends BaseRepository {
         return super.updateObject(record);
     }
 
-    updatePlayerHand(oid: string, player: PlayerHand): Promise<any> {
-        return this.context.update({ oid, 'players.userId': player.userId }, { 'players.$': player }, null);
+    updatePlayerHand(oid: string, idx: number, player: PlayerHand): Promise<any> {
+        return this.context.update({ oid }, { [`players.${idx}`]: player }, null);
     }
 
     remove(oid: string): Promise<boolean> {

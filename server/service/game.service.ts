@@ -36,8 +36,8 @@ export class GameService extends BaseService {
         return new ApiResponse(true, saved);
     }
 
-    async savePlayer(oid: string, player: PlayerHand): Promise<ApiResponse<null>> {
-        await this.gameRepository.updatePlayerHand(oid, player);
+    async savePlayer(oid: string, idx: number, player: PlayerHand): Promise<ApiResponse<null>> {
+        await this.gameRepository.updatePlayerHand(oid, idx, player);
         return new ApiResponse(true, null);
     }
 

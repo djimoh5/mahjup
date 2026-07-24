@@ -202,9 +202,9 @@ export class APIController extends BaseController {
 
 	@Post('game/record/player')
 	async savePlayerHand(req: Request, res: Response) {
-		const { oid, player } = req.body;
-		if (!oid || !player) return this.sendError(res, 'oid and player are required');
-		const data = await this.gameService.savePlayer(oid, player);
+		const { oid, idx, player } = req.body;
+		if (!oid || !player || typeof idx !== 'number') return this.sendError(res, 'oid, idx, and player are required');
+		const data = await this.gameService.savePlayer(oid, idx, player);
 		res.send(data);
 	}
 

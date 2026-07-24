@@ -39,9 +39,9 @@ export class GameService extends BaseService {
     }
   }
 
-  async savePlayer(gameOid: string, player: PlayerHand): Promise<{ error?: string }> {
+  async savePlayer(gameOid: string, idx: number, player: PlayerHand): Promise<{ error?: string }> {
     try {
-      const res = await this.post<ApiResponse<null>>('/game/record/player', { oid: gameOid, player });
+      const res = await this.post<ApiResponse<null>>('/game/record/player', { oid: gameOid, idx, player });
       if (res.success) return {};
       return { error: res.msg ?? 'Failed to save player hand' };
     } catch {
