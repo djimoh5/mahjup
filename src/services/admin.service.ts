@@ -26,8 +26,11 @@ export class AdminService extends BaseService {
 
   async login(email: string, password: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const res = await this.post<ApiResponse<null>>('/admin/login', { email, password });
-      if (res.success) return { success: true };
+      const res = await this.post<ApiResponse<{ token?: string }>>('/admin/login', { email, password });
+      if (res.success) {
+        if (res.data?.token) this.setToken(res.data.token);
+        return { success: true };
+      }
       return { success: false, error: res.msg ?? 'Login failed' };
     } catch {
       return { success: false, error: 'Unable to connect, please try again' };
